@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Train Speed Problem - Visual Solution</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0a0e27;
+      --bg-card: #1a1f3a;
+      --accent-blue: #3b82f6;
+      --accent-green: #10b981;
+      --accent-orange: #f59e0b;
+      --accent-red: #ef4444;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --border: rgba(255, 255, 255, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      padding: 30px 0 40px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--accent-blue);
+    }
+
+    .header .subtitle {
+      font-size: 1rem;
+      color: var(--text-secondary);
+    }
+
+    /* Section */
+    .section {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      border: 1px solid var(--border);
+    }
+
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--accent-blue);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title .icon {
+      font-size: 1.6rem;
+    }
+
+    /* Problem Box */
+    .problem-box {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1));
+      border: 2px solid var(--accent-blue);
+      border-radius: 10px;
+      padding: 25px;
+      margin-bottom: 25px;
+    }
+
+    .problem-statement {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      line-height: 1.8;
+    }
+
+    .given-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .info-item {
+      background: rgba(59, 130, 246, 0.1);
+      padding: 12px 18px;
+      border-radius: 8px;
+      border-left: 3px solid var(--accent-blue);
+    }
+
+    .info-label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .info-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--accent-blue);
+    }
+
+    /* Animation Container */
+    .animation-container {
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 40px 30px;
+      margin: 25px 0;
+      position: relative;
+      min-height: 250px;
+      border: 1px solid var(--border);
+    }
+
+    .track {
+      position: relative;
+      height: 150px;
+      display: flex;
+      align-items: center;
+    }
+
+    .track-line {
+      position: absolute;
+      width: 100%;
+      height: 3px;
+      background: var(--accent-blue);
+      top: 50%;
+      transform: translateY(-50%);
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    }
+
+    .track-ties {
+      position: absolute;
+      width: 100%;
+      height: 30px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .tie {
+      width: 2px;
+      height: 25px;
+      background: rgba(59, 130, 246, 0.3);
+    }
+
+    .train {
+      position: absolute;
+      left: -200px;
+      top: 50%;
+      transform: translateY(-50%);
+      transition: left 3s linear;
+      z-index: 10;
+    }
+
+    .train-body {
+      background: linear-gradient(135deg, var(--accent-orange), #dc2626);
+      width: 180px;
+      height: 60px;
+      border-radius: 8px;
+      position: relative;
+      box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .train-wheels {
+      position: absolute;
+      bottom: -10px;
+      left: 15px;
+      right: 15px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .wheel {
+      width: 20px;
+      height: 20px;
+      background: #1f2937;
+      border: 3px solid var(--accent-blue);
+      border-radius: 50%;
+    }
+
+    .pole {
+      position: absolute;
+      right: 200px;
+      top: 20%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .pole-post {
+      width: 4px;
+      height: 80px;
+      background: var(--accent-green);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    }
+
+    .pole-label {
+      margin-top: 8px;
+      font-size: 0.85rem;
+      color: var(--accent-green);
+      font-weight: 600;
+    }
+
+    .measurement-label {
+      position: absolute;
+      background: rgba(59, 130, 246, 0.2);
+      border: 1px solid var(--accent-blue);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--accent-blue);
+    }
+
+    .train.moving {
+      left: calc(100% + 100px);
+    }
+
+    /* Formula Box */
+    .formula-box {
+      background: rgba(59, 130, 246, 0.1);
+      border: 2px solid var(--accent-blue);
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: center;
+    }
+
+    .formula-title {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .formula {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      margin: 10px 0;
+    }
+
+    .formula-note {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-top: 10px;
+      font-style: italic;
+    }
+
+    /* Steps */
+    .steps {
+      margin: 25px 0;
+    }
+
+    .step {
+      background: rgba(59, 130, 246, 0.05);
+      border-left: 4px solid var(--accent-blue);
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .step-number {
+      width: 32px;
+      height: 32px;
+      background: var(--accent-blue);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .step-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .step-content {
+      margin-left: 44px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    .calculation {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid var(--accent-green);
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-family: 'Fira Code', monospace;
+      font-size: 1.1rem;
+      margin: 12px 0;
+      color: var(--accent-green);
+      font-weight: 600;
+    }
+
+    /* Answer Options */
+    .options {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin: 25px 0;
+    }
+
+    .option {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      padding: 18px;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .option:hover {
+      border-color: var(--accent-blue);
+      transform: translateY(-2px);
+    }
+
+    .option.correct {
+      border-color: var(--accent-green);
+      background: rgba(16, 185, 129, 0.1);
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+    }
+
+    .option.wrong {
+      border-color: var(--accent-red);
+      background: rgba(239, 68, 68, 0.1);
+      opacity: 0.5;
+    }
+
+    /* Answer Box */
+    .answer-box {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.1));
+      border: 2px solid var(--accent-green);
+      border-radius: 10px;
+      padding: 25px;
+      text-align: center;
+    }
+
+    .answer-label {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .answer-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent-green);
+    }
+
+    /* Practice Tips */
+    .tip-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin: 25px 0;
+    }
+
+    .tip-card {
+      background: rgba(59, 130, 246, 0.05);
+      border: 1px solid var(--border);
+      padding: 20px;
+      border-radius: 10px;
+      border-top: 3px solid var(--accent-blue);
+    }
+
+    .tip-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--accent-blue);
+    }
+
+    .tip-content {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    .tip-content ul {
+      margin-left: 20px;
+      margin-top: 8px;
+    }
+
+    .tip-content ul li {
+      margin-bottom: 6px;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin: 30px 0;
+    }
+
+    .btn {
+      padding: 12px 30px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--accent-blue);
+      border: 2px solid var(--accent-blue);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    /* Highlight */
+    .highlight {
+      color: var(--accent-blue);
+      font-weight: 600;
+    }
+
+    .highlight-green {
+      color: var(--accent-green);
+      font-weight: 600;
+    }
+
+    .highlight-orange {
+      color: var(--accent-orange);
+      font-weight: 600;
+    }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--accent-blue);
+      font-weight: 600;
+    }
+
+    td {
+      color: var(--text-secondary);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 20px 15px;
+      }
+
+      .header h1 {
+        font-size: 1.5rem;
+      }
+
+      .section {
+        padding: 20px;
+      }
+
+      .options {
+        grid-template-columns: 1fr;
+      }
+
+      .given-info {
+        grid-template-columns: 1fr;
+      }
+
+      .train-body {
+        width: 120px;
+        height: 50px;
+        font-size: 0.9rem;
+      }
+
+      .pole {
+        right: 100px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>🚂 Train Speed Problem</h1>
+      <p class="subtitle">Solve with clear steps and visual understanding</p>
+    </div>
+
+    <!-- Section 1: Problem -->
+    <div class="section">
+      <h2 class="section-title">
+        <span class="icon">📋</span>
+        The Problem
+      </h2>
+      
+      <div class="problem-box">
+        <div class="problem-statement">
+          A train <span class="highlight">180 meters</span> long crosses a <span class="highlight-green">pole</span> in <span class="highlight-orange">15 seconds</span>. What is its speed in km/h?
+        </div>
+        
+        <div class="given-info">
+          <div class="info-item">
+            <div class="info-label">Train Length</div>
+            <div class="info-value">180 meters</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Time Taken</div>
+            <div class="info-value">15 seconds</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Find</div>
+            <div class="info-value">Speed in km/h</div>
+          </div>
+        </div>
+      </div>
+
+      <h3 style="margin: 25px 0 15px; font-size: 1.1rem; color: var(--text-secondary);">Answer Options:</h3>
+      <div class="options">
+        <div class="option">A. 36 km/h</div>
+        <div class="option">B. 43.2 km/h</div>
+        <div class="option">C. 48 km/h</div>
+        <div class="option">D. 54 km/h</div>
+      </div>
+    </div>
+
+    <!-- Section 2: Visual Animation -->
+    <div class="section">
+      <h2 class="section-title">
+        <span class="icon">🎬</span>
+        Visual Understanding
+      </h2>
+      
+      <div class="animation-container">
+        <div class="measurement-label" style="top: 10px; left: 20px;">
+          Train: 180m
+        </div>
+        <div class="measurement-label" style="top: 10px; right: 20px;">
+          Time: 15s
+        </div>
+        
+        <div class="track">
+          <div class="track-line"></div>
+          <div class="track-ties">
+            <div class="tie"></div>
+            <div class="tie"></div>
+            <div class="tie"></div>
+            <div class="tie"></div>
+            <div class="tie"></div>
+            <div class="tie"></div>
+            <div class="tie"></div>
+            <div class="tie"></div>
+            <div class="tie"></div>
+            <div class="tie"></div>
+          </div>
+          
+          <div class="train" id="train">
+            <div class="train-body">
+              180m
+              <div class="train-wheels">
+                <div class="wheel"></div>
+                <div class="wheel"></div>
+                <div class="wheel"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="pole">
+            <div class="pole-post"></div>
+            <div class="pole-label">Pole</div>
+          </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+          <p style="color: var(--text-secondary); font-size: 0.95rem;">
+            The entire <span class="highlight-orange">180-meter train</span> must pass the <span class="highlight-green">fixed pole</span>.
+          </p>
+          <p style="color: var(--text-secondary); font-size: 0.95rem; margin-top: 5px;">
+            Distance traveled = Train length = <span class="highlight">180 meters</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn btn-primary" onclick="animateTrain()">
+          ▶️ Play Animation
+        </button>
+        <button class="btn btn-secondary" onclick="resetTrain()">
+          🔄 Reset
+        </button>
+      </div>
+    </div>
+
+    <!-- Section 3: Formula -->
+    <div class="section">
+      <h2 class="section-title">
+        <span class="icon">📐</span>
+        The Formula
+      </h2>
+      
+      <div class="formula-box">
+        <div class="formula-title">Basic Formula</div>
+        <div class="formula">Speed = Distance ÷ Time</div>
+        <div class="formula-note">This works for any moving object</div>
+      </div>
+
+      <div class="formula-box" style="border-color: var(--accent-orange);">
+        <div class="formula-title">Unit Conversion</div>
+        <div class="formula" style="color: var(--accent-orange);">
+          m/s × 18/5 = km/h
+        </div>
+        <div class="formula-note">Or multiply by 3.6 (same thing)</div>
+      </div>
+
+      <div style="background: rgba(59, 130, 246, 0.05); padding: 20px; border-radius: 10px; margin-top: 20px;">
+        <h3 style="font-size: 1.1rem; margin-bottom: 12px; color: var(--accent-blue);">💡 Key Insight</h3>
+        <p style="color: var(--text-secondary);">
+          When a train crosses a <strong>pole</strong> (or any point object), the distance it travels equals the <strong>length of the train</strong>. 
+          The entire train must pass the fixed point!
+        </p>
+      </div>
+    </div>
+
+    <!-- Section 4: Solution -->
+    <div class="section">
+      <h2 class="section-title">
+        <span class="icon">✏️</span>
+        Step-by-Step Solution
+      </h2>
+      
+      <div class="steps">
+        <div class="step">
+          <div class="step-header">
+            <div class="step-number">1</div>
+            <div class="step-title">Identify the Distance</div>
+          </div>
+          <div class="step-content">
+            <p>Since the train is crossing a pole (fixed point), the distance = length of train</p>
+            <div class="calculation">Distance = 180 meters</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">
+            <div class="step-number">2</div>
+            <div class="step-title">Calculate Speed in m/s</div>
+          </div>
+          <div class="step-content">
+            <p>Apply the formula: Speed = Distance ÷ Time</p>
+            <div class="calculation">
+              Speed = 180 m ÷ 15 s = 12 m/s
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">
+            <div class="step-number">3</div>
+            <div class="step-title">Convert m/s to km/h</div>
+          </div>
+          <div class="step-content">
+            <p>Use the conversion factor: multiply by 18/5 (or 3.6)</p>
+            <div class="calculation">
+              Speed = 12 × 18/5 = 12 × 3.6 = 43.2 km/h
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 5: Answer -->
+    <div class="section">
+      <h2 class="section-title">
+        <span class="icon">✅</span>
+        The Answer
+      </h2>
+      
+      <div class="answer-box">
+        <div class="answer-label">Correct Answer</div>
+        <div class="answer-value">B. 43.2 km/h</div>
+      </div>
+
+      <div style="margin-top: 30px;">
+        <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: var(--text-secondary);">Why other options are incorrect:</h3>
+        <div class="options" id="answerOptions">
+          <div class="option wrong">A. 36 km/h → Would be 10 m/s</div>
+          <div class="option correct">B. 43.2 km/h → 12 m/s ✓</div>
+          <div class="option wrong">C. 48 km/h → Would be 13.3 m/s</div>
+          <div class="option wrong">D. 54 km/h → Would be 15 m/s</div>
+        </div>
+      </div>
+
+      <div style="background: rgba(16, 185, 129, 0.05); padding: 20px; border-radius: 10px; margin-top: 25px; border-left: 4px solid var(--accent-green);">
+        <h3 style="font-size: 1.1rem; margin-bottom: 12px; color: var(--accent-green);">✓ Verification</h3>
+        <p style="color: var(--text-secondary);">
+          Let's check: 43.2 km/h = 12 m/s<br>
+          Distance in 15 seconds = 12 m/s × 15 s = 180 m ✓<br>
+          This matches the train length perfectly!
+        </p>
+      </div>
+    </div>
+
+    <!-- Section 6: Practice Tips -->
+    <div class="section">
+      <h2 class="section-title">
+        <span class="icon">📚</span>
+        Practice Tips & Common Variations
+      </h2>
+      
+      <div class="tip-grid">
+        <div class="tip-card">
+          <div class="tip-title">🎯 Train Crossing a Pole</div>
+          <div class="tip-content">
+            <strong>Distance = Train Length</strong>
+            <p>The entire train must pass the point.</p>
+          </div>
+        </div>
+
+        <div class="tip-card">
+          <div class="tip-title">🌉 Train Crossing a Bridge</div>
+          <div class="tip-content">
+            <strong>Distance = Train + Bridge Length</strong>
+            <p>Train must completely cross the bridge.</p>
+          </div>
+        </div>
+
+        <div class="tip-card">
+          <div class="tip-title">🚂🚂 Two Trains Meeting</div>
+          <div class="tip-content">
+            <strong>Opposite direction:</strong> Add speeds<br>
+            <strong>Same direction:</strong> Subtract speeds
+          </div>
+        </div>
+
+        <div class="tip-card">
+          <div class="tip-title">🔄 Unit Conversions</div>
+          <div class="tip-content">
+            <strong>m/s to km/h:</strong> × 18/5 (or × 3.6)<br>
+            <strong>km/h to m/s:</strong> × 5/18 (or ÷ 3.6)
+          </div>
+        </div>
+      </div>
+
+      <h3 style="margin: 30px 0 15px; font-size: 1.2rem; color: var(--accent-blue);">📋 Quick Reference Table</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Scenario</th>
+            <th>Distance Formula</th>
+            <th>Speed Formula</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Train crosses pole</td>
+            <td>Train length</td>
+            <td>Distance ÷ Time</td>
+          </tr>
+          <tr>
+            <td>Train crosses platform</td>
+            <td>Train + Platform length</td>
+            <td>Distance ÷ Time</td>
+          </tr>
+          <tr>
+            <td>Two trains (opposite)</td>
+            <td>Sum of train lengths</td>
+            <td>Speed₁ + Speed₂</td>
+          </tr>
+          <tr>
+            <td>Two trains (same dir)</td>
+            <td>Sum of train lengths</td>
+            <td>|Speed₁ - Speed₂|</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="background: rgba(59, 130, 246, 0.05); padding: 20px; border-radius: 10px; margin-top: 25px;">
+        <h3 style="font-size: 1.1rem; margin-bottom: 12px; color: var(--accent-blue);">💪 Problem-Solving Steps</h3>
+        <ol style="margin-left: 20px; color: var(--text-secondary); line-height: 2;">
+          <li>Identify what's crossing what (train vs pole/platform/train)</li>
+          <li>Calculate the total distance</li>
+          <li>Apply: Speed = Distance ÷ Time</li>
+          <li>Convert units if necessary (m/s ↔ km/h)</li>
+          <li>Verify your answer makes sense</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function animateTrain() {
+      const train = document.getElementById('train');
+      train.classList.remove('moving');
+      // Force reflow
+      void train.offsetWidth;
+      train.classList.add('moving');
+    }
+
+    function resetTrain() {
+      const train = document.getElementById('train');
+      train.classList.remove('moving');
+    }
+
+    // Auto-play animation on load
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        animateTrain();
+      }, 500);
+    });
+  </script>
+</body>
+</html>

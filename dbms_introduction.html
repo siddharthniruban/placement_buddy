@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Introduction to Database Management System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0a0e27;
+      --bg-card: #1a1f3a;
+      --accent-blue: #3b82f6;
+      --accent-green: #10b981;
+      --accent-orange: #f59e0b;
+      --accent-purple: #8b5cf6;
+      --accent-pink: #ec4899;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --border: rgba(255, 255, 255, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      line-height: 1.6;
+      font-size: 14px;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      padding: 40px 30px;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border-radius: 16px;
+      margin-bottom: 40px;
+      border: 1px solid var(--border);
+    }
+
+    .header h1 {
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 800;
+    }
+
+    .header .subtitle {
+      font-size: 1rem;
+      color: var(--text-secondary);
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      border-bottom: 2px solid var(--border);
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .tab {
+      padding: 12px 24px;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+      white-space: nowrap;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .tab:hover {
+      color: var(--text-primary);
+    }
+
+    .tab.active {
+      color: var(--accent-blue);
+      border-bottom-color: var(--accent-blue);
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Section */
+    .section {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 25px;
+      border: 1px solid var(--border);
+    }
+
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--accent-blue);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Building Blocks Animation */
+    .building-blocks {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      margin: 30px 0;
+    }
+
+    .block-level {
+      opacity: 0;
+      animation: slideIn 0.6s ease-out forwards;
+    }
+
+    .block-level:nth-child(1) { animation-delay: 0.2s; }
+    .block-level:nth-child(2) { animation-delay: 0.8s; }
+    .block-level:nth-child(3) { animation-delay: 1.4s; }
+    .block-level:nth-child(4) { animation-delay: 2.0s; }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .block-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .block-number {
+      width: 40px;
+      height: 40px;
+      background: var(--accent-blue);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .block-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+    }
+
+    .block-content {
+      margin-left: 55px;
+    }
+
+    .block-description {
+      color: var(--text-secondary);
+      margin-bottom: 15px;
+      line-height: 1.6;
+    }
+
+    /* Data Items */
+    .data-items {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin: 15px 0;
+    }
+
+    .data-item {
+      background: rgba(59, 130, 246, 0.1);
+      border: 2px solid var(--accent-blue);
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-family: 'Fira Code', monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      animation: bounce 0.5s ease-out;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .data-item.meaningless {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: #ef4444;
+      color: #ef4444;
+    }
+
+    /* Table Visualization */
+    .table-container {
+      overflow-x: auto;
+      margin: 20px 0;
+      border-radius: 10px;
+      border: 2px solid var(--accent-green);
+      background: rgba(16, 185, 129, 0.05);
+      padding: 15px;
+    }
+
+    .db-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'Fira Code', monospace;
+    }
+
+    .db-table th {
+      background: var(--accent-green);
+      color: white;
+      padding: 12px;
+      text-align: left;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .db-table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+
+    .db-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .db-table tr:hover {
+      background: rgba(16, 185, 129, 0.05);
+    }
+
+    .table-label {
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--accent-green);
+      font-weight: 700;
+      margin-top: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .annotation {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .annotation-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .annotation-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+    }
+
+    /* Database Collection */
+    .database-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin: 25px 0;
+    }
+
+    .mini-table {
+      background: rgba(139, 92, 246, 0.05);
+      border: 2px solid var(--accent-purple);
+      border-radius: 10px;
+      padding: 15px;
+      opacity: 0;
+      animation: popIn 0.5s ease-out forwards;
+    }
+
+    .mini-table:nth-child(1) { animation-delay: 0.1s; }
+    .mini-table:nth-child(2) { animation-delay: 0.3s; }
+    .mini-table:nth-child(3) { animation-delay: 0.5s; }
+    .mini-table:nth-child(4) { animation-delay: 0.7s; }
+
+    @keyframes popIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .mini-table-title {
+      font-weight: 700;
+      color: var(--accent-purple);
+      margin-bottom: 10px;
+      font-size: 1rem;
+    }
+
+    .mini-table table {
+      width: 100%;
+      font-size: 0.85rem;
+    }
+
+    .mini-table th {
+      background: var(--accent-purple);
+      color: white;
+      padding: 8px;
+      font-size: 0.8rem;
+    }
+
+    .mini-table td {
+      padding: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Common Attributes Highlight */
+    .common-attr {
+      background: rgba(245, 158, 11, 0.2);
+      border: 2px dashed var(--accent-orange);
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      text-align: center;
+    }
+
+    .common-attr-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--accent-orange);
+      margin-bottom: 8px;
+    }
+
+    .common-attr-list {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .attr-badge {
+      background: var(--accent-orange);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    /* DBMS Architecture */
+    .architecture {
+      background: #0f172a;
+      border-radius: 12px;
+      padding: 30px;
+      margin: 25px 0;
+      border: 2px solid var(--accent-blue);
+    }
+
+    .layer {
+      background: var(--bg-card);
+      border: 2px solid var(--accent-blue);
+      border-radius: 10px;
+      padding: 20px;
+      margin: 15px 0;
+      position: relative;
+      opacity: 0;
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    .layer:nth-child(1) { animation-delay: 0.2s; }
+    .layer:nth-child(2) { animation-delay: 0.5s; }
+    .layer:nth-child(3) { animation-delay: 0.8s; }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .layer-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      margin-bottom: 10px;
+    }
+
+    .layer-content {
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .user-icons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+
+    .user-card {
+      background: var(--bg-card);
+      border: 2px solid var(--accent-green);
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+      min-width: 120px;
+      transition: all 0.3s;
+    }
+
+    .user-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+    }
+
+    .user-icon {
+      font-size: 2.5rem;
+      margin-bottom: 8px;
+    }
+
+    .user-role {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--accent-green);
+    }
+
+    .arrow-down {
+      text-align: center;
+      font-size: 2rem;
+      color: var(--accent-blue);
+      margin: 15px 0;
+      animation: arrowBounce 1.5s ease-in-out infinite;
+    }
+
+    @keyframes arrowBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(10px); }
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 30px 0;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 10px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 2px solid var(--accent-blue);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    /* Interactive Builder */
+    .builder-stage {
+      background: #0f172a;
+      border-radius: 12px;
+      padding: 30px;
+      margin: 25px 0;
+      border: 2px solid var(--border);
+      min-height: 400px;
+    }
+
+    .stage-title {
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      margin-bottom: 25px;
+    }
+
+    .build-area {
+      min-height: 300px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .message-box {
+      text-align: center;
+      padding: 20px;
+      background: rgba(59, 130, 246, 0.1);
+      border-radius: 10px;
+      border: 1px solid var(--accent-blue);
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+    }
+
+    /* Key Points */
+    .key-point {
+      background: rgba(16, 185, 129, 0.1);
+      border-left: 4px solid var(--accent-green);
+      padding: 15px 20px;
+      margin: 15px 0;
+      border-radius: 6px;
+    }
+
+    .key-point-title {
+      font-weight: 700;
+      color: var(--accent-green);
+      margin-bottom: 6px;
+    }
+
+    .key-point-content {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    /* Definition Box */
+    .definition {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+      border: 2px solid var(--accent-purple);
+      border-radius: 12px;
+      padding: 25px;
+      margin: 25px 0;
+    }
+
+    .definition-term {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent-purple);
+      margin-bottom: 12px;
+    }
+
+    .definition-text {
+      color: var(--text-secondary);
+      line-height: 1.7;
+      font-size: 1rem;
+    }
+
+    .example-tag {
+      display: inline-block;
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--accent-orange);
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin: 8px 5px 8px 0;
+      font-family: 'Fira Code', monospace;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .database-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 1.8rem;
+      }
+
+      .section {
+        padding: 20px;
+      }
+
+      .block-content {
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>🗄️ Introduction to Database Management System</h1>
+      <p class="subtitle">UNIT 1: Understanding the Building Blocks of DBMS</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab(0)">🧱 Building Blocks</button>
+      <button class="tab" onclick="switchTab(1)">📊 Data → Database</button>
+      <button class="tab" onclick="switchTab(2)">🗃️ Tables & Relations</button>
+      <button class="tab" onclick="switchTab(3)">🏢 DBMS Architecture</button>
+      <button class="tab" onclick="switchTab(4)">💡 Key Concepts</button>
+    </div>
+
+    <!-- Tab 0: Building Blocks Overview -->
+    <div class="tab-content active" id="tab-0">
+      <div class="section">
+        <h2 class="section-title">
+          <span>🧱</span> The Four Building Blocks
+        </h2>
+        
+        <div class="definition">
+          <div class="definition-term">What is a Database Management System?</div>
+          <div class="definition-text">
+            A Database Management System (DBMS) consists of two main parts:
+            <strong>Database</strong> (organized collection of data) and 
+            <strong>Management System</strong> (software to manage that data).
+          </div>
+        </div>
+
+        <div class="building-blocks" id="buildingBlocks">
+          <div class="block-level">
+            <div class="block-header">
+              <div class="block-number">1</div>
+              <div class="block-title">Data (Basic Unit)</div>
+            </div>
+            <div class="block-content">
+              <div class="block-description">
+                Facts, figures, statistics with no particular meaning by themselves
+              </div>
+              <div class="data-items">
+                <div class="data-item meaningless">1</div>
+                <div class="data-item meaningless">ABC</div>
+                <div class="data-item meaningless">19</div>
+              </div>
+              <p style="color: var(--text-secondary); font-style: italic; margin-top: 10px;">
+                ❌ These individual pieces have no meaning alone
+              </p>
+            </div>
+          </div>
+
+          <div class="block-level">
+            <div class="block-header">
+              <div class="block-number">2</div>
+              <div class="block-title">Record (Meaningful Group)</div>
+            </div>
+            <div class="block-content">
+              <div class="block-description">
+                Collection of related data items that together represent meaningful information
+              </div>
+              <div class="table-container" style="max-width: 400px;">
+                <table class="db-table">
+                  <tr>
+                    <th>Roll</th>
+                    <th>Name</th>
+                    <th>Age</th>
+                  </tr>
+                  <tr>
+                    <td>1</td>
+                    <td>ABC</td>
+                    <td>19</td>
+                  </tr>
+                </table>
+              </div>
+              <p style="color: var(--accent-green); font-weight: 600; margin-top: 10px;">
+                ✓ Now it's meaningful: "Student with roll 1 is ABC, aged 19"
+              </p>
+            </div>
+          </div>
+
+          <div class="block-level">
+            <div class="block-header">
+              <div class="block-number">3</div>
+              <div class="block-title">Table/Relation (Multiple Records)</div>
+            </div>
+            <div class="block-content">
+              <div class="block-description">
+                Collection of related records with common structure
+              </div>
+              <div class="table-container">
+                <table class="db-table">
+                  <tr>
+                    <th>Roll</th>
+                    <th>Name</th>
+                    <th>Age</th>
+                  </tr>
+                  <tr>
+                    <td>1</td>
+                    <td>ABC</td>
+                    <td>19</td>
+                  </tr>
+                  <tr>
+                    <td>2</td>
+                    <td>DEF</td>
+                    <td>22</td>
+                  </tr>
+                  <tr>
+                    <td>3</td>
+                    <td>XYZ</td>
+                    <td>28</td>
+                  </tr>
+                </table>
+                <div class="table-label">Student Table</div>
+              </div>
+              <div class="annotation">
+                <div class="annotation-item">
+                  <div class="annotation-color" style="background: var(--accent-green);"></div>
+                  <span>Columns = Fields/Attributes/Domains</span>
+                </div>
+                <div class="annotation-item">
+                  <div class="annotation-color" style="background: var(--accent-blue);"></div>
+                  <span>Rows = Tuples/Records</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="block-level">
+            <div class="block-header">
+              <div class="block-number">4</div>
+              <div class="block-title">Database (Multiple Tables)</div>
+            </div>
+            <div class="block-content">
+              <div class="block-description">
+                Collection of related relations (tables) that together form a complete information system
+              </div>
+              <div class="database-grid">
+                <div class="mini-table">
+                  <div class="mini-table-title">T1: Student Info</div>
+                  <table class="db-table">
+                    <tr>
+                      <th>Roll</th>
+                      <th>Name</th>
+                      <th>Age</th>
+                    </tr>
+                    <tr><td>1</td><td>ABC</td><td>19</td></tr>
+                    <tr><td>2</td><td>DEF</td><td>22</td></tr>
+                    <tr><td>3</td><td>XYZ</td><td>28</td></tr>
+                  </table>
+                </div>
+
+                <div class="mini-table">
+                  <div class="mini-table-title">T2: Address</div>
+                  <table class="db-table">
+                    <tr>
+                      <th>Roll</th>
+                      <th>Address</th>
+                    </tr>
+                    <tr><td>1</td><td>KOL</td></tr>
+                    <tr><td>2</td><td>DEL</td></tr>
+                    <tr><td>3</td><td>MUM</td></tr>
+                  </table>
+                </div>
+
+                <div class="mini-table">
+                  <div class="mini-table-title">T3: Academic</div>
+                  <table class="db-table">
+                    <tr>
+                      <th>Roll</th>
+                      <th>Year</th>
+                    </tr>
+                    <tr><td>1</td><td>I</td></tr>
+                    <tr><td>2</td><td>II</td></tr>
+                    <tr><td>3</td><td>I</td></tr>
+                  </table>
+                </div>
+
+                <div class="mini-table">
+                  <div class="mini-table-title">T4: Hostel</div>
+                  <table class="db-table">
+                    <tr>
+                      <th>Year</th>
+                      <th>Hostel</th>
+                    </tr>
+                    <tr><td>I</td><td>H1</td></tr>
+                    <tr><td>II</td><td>H2</td></tr>
+                  </table>
+                </div>
+              </div>
+              
+              <div class="common-attr">
+                <div class="common-attr-title">🔗 Common Attributes Enable Relations</div>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">
+                  Tables are related through common attributes, allowing complex queries
+                </p>
+                <div class="common-attr-list">
+                  <div class="attr-badge">Roll (T1 ↔ T2 ↔ T3)</div>
+                  <div class="attr-badge">Year (T3 ↔ T4)</div>
+                </div>
+                <p style="color: var(--accent-green); margin-top: 15px; font-weight: 600;">
+                  Example Query: "Which hostel does the youngest student live in?"<br>
+                  Answer: Join T1→T3→T4 using Roll and Year
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button class="btn btn-primary" onclick="restartAnimation()">🔄 Replay Animation</button>
+          <button class="btn btn-secondary" onclick="switchTab(1)">Next: Interactive Builder →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 1: Interactive Data to Database Builder -->
+    <div class="tab-content" id="tab-1">
+      <div class="section">
+        <h2 class="section-title">
+          <span>🎯</span> Build from Data to Database
+        </h2>
+        
+        <div class="builder-stage">
+          <div class="stage-title" id="builderTitle">Stage 1: Individual Data Items</div>
+          <div class="build-area" id="buildArea">
+            <div class="message-box">
+              Click "Next Stage" to build from data to complete database
+            </div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button class="btn btn-secondary" id="prevStage" onclick="prevStage()" disabled>← Previous Stage</button>
+          <button class="btn btn-primary" id="nextStage" onclick="nextStage()">Next Stage →</button>
+          <button class="btn btn-secondary" onclick="resetBuilder()">🔄 Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Table Terminology -->
+    <div class="tab-content" id="tab-2">
+      <div class="section">
+        <h2 class="section-title">
+          <span>📊</span> Understanding Tables & Relations
+        </h2>
+
+        <div class="definition">
+          <div class="definition-term">Table Terminology</div>
+          <div class="definition-text">
+            In DBMS, data is strictly organized in row and column format with specific terminology
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="db-table">
+            <thead>
+              <tr>
+                <th style="background: var(--accent-purple);">Roll</th>
+                <th style="background: var(--accent-purple);">Name</th>
+                <th style="background: var(--accent-purple);">Age</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="background: rgba(59, 130, 246, 0.1);">
+                <td>1</td>
+                <td>ABC</td>
+                <td>19</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>DEF</td>
+                <td>22</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>XYZ</td>
+                <td>28</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 30px 0;">
+          <div class="key-point">
+            <div class="key-point-title">📋 Columns (Vertical)</div>
+            <div class="key-point-content">
+              Also called: <strong>Fields, Attributes, or Domains</strong><br>
+              All data in one column must be the same type<br>
+              Example: "Age" column contains only integers
+            </div>
+          </div>
+
+          <div class="key-point">
+            <div class="key-point-title">📝 Rows (Horizontal)</div>
+            <div class="key-point-content">
+              Also called: <strong>Tuples or Records</strong><br>
+              Data items in one row can be different types<br>
+              Example: One row has int, string, int (1, "ABC", 19)
+            </div>
+          </div>
+        </div>
+
+        <div class="definition" style="border-color: var(--accent-orange); background: rgba(245, 158, 11, 0.05);">
+          <div class="definition-term" style="color: var(--accent-orange);">💡 Key Insight</div>
+          <div class="definition-text">
+            <strong>Columns are homogeneous</strong> (same data type within a column)<br>
+            <strong>Rows are heterogeneous</strong> (different data types across columns)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: DBMS Architecture -->
+    <div class="tab-content" id="tab-3">
+      <div class="section">
+        <h2 class="section-title">
+          <span>🏢</span> DBMS Architecture & Access
+        </h2>
+
+        <div class="definition">
+          <div class="definition-term">Multi-User Access</div>
+          <div class="definition-text">
+            A database can be accessed by multiple users with different roles and permissions. 
+            Each user sees only the data they're authorized to access.
+          </div>
+        </div>
+
+        <div class="user-icons">
+          <div class="user-card">
+            <div class="user-icon">👨‍💼</div>
+            <div class="user-role">Manager</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">
+              Full access
+            </div>
+          </div>
+
+          <div class="user-card">
+            <div class="user-icon">👨‍💻</div>
+            <div class="user-role">Developer</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">
+              Read/Write
+            </div>
+          </div>
+
+          <div class="user-card">
+            <div class="user-icon">📊</div>
+            <div class="user-role">Analyst</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">
+              Read only
+            </div>
+          </div>
+
+          <div class="user-card">
+            <div class="user-icon">👥</div>
+            <div class="user-role">Customer</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">
+              Limited view
+            </div>
+          </div>
+        </div>
+
+        <div class="arrow-down">↓</div>
+
+        <div class="architecture">
+          <div class="layer">
+            <div class="layer-title">👥 User Layer</div>
+            <div class="layer-content">
+              Different employees and customers access the system with customized front-end applications. 
+              Each has different permission levels and sees different views of the same data.
+            </div>
+          </div>
+
+          <div class="arrow-down">↓</div>
+
+          <div class="layer">
+            <div class="layer-title">⚙️ DBMS Layer (Management System)</div>
+            <div class="layer-content">
+              Software that manages data access, security, integrity, and concurrent operations. 
+              Handles queries, transactions, and ensures data consistency.
+            </div>
+          </div>
+
+          <div class="arrow-down">↓</div>
+
+          <div class="layer">
+            <div class="layer-title">🗄️ Database Layer (Data Storage)</div>
+            <div class="layer-content">
+              Actual data stored in tables with strict row-column organization. 
+              Data persists on disk and can be retrieved efficiently.
+            </div>
+          </div>
+        </div>
+
+        <div class="key-point">
+          <div class="key-point-title">🔐 Customized Access</div>
+          <div class="key-point-content">
+            Each user category has their own customized front-end application with appropriate access levels. 
+            For example, HR can see salary data, while regular employees cannot.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 4: Key Concepts Summary -->
+    <div class="tab-content" id="tab-4">
+      <div class="section">
+        <h2 class="section-title">
+          <span>💡</span> Key Concepts Summary
+        </h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 25px 0;">
+          
+          <div class="definition" style="background: rgba(59, 130, 246, 0.05); border-color: var(--accent-blue);">
+            <div class="definition-term" style="color: var(--accent-blue);">Data vs Information</div>
+            <div class="definition-text">
+              <strong>Data:</strong> Raw facts without meaning<br>
+              <strong>Information:</strong> Organized data with meaning<br>
+              <div class="example-tag">1, ABC, 19</div> → Data<br>
+              <div class="example-tag">Roll=1, Name=ABC, Age=19</div> → Information
+            </div>
+          </div>
+
+          <div class="definition" style="background: rgba(16, 185, 129, 0.05); border-color: var(--accent-green);">
+            <div class="definition-term" style="color: var(--accent-green);">Hierarchy</div>
+            <div class="definition-text">
+              <strong>Data</strong> (smallest)<br>
+              ↓ <strong>Record</strong><br>
+              ↓ <strong>Table</strong><br>
+              ↓ <strong>Database</strong> (largest)
+            </div>
+          </div>
+
+          <div class="definition" style="background: rgba(139, 92, 246, 0.05); border-color: var(--accent-purple);">
+            <div class="definition-term" style="color: var(--accent-purple);">Table Components</div>
+            <div class="definition-text">
+              <strong>Columns:</strong> Fields/Attributes/Domains<br>
+              <strong>Rows:</strong> Tuples/Records<br>
+              <strong>Same column:</strong> Same data type<br>
+              <strong>Same row:</strong> Can have different types
+            </div>
+          </div>
+
+          <div class="definition" style="background: rgba(245, 158, 11, 0.05); border-color: var(--accent-orange);">
+            <div class="definition-term" style="color: var(--accent-orange);">Related Collection</div>
+            <div class="definition-text">
+              Tables are related through <strong>common attributes</strong><br>
+              Enables joining data from multiple tables<br>
+              Example: "Roll" appears in T1, T2, T3
+            </div>
+          </div>
+        </div>
+
+        <div class="section" style="margin-top: 30px; background: rgba(59, 130, 246, 0.05);">
+          <h3 style="font-size: 1.2rem; margin-bottom: 15px; color: var(--accent-blue);">🎯 Why This Matters</h3>
+          <ul style="margin-left: 25px; color: var(--text-secondary); line-height: 2;">
+            <li><strong>Organized Storage:</strong> Data is structured, not random files</li>
+            <li><strong>Relationships:</strong> Can connect related information across tables</li>
+            <li><strong>Efficiency:</strong> Quick retrieval through proper organization</li>
+            <li><strong>Multi-User:</strong> Different people can access simultaneously</li>
+            <li><strong>Security:</strong> Control who sees what data</li>
+            <li><strong>Integrity:</strong> Maintain data accuracy and consistency</li>
+          </ul>
+        </div>
+
+        <div class="key-point" style="background: rgba(236, 72, 153, 0.1); border-left-color: var(--accent-pink);">
+          <div class="key-point-title" style="color: var(--accent-pink);">📚 Remember for Exams</div>
+          <div class="key-point-content">
+            <strong>DBMS = Database + Management System</strong><br>
+            <strong>Database:</strong> Collection of related tables<br>
+            <strong>Table:</strong> Collection of records<br>
+            <strong>Record:</strong> Collection of fields<br>
+            <strong>Field:</strong> Single data item
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Tab Management
+    function switchTab(index) {
+      document.querySelectorAll('.tab').forEach((tab, i) => {
+        tab.classList.toggle('active', i === index);
+      });
+      document.querySelectorAll('.tab-content').forEach((content, i) => {
+        content.classList.toggle('active', i === index);
+      });
+    }
+
+    // Building Blocks Animation Restart
+    function restartAnimation() {
+      const blocks = document.querySelectorAll('.block-level');
+      blocks.forEach(block => {
+        block.style.animation = 'none';
+        void block.offsetWidth; // Force reflow
+        block.style.animation = '';
+      });
+    }
+
+    // Interactive Builder
+    let builderStage = 0;
+    const builderStages = [
+      {
+        title: "Stage 1: Individual Data Items",
+        content: `
+          <div class="message-box">These are just raw data with no meaning</div>
+          <div class="data-items">
+            <div class="data-item meaningless">1</div>
+            <div class="data-item meaningless">ABC</div>
+            <div class="data-item meaningless">19</div>
+            <div class="data-item meaningless">2</div>
+            <div class="data-item meaningless">DEF</div>
+            <div class="data-item meaningless">22</div>
+          </div>
+          <p style="color: var(--text-secondary); margin-top: 20px;">
+            ❌ No structure, no context, no meaning
+          </p>
+        `
+      },
+      {
+        title: "Stage 2: Organizing into a Record",
+        content: `
+          <div class="message-box">Let's organize related data items together</div>
+          <div class="table-container" style="max-width: 500px;">
+            <table class="db-table">
+              <tr>
+                <th>Roll</th>
+                <th>Name</th>
+                <th>Age</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>ABC</td>
+                <td>19</td>
+              </tr>
+            </table>
+          </div>
+          <p style="color: var(--accent-green); margin-top: 20px; font-weight: 600;">
+            ✓ Now it's meaningful: A student record!
+          </p>
+        `
+      },
+      {
+        title: "Stage 3: Building a Table (Multiple Records)",
+        content: `
+          <div class="message-box">Adding more records with the same structure</div>
+          <div class="table-container">
+            <table class="db-table">
+              <tr>
+                <th>Roll</th>
+                <th>Name</th>
+                <th>Age</th>
+              </tr>
+              <tr><td>1</td><td>ABC</td><td>19</td></tr>
+              <tr><td>2</td><td>DEF</td><td>22</td></tr>
+              <tr><td>3</td><td>XYZ</td><td>28</td></tr>
+            </table>
+            <div class="table-label">Student Table (Relation)</div>
+          </div>
+          <p style="color: var(--accent-green); margin-top: 20px; font-weight: 600;">
+            ✓ A complete table with multiple student records!
+          </p>
+        `
+      },
+      {
+        title: "Stage 4: Complete Database (Multiple Tables)",
+        content: `
+          <div class="message-box">Combining related tables to form a database</div>
+          <div class="database-grid">
+            <div class="mini-table">
+              <div class="mini-table-title">Students</div>
+              <table class="db-table">
+                <tr><th>Roll</th><th>Name</th><th>Age</th></tr>
+                <tr><td>1</td><td>ABC</td><td>19</td></tr>
+                <tr><td>2</td><td>DEF</td><td>22</td></tr>
+              </table>
+            </div>
+            <div class="mini-table">
+              <div class="mini-table-title">Address</div>
+              <table class="db-table">
+                <tr><th>Roll</th><th>City</th></tr>
+                <tr><td>1</td><td>KOL</td></tr>
+                <tr><td>2</td><td>DEL</td></tr>
+              </table>
+            </div>
+          </div>
+          <div class="common-attr">
+            <div class="common-attr-title">🔗 Related via "Roll" attribute</div>
+            <p style="color: var(--text-secondary);">
+              Can now answer: "What is ABC's address?" by joining tables
+            </p>
+          </div>
+          <p style="color: var(--accent-green); margin-top: 20px; font-weight: 600; text-align: center; font-size: 1.1rem;">
+            ✓ Complete Database System!
+          </p>
+        `
+      }
+    ];
+
+    function nextStage() {
+      if (builderStage < builderStages.length - 1) {
+        builderStage++;
+        updateBuilder();
+      }
+    }
+
+    function prevStage() {
+      if (builderStage > 0) {
+        builderStage--;
+        updateBuilder();
+      }
+    }
+
+    function resetBuilder() {
+      builderStage = 0;
+      updateBuilder();
+    }
+
+    function updateBuilder() {
+      const stage = builderStages[builderStage];
+      document.getElementById('builderTitle').textContent = stage.title;
+      document.getElementById('buildArea').innerHTML = stage.content;
+      
+      document.getElementById('prevStage').disabled = builderStage === 0;
+      document.getElementById('nextStage').disabled = builderStage === builderStages.length - 1;
+      
+      if (builderStage === builderStages.length - 1) {
+        document.getElementById('nextStage').textContent = '✓ Completed';
+      } else {
+        document.getElementById('nextStage').textContent = 'Next Stage →';
+      }
+    }
+
+    // Initialize
+    window.addEventListener('load', () => {
+      updateBuilder();
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      const activeTab = document.querySelector('.tab.active');
+      const tabIndex = Array.from(document.querySelectorAll('.tab')).indexOf(activeTab);
+      
+      if (tabIndex === 1) {
+        if (e.key === 'ArrowRight') nextStage();
+        else if (e.key === 'ArrowLeft') prevStage();
+      }
+    });
+  </script>
+</body>
+</html>

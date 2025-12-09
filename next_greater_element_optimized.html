@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⛰️ Next Greater Element - Story Learning</title>
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Mountain Climbing Theme Colors */
+      --bg-dark: #0f0f23;
+      --bg-story: #1a1a2e;
+      --bg-card: #16213e;
+      --accent-primary: #ff6b35;      /* Mountain peak orange */
+      --accent-secondary: #4ecdc4;    /* Sky blue */
+      --accent-tertiary: #a8dadc;     /* Ice blue */
+      --accent-success: #2ec4b6;      /* Success teal */
+      --text-light: #f0e6d2;
+      --text-secondary: #a89984;
+      --text-muted: #5a6480;
+      --border: rgba(255, 255, 255, 0.08);
+      --shadow-glow: rgba(255, 107, 53, 0.3);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Merriweather', serif;
+      background: var(--bg-dark);
+      color: var(--text-light);
+      line-height: 1.6;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-size: 14px;
+    }
+
+    .story-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Tab Navigation */
+    .tab-nav {
+      background: var(--bg-story);
+      border-bottom: 2px solid var(--accent-primary);
+      padding: 12px 25px;
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+      overflow-x: auto;
+    }
+
+    .tab-button {
+      padding: 10px 20px;
+      border: 2px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      border-radius: 8px 8px 0 0;
+      cursor: pointer;
+      font-family: 'Merriweather', serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+      position: relative;
+    }
+
+    .tab-button:hover {
+      border-color: var(--accent-primary);
+      color: var(--text-light);
+    }
+
+    .tab-button.active {
+      background: linear-gradient(135deg, var(--accent-primary), #ff8c42);
+      color: var(--bg-dark);
+      border-color: var(--accent-primary);
+      box-shadow: 0 -4px 20px var(--shadow-glow);
+    }
+
+    .tab-button .tab-number {
+      display: inline-block;
+      width: 22px;
+      height: 22px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 50%;
+      text-align: center;
+      line-height: 22px;
+      margin-right: 6px;
+      font-size: 0.8rem;
+    }
+
+    .tab-button.active .tab-number {
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    /* Tab Content */
+    .tab-content-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 25px;
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.4s ease-out;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Scene - Tab Content */
+    .scene {
+      background: var(--bg-story);
+      border-radius: 16px;
+      padding: 25px 30px;
+      border: 1px solid rgba(255, 107, 53, 0.2);
+      position: relative;
+    }
+
+    .scene-title {
+      font-size: 1.5rem;
+      color: var(--accent-primary);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .scene-icon {
+      font-size: 1.8rem;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .scene-content {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--text-light);
+    }
+
+    .scene-content p {
+      margin-bottom: 15px;
+    }
+
+    .scene-content ul {
+      margin-bottom: 15px;
+    }
+
+    .scene-content ul li {
+      margin-bottom: 8px;
+    }
+
+    .highlight {
+      color: var(--accent-primary);
+      font-weight: 700;
+    }
+
+    .clue {
+      color: var(--accent-secondary);
+      font-weight: 700;
+      text-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
+    }
+
+    .suspect {
+      color: var(--accent-tertiary);
+      font-weight: 700;
+    }
+
+    /* Side by Side Layout */
+    .side-by-side-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      height: calc(100vh - 220px);
+    }
+
+    .side-panel {
+      background: var(--bg-story);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid rgba(255, 107, 53, 0.2);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .side-panel-title {
+      font-size: 1.3rem;
+      color: var(--accent-primary);
+      margin-bottom: 15px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* Visualization Area */
+    .visualization-container {
+      margin: 15px 0;
+    }
+
+    .data-structure-display {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+      position: relative;
+    }
+
+    /* Mountain peaks */
+    .data-item {
+      width: 75px;
+      background: linear-gradient(135deg, var(--bg-card), #1a1a2e);
+      border: 2px solid rgba(168, 218, 220, 0.3);
+      border-radius: 12px 12px 0 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      font-size: 1.5rem;
+      font-weight: 700;
+      position: relative;
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      padding-bottom: 10px;
+    }
+
+    .data-item .badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 24px;
+      height: 24px;
+      background: var(--bg-card);
+      border: 2px solid var(--accent-tertiary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      color: var(--accent-tertiary);
+      font-weight: 700;
+    }
+
+    .data-item .result {
+      position: absolute;
+      bottom: -30px;
+      font-size: 0.9rem;
+      color: var(--accent-success);
+      font-weight: 700;
+      background: rgba(46, 196, 182, 0.1);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--accent-success);
+    }
+
+    .data-item.current {
+      border-color: var(--accent-secondary);
+      box-shadow: 0 0 40px rgba(78, 205, 196, 0.6);
+      transform: translateY(-15px) scale(1.05);
+      animation: climbing 1s ease-in-out infinite;
+    }
+
+    @keyframes climbing {
+      0%, 100% { box-shadow: 0 0 40px rgba(78, 205, 196, 0.6); }
+      50% { box-shadow: 0 0 60px rgba(78, 205, 196, 0.9); }
+    }
+
+    .data-item.found {
+      border-color: var(--accent-success);
+      background: linear-gradient(135deg, rgba(46, 196, 182, 0.2), var(--bg-card));
+      box-shadow: 0 0 50px rgba(46, 196, 182, 0.8);
+      animation: summit 0.8s ease-in-out;
+    }
+
+    @keyframes summit {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1) translateY(-10px); }
+    }
+
+    .data-item.in-stack {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 30px rgba(255, 107, 53, 0.5);
+    }
+
+    /* Narration Box */
+    .narration {
+      background: linear-gradient(135deg, rgba(78, 205, 196, 0.05), rgba(255, 107, 53, 0.05));
+      border-left: 4px solid var(--accent-secondary);
+      padding: 15px 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-style: italic;
+      line-height: 1.5;
+      text-align: center;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .narration.thinking {
+      animation: thinking 2s ease-in-out infinite;
+    }
+
+    @keyframes thinking {
+      0%, 100% { border-left-color: var(--accent-secondary); }
+      50% { border-left-color: var(--accent-primary); }
+    }
+
+    /* Stack visualization */
+    .evidence-board {
+      background: var(--bg-card);
+      border: 2px dashed var(--accent-primary);
+      border-radius: 12px;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .evidence-title {
+      font-size: 1.1rem;
+      color: var(--accent-primary);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+    }
+
+    .stack-display {
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 8px;
+      align-items: center;
+      min-height: 150px;
+      justify-content: flex-start;
+      padding: 15px;
+    }
+
+    .stack-item {
+      background: linear-gradient(135deg, rgba(255, 107, 53, 0.2), transparent);
+      border: 2px solid var(--accent-primary);
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-family: 'Fira Code', monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent-primary);
+      opacity: 0;
+      animation: stackPush 0.4s ease-out forwards;
+      min-width: 80px;
+      text-align: center;
+    }
+
+    @keyframes stackPush {
+      from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin: 25px 0 15px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 10px 25px;
+      border: none;
+      border-radius: 50px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Merriweather', serif;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    .btn:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-primary), #ff8c42);
+      color: white;
+      box-shadow: 0 4px 15px var(--shadow-glow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px var(--shadow-glow);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-light);
+      border: 2px solid var(--accent-secondary);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(78, 205, 196, 0.1);
+      border-color: var(--accent-secondary);
+      box-shadow: 0 0 20px rgba(78, 205, 196, 0.3);
+    }
+
+    .btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn span {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Code Display */
+    .code-reveal {
+      background: var(--bg-dark);
+      border: 2px solid var(--accent-primary);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 15px 0;
+      font-family: 'Fira Code', monospace;
+    }
+
+    .code-line {
+      padding: 8px 15px;
+      margin: 5px 0;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      transition: all 0.4s ease;
+      position: relative;
+      opacity: 0.4;
+    }
+
+    .code-line.revealed {
+      opacity: 1;
+      background: rgba(255, 107, 53, 0.05);
+      border-left: 3px solid var(--accent-primary);
+      transform: translateX(8px);
+      animation: codeReveal 0.6s ease-out;
+    }
+
+    @keyframes codeReveal {
+      from {
+        opacity: 0;
+        transform: translateX(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(8px);
+      }
+    }
+
+    .code-story-map {
+      background: rgba(78, 205, 196, 0.05);
+      border: 1px solid rgba(78, 205, 196, 0.3);
+      border-radius: 6px;
+      padding: 10px 15px;
+      margin-top: 8px;
+      font-family: 'Merriweather', serif;
+      font-size: 0.85rem;
+      font-style: italic;
+      color: var(--accent-secondary);
+      line-height: 1.4;
+    }
+
+    /* Syntax highlighting */
+    .keyword { color: #ff79c6; }
+    .function { color: #50fa7b; }
+    .variable { color: var(--accent-secondary); }
+    .number { color: #bd93f9; }
+    .comment { color: var(--text-muted); font-style: italic; }
+
+    /* Story Progress */
+    .story-progress {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--bg-story);
+      border: 2px solid var(--accent-primary);
+      border-radius: 12px;
+      padding: 10px 18px;
+      font-size: 0.9rem;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+    }
+
+    .progress-label {
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 3px;
+    }
+
+    .progress-text {
+      color: var(--accent-primary);
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    /* Tooltip */
+    .tooltip {
+      position: relative;
+      cursor: help;
+      border-bottom: 2px dotted var(--accent-secondary);
+    }
+
+    .tooltip::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-dark);
+      color: var(--accent-secondary);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      border: 1px solid var(--accent-secondary);
+      z-index: 100;
+      margin-bottom: 5px;
+    }
+
+    .tooltip:hover::after {
+      opacity: 1;
+    }
+
+    /* Character/Climber Icon */
+    .character {
+      text-align: center;
+      margin: 12px 0;
+    }
+
+    .character-icon {
+      font-size: 2.5rem;
+      margin-bottom: 8px;
+      animation: characterFloat 2s ease-in-out infinite;
+    }
+
+    @keyframes characterFloat {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-8px) scale(1.02); }
+    }
+
+    .character-label {
+      font-size: 0.85rem;
+      color: var(--accent-primary);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .side-by-side-container {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+
+      .side-panel {
+        max-height: 600px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .tab-nav {
+        padding: 15px 20px;
+      }
+
+      .tab-button {
+        padding: 12px 20px;
+        font-size: 0.9rem;
+      }
+
+      .tab-content-container {
+        padding: 20px;
+      }
+
+      .scene {
+        padding: 25px;
+      }
+
+      .data-structure-display {
+        gap: 10px;
+      }
+
+      .data-item {
+        width: 70px;
+        font-size: 1.5rem;
+      }
+
+      .story-progress {
+        bottom: 15px;
+        right: 15px;
+        padding: 10px 15px;
+      }
+
+      .side-panel {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="story-container">
+    <!-- Tab Navigation -->
+    <div class="tab-nav">
+      <button class="tab-button active" onclick="switchTab(0)">
+        <span class="tab-number">1</span>
+        <span>The Mountain</span>
+      </button>
+      <button class="tab-button" onclick="switchTab(1)">
+        <span class="tab-number">2</span>
+        <span>The Strategy</span>
+      </button>
+      <button class="tab-button" onclick="switchTab(2)">
+        <span class="tab-number">3</span>
+        <span>The Climb</span>
+      </button>
+      <button class="tab-button" onclick="switchTab(3)">
+        <span class="tab-number">4</span>
+        <span>The Summit</span>
+      </button>
+      <button class="tab-button" onclick="switchTab(4)">
+        <span class="tab-number">5</span>
+        <span>Lessons</span>
+      </button>
+    </div>
+
+    <!-- Tab Content Container -->
+    <div class="tab-content-container">
+      
+      <!-- TAB 1: PROBLEM INTRODUCTION -->
+      <div class="tab-content active" id="tab-0">
+        <div class="scene">
+          <h2 class="scene-title">
+            <span class="scene-icon">⛰️</span>
+            Act 1: The Mountain Range Challenge
+          </h2>
+          <div class="scene-content">
+            <p style="font-size: 2rem; text-align: center; margin-bottom: 30px; color: var(--accent-primary);">
+              🧗 The Next Greater Peak
+            </p>
+            <p style="text-align: center; font-style: italic; color: var(--text-secondary); margin-bottom: 50px;">
+              "Every climber seeks the next greater summit..."
+            </p>
+            
+            <p>
+              You are a <span class="highlight">mountain climber</span> standing on a peak. Looking to your right, 
+              you see a range of mountains stretching into the distance: <span class="suspect">[4, 5, 2, 10, 8]</span>.
+            </p>
+            <p>
+              Your mission is simple yet crucial: for each peak where you stand, identify the 
+              <span class="clue">next taller peak to your right</span>. If no taller peak exists, mark it as 
+              <span class="highlight">-1</span> (meaning you're at or past the tallest visible peak).
+            </p>
+            <p>
+              But here's the challenge — you can only look to the <span class="tooltip" data-tooltip="We process from left to right, one peak at a time">RIGHT</span>, 
+              never back. Once you pass a peak, it's behind you forever.
+            </p>
+            
+            <div class="evidence-board">
+              <div class="evidence-title">📋 Example</div>
+              <div class="scene-content">
+                <p><strong>Input:</strong> heights = [4, 5, 2, 10, 8]</p>
+                <p><strong>Output:</strong> [5, 10, 10, -1, -1]</p>
+                <p><strong>Explanation:</strong></p>
+                <ul style="margin-left: 30px; line-height: 2;">
+                  <li>Peak 4 → next greater is 5</li>
+                  <li>Peak 5 → next greater is 10</li>
+                  <li>Peak 2 → next greater is 10</li>
+                  <li>Peak 10 → no greater peak (-1)</li>
+                  <li>Peak 8 → no greater peak (-1)</li>
+                </ul>
+              </div>
+            </div>
+
+            <p>
+              The <span class="highlight">key question</span>: How can we efficiently find the next greater peak 
+              without comparing each peak to every other peak ahead of it?
+            </p>
+
+            <div style="margin-top: 60px; text-align: center;">
+              <button class="btn btn-primary" onclick="switchTab(1)">
+                <span>Next: The Strategy →</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: STRATEGY/APPROACH -->
+      <div class="tab-content" id="tab-1">
+        <div class="scene">
+          <h2 class="scene-title">
+            <span class="scene-icon">🎒</span>
+            Act 2: The Climber's Strategy
+          </h2>
+          <div class="scene-content">
+            <p>
+              The clever climber realizes something profound: you don't need to remember 
+              <span class="highlight">every peak</span> you've passed — only the ones that might be 
+              <span class="clue">"next greater"</span> for future peaks!
+            </p>
+            <p>
+              Imagine carrying a <span class="highlight">backpack (stack)</span>. As you climb, you keep track of 
+              peaks you've passed that are still <span class="clue">"waiting"</span> to find their next greater peak.
+            </p>
+            
+            <div class="evidence-board">
+              <div class="evidence-title">
+                🎒 The Backpack Strategy
+              </div>
+              <div class="scene-content">
+                <p><span class="highlight">Step 1:</span> Start at the rightmost peak (work backwards from right to left)</p>
+                <p><span class="highlight">Step 2:</span> For each peak, check your backpack (stack) from the top</p>
+                <p><span class="highlight">Step 3:</span> Remove all peaks from backpack that are <span class="clue">shorter or equal</span> to current peak 
+                (they can't be "next greater" for anyone)</p>
+                <p><span class="highlight">Step 4:</span> The peak now on top of backpack is the <span class="suspect">next greater</span> (or -1 if backpack empty)</p>
+                <p><span class="highlight">Step 5:</span> Add current peak to backpack for future peaks to reference</p>
+              </div>
+            </div>
+
+            <p>
+              This approach is <span class="highlight">brilliant</span> because:
+            </p>
+            <ul style="margin-left: 30px; line-height: 2; margin-bottom: 20px;">
+              <li>We maintain peaks in <span class="tooltip" data-tooltip="Stack naturally keeps decreasing heights">decreasing order</span> in our backpack</li>
+              <li>Each peak is added and removed <span class="tooltip" data-tooltip="Every element pushed and popped at most once">at most once</span></li>
+              <li>We find answers in <span class="tooltip" data-tooltip="Linear time - O(n)">one efficient pass</span></li>
+            </ul>
+
+            <p>
+              Instead of checking every future peak (which takes 
+              <span class="tooltip" data-tooltip="n² means checking all pairs - very slow!">O(n²) time</span>), 
+              we use our smart backpack to do it in 
+              <span class="tooltip" data-tooltip="Linear time - the best possible!">O(n) time</span>!
+            </p>
+
+            <div style="margin-top: 60px; text-align: center; display: flex; gap: 20px; justify-content: center;">
+              <button class="btn btn-secondary" onclick="switchTab(0)">
+                <span>← Previous</span>
+              </button>
+              <button class="btn btn-primary" onclick="switchTab(2)">
+                <span>Watch the Climb →</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: INTERACTIVE VISUALIZATION + CODE -->
+      <div class="tab-content" id="tab-2">
+        <div class="side-by-side-container">
+          
+          <!-- LEFT PANEL: VISUALIZATION -->
+          <div class="side-panel">
+            <h3 class="side-panel-title">
+              <span>⛰️</span> Live Mountain Climb
+            </h3>
+
+            <div class="character">
+              <div class="character-icon">🧗</div>
+              <div class="character-label">The Climber</div>
+            </div>
+
+            <div class="data-structure-display" id="dataDisplay">
+              <!-- Mountain peaks will be inserted here -->
+            </div>
+
+            <div class="narration thinking" id="narration">
+              Click "Next Step" to start climbing...
+            </div>
+
+            <div class="evidence-board">
+              <div class="evidence-title">
+                🎒 Climber's Backpack (Stack)
+              </div>
+              <div class="stack-display" id="stackDisplay">
+                <div style="text-align: center; color: var(--text-muted); font-style: italic; padding: 20px;">
+                  Empty backpack...
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT PANEL: CODE -->
+          <div class="side-panel">
+            <h3 class="side-panel-title">
+              <span>💻</span> The Code in Action
+            </h3>
+
+            <div class="code-reveal" style="background: transparent; border: none; padding: 0;">
+              
+              <div class="code-line" data-step="0">
+                <span class="keyword">def</span> <span class="function">nextGreaterElements</span>(heights):
+              </div>
+              <div class="code-story-map" id="codeStory0" style="display: none;">
+                📖 Our climbing function takes the mountain heights
+              </div>
+
+              <div class="code-line" data-step="1">
+                &nbsp;&nbsp;&nbsp;&nbsp;n = <span class="function">len</span>(heights)
+              </div>
+              <div class="code-story-map" id="codeStory1" style="display: none;">
+                📖 Count how many peaks we have
+              </div>
+
+              <div class="code-line" data-step="2">
+                &nbsp;&nbsp;&nbsp;&nbsp;result = [<span class="number">-1</span>] * n
+              </div>
+              <div class="code-story-map" id="codeStory2" style="display: none;">
+                📖 Initialize answer array with -1 (assume no greater peaks)
+              </div>
+
+              <div class="code-line" data-step="3">
+                &nbsp;&nbsp;&nbsp;&nbsp;stack = []  <span class="comment"># Our backpack</span>
+              </div>
+              <div class="code-story-map" id="codeStory3" style="display: none;">
+                📖 Empty backpack (stack) ready to carry peak indices
+              </div>
+
+              <div class="code-line" data-step="4">
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">for</span> i <span class="keyword">in</span> <span class="function">range</span>(n <span class="number">- 1</span>, <span class="number">-1</span>, <span class="number">-1</span>):
+              </div>
+              <div class="code-story-map" id="codeStory4" style="display: none;">
+                📖 Walk backwards from right to left (rightmost peak first)
+              </div>
+
+              <div class="code-line" data-step="5">
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">while</span> stack <span class="keyword">and</span> heights[stack[<span class="number">-1</span>]] &lt;= heights[i]:
+              </div>
+              <div class="code-story-map" id="codeStory5" style="display: none;">
+                📖 Remove peaks from backpack that are shorter/equal (can't be next greater)
+              </div>
+
+              <div class="code-line" data-step="6">
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;stack.<span class="function">pop</span>()
+              </div>
+              <div class="code-story-map" id="codeStory6" style="display: none;">
+                📖 Throw out the shorter peak from backpack
+              </div>
+
+              <div class="code-line" data-step="7">
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> stack:
+              </div>
+              <div class="code-story-map" id="codeStory7" style="display: none;">
+                📖 If backpack still has peaks...
+              </div>
+
+              <div class="code-line" data-step="8">
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;result[i] = heights[stack[<span class="number">-1</span>]]
+              </div>
+              <div class="code-story-map" id="codeStory8" style="display: none;">
+                📖 The top peak in backpack is our next greater!
+              </div>
+
+              <div class="code-line" data-step="9">
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;stack.<span class="function">append</span>(i)
+              </div>
+              <div class="code-story-map" id="codeStory9" style="display: none;">
+                📖 Add current peak to backpack for future references
+              </div>
+
+              <div class="code-line" data-step="10">
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> result
+              </div>
+              <div class="code-story-map" id="codeStory10" style="display: none;">
+                📖 Return the complete answer array!
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls" style="margin-top: 20px;">
+          <button class="btn btn-secondary" id="prevBtn" onclick="previousStep()">
+            <span>← Previous Step</span>
+          </button>
+          <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">
+            <span>Next Step →</span>
+          </button>
+          <button class="btn btn-secondary" onclick="resetVisualization()">
+            <span>🔄 Restart</span>
+          </button>
+        </div>
+
+        <div style="margin-top: 30px; text-align: center;">
+          <button class="btn btn-primary" onclick="switchTab(3)">
+            <span>Summit Reached! →</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 4: SOLUTION SUMMARY -->
+      <div class="tab-content" id="tab-3">
+        <div class="scene">
+          <h2 class="scene-title">
+            <span class="scene-icon">🏔️</span>
+            Act 4: Reaching the Summit
+          </h2>
+          <div class="scene-content">
+            <p>
+              The climber has successfully mapped every peak to its <span class="clue">next greater peak</span>! 
+              By using the smart backpack strategy, we found all answers efficiently.
+            </p>
+            <p>
+              The <span class="highlight">key insight</span>: maintaining a stack of peaks in decreasing order 
+              lets us quickly find the next greater element without redundant comparisons.
+            </p>
+            <p>
+              <span class="suspect">Time Complexity:</span> 
+              <span class="tooltip" data-tooltip="Each element pushed and popped at most once">O(n)</span> — 
+              we process each peak exactly once<br>
+              <span class="suspect">Space Complexity:</span> 
+              <span class="tooltip" data-tooltip="Stack can hold up to n elements">O(n)</span> — 
+              for the result array and stack
+            </p>
+
+            <div class="evidence-board" style="margin-top: 40px;">
+              <div class="evidence-title">🎯 Complete Example</div>
+              <div class="scene-content">
+                <p><strong>Input:</strong> [4, 5, 2, 10, 8]</p>
+                <p><strong>Output:</strong> [5, 10, 10, -1, -1]</p>
+                <p style="margin-top: 20px;"><strong>Why it works:</strong></p>
+                <ul style="margin-left: 30px; line-height: 2;">
+                  <li>Working backwards ensures we know all future peaks</li>
+                  <li>Stack keeps only "candidates" for next greater (in decreasing order)</li>
+                  <li>Smaller peaks get eliminated as they can never be "next greater"</li>
+                  <li>Each peak added and removed from stack at most once = O(n) time!</li>
+                </ul>
+              </div>
+            </div>
+
+            <p style="margin-top: 40px; font-size: 1.4rem; text-align: center; color: var(--accent-success);">
+              🎉 All peaks mapped successfully! Every climber knows their next greater summit! 🎉
+            </p>
+            <div style="margin-top: 60px; text-align: center; display: flex; gap: 20px; justify-content: center;">
+              <button class="btn btn-secondary" onclick="switchTab(2)">
+                <span>← Back to Climb</span>
+              </button>
+              <button class="btn btn-primary" onclick="switchTab(4)">
+                <span>Learn the Lessons →</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 5: LESSONS LEARNED -->
+      <div class="tab-content" id="tab-4">
+        <div class="scene">
+          <h2 class="scene-title">
+            <span class="scene-icon">📚</span>
+            Epilogue: Lessons from the Mountain
+          </h2>
+          <div class="scene-content">
+            <p>
+              The climber's journey teaches us profound algorithmic wisdom:
+            </p>
+            <div class="evidence-board">
+              <div class="evidence-title">
+                🧠 The Lesson
+              </div>
+              <div class="scene-content">
+                <p><span class="highlight">🎯 The Problem:</span> Find the next greater element to the right for each array element</p>
+                <p><span class="highlight">💡 The Insight:</span> Work backwards and maintain only decreasing candidates in a stack</p>
+                <p><span class="highlight">🗺️ The Tool:</span> Monotonic Stack (keeps elements in decreasing order)</p>
+                <p><span class="highlight">⚡ The Result:</span> O(n) time instead of O(n²) — each element processed once!</p>
+                <p><span class="highlight">📚 The Technique:</span> "Monotonic Stack Pattern" — powerful for next/previous greater/smaller problems</p>
+              </div>
+            </div>
+
+            <div class="evidence-board" style="margin-top: 40px;">
+              <div class="evidence-title">🔧 When to Use This Pattern</div>
+              <div class="scene-content">
+                <p>Use monotonic stack whenever you need to find:</p>
+                <ul style="margin-left: 30px; line-height: 2;">
+                  <li><strong>Next Greater Element</strong> (this problem!)</li>
+                  <li><strong>Next Smaller Element</strong> (same idea, flip comparison)</li>
+                  <li><strong>Previous Greater/Smaller</strong> (work left to right instead)</li>
+                  <li><strong>Largest Rectangle in Histogram</strong></li>
+                  <li><strong>Trapping Rain Water</strong></li>
+                  <li><strong>Stock Span Problem</strong></li>
+                </ul>
+              </div>
+            </div>
+
+            <p style="margin-top: 40px; text-align: center; font-size: 1.4rem;">
+              Every time you see "next greater" or "previous smaller," think of the 
+              <span class="clue">climber with the backpack</span> — 
+              keeping only what matters in a <span class="highlight">monotonic stack</span>! ⛰️
+            </p>
+            <div style="margin-top: 60px; text-align: center;">
+              <button class="btn btn-primary" onclick="switchTab(0)">
+                <span>🔄 Climb Again</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Story Progress Indicator -->
+  <div class="story-progress">
+    <div class="progress-label">Climb Progress</div>
+    <div class="progress-text" id="progressText">0 / 10</div>
+  </div>
+
+  <script>
+    // TAB MANAGEMENT
+    let currentTab = 0;
+
+    function switchTab(tabIndex) {
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+
+      document.getElementById(`tab-${tabIndex}`).classList.add('active');
+      document.querySelectorAll('.tab-button')[tabIndex].classList.add('active');
+      
+      currentTab = tabIndex;
+      document.querySelector('.tab-content-container').scrollTop = 0;
+    }
+
+    // VISUALIZATION STATE
+    const heights = [4, 5, 2, 10, 8];
+    const n = heights.length;
+    let visualizationStep = 0;
+    let stack = [];
+    let result = new Array(n).fill(-1);
+    let currentIndex = n - 1;
+
+    // VISUALIZATION STEPS
+    const visualizationSteps = [
+      {
+        narration: "🧗 Starting from the rightmost peak (index 4, height 8). Backpack is empty.",
+        currentIndex: 4,
+        action: 'init',
+        codeLines: [0, 1, 2, 3, 4],
+        stack: [],
+        result: [-1, -1, -1, -1, -1]
+      },
+      {
+        narration: "📦 Backpack is empty, so no greater peak exists. Result[4] = -1. Adding height 8 (index 4) to backpack.",
+        currentIndex: 4,
+        action: 'process',
+        codeLines: [5, 6, 7, 9],
+        stack: [4],
+        result: [-1, -1, -1, -1, -1]
+      },
+      {
+        narration: "🧗 Moving to index 3 (height 10). Checking backpack...",
+        currentIndex: 3,
+        action: 'examine',
+        codeLines: [4, 5],
+        stack: [4],
+        result: [-1, -1, -1, -1, -1]
+      },
+      {
+        narration: "🗑️ Height 8 in backpack ≤ current height 10. Removing 8 from backpack (can't be next greater for anyone).",
+        currentIndex: 3,
+        action: 'pop',
+        codeLines: [5, 6],
+        stack: [],
+        result: [-1, -1, -1, -1, -1]
+      },
+      {
+        narration: "📦 Backpack now empty. Result[3] = -1. Adding height 10 (index 3) to backpack.",
+        currentIndex: 3,
+        action: 'process',
+        codeLines: [7, 9],
+        stack: [3],
+        result: [-1, -1, -1, -1, -1]
+      },
+      {
+        narration: "🧗 Moving to index 2 (height 2). Checking backpack...",
+        currentIndex: 2,
+        action: 'examine',
+        codeLines: [4, 5],
+        stack: [3],
+        result: [-1, -1, -1, -1, -1]
+      },
+      {
+        narration: "✅ Height 10 in backpack > current 2. Found next greater! Result[2] = 10. Adding 2 to backpack.",
+        currentIndex: 2,
+        action: 'found',
+        codeLines: [7, 8, 9],
+        stack: [3, 2],
+        result: [-1, -1, 10, -1, -1]
+      },
+      {
+        narration: "🧗 Moving to index 1 (height 5). Checking backpack...",
+        currentIndex: 1,
+        action: 'examine',
+        codeLines: [4, 5],
+        stack: [3, 2],
+        result: [-1, -1, 10, -1, -1]
+      },
+      {
+        narration: "🗑️ Height 2 in backpack ≤ current 5. Removing 2. Now checking height 10 > 5. Found! Result[1] = 10.",
+        currentIndex: 1,
+        action: 'found',
+        codeLines: [5, 6, 7, 8, 9],
+        stack: [3, 1],
+        result: [-1, 10, 10, -1, -1]
+      },
+      {
+        narration: "🧗 Moving to index 0 (height 4). Checking backpack...",
+        currentIndex: 0,
+        action: 'examine',
+        codeLines: [4, 5],
+        stack: [3, 1],
+        result: [-1, 10, 10, -1, -1]
+      },
+      {
+        narration: "✅ Height 5 in backpack > current 4. Found! Result[0] = 5. 🎉 All peaks mapped!",
+        currentIndex: 0,
+        action: 'complete',
+        codeLines: [7, 8, 9, 10],
+        stack: [3, 1, 0],
+        result: [5, 10, 10, -1, -1]
+      }
+    ];
+
+    // INITIALIZE VISUALIZATION
+    function initializeVisualization() {
+      const display = document.getElementById('dataDisplay');
+      display.innerHTML = '';
+      
+      heights.forEach((height, idx) => {
+        const peak = document.createElement('div');
+        peak.className = 'data-item';
+        peak.id = `peak-${idx}`;
+        peak.style.height = `${60 + height * 10}px`;
+        peak.innerHTML = `
+          <div class="badge">${idx}</div>
+          <div style="margin-top: auto; padding-bottom: 8px;">${height}</div>
+        `;
+        display.appendChild(peak);
+      });
+    }
+
+    // UPDATE VISUALIZATION
+    function updateVisualization() {
+      const step = visualizationSteps[visualizationStep];
+      
+      // Update narration
+      document.getElementById('narration').innerHTML = step.narration;
+      
+      // Reset all peaks
+      document.querySelectorAll('.data-item').forEach(peak => {
+        peak.className = 'data-item';
+        // Remove result display
+        const resultDiv = peak.querySelector('.result');
+        if (resultDiv) resultDiv.remove();
+      });
+      
+      // Highlight current peak
+      if (step.currentIndex >= 0) {
+        const currentPeak = document.getElementById(`peak-${step.currentIndex}`);
+        if (currentPeak) {
+          if (step.action === 'found' || step.action === 'complete') {
+            currentPeak.classList.add('found');
+          } else {
+            currentPeak.classList.add('current');
+          }
+        }
+      }
+
+      // Show results found so far
+      step.result.forEach((res, idx) => {
+        if (res !== -1 && idx <= step.currentIndex) {
+          const peak = document.getElementById(`peak-${idx}`);
+          if (peak && !peak.querySelector('.result')) {
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'result';
+            resultDiv.textContent = res;
+            peak.appendChild(resultDiv);
+          }
+        }
+      });
+
+      // Highlight peaks in stack
+      step.stack.forEach(idx => {
+        const peak = document.getElementById(`peak-${idx}`);
+        if (peak && idx !== step.currentIndex) {
+          peak.classList.add('in-stack');
+        }
+      });
+      
+      // Update stack display
+      updateStackDisplay(step.stack);
+      
+      // Update code highlighting
+      updateCodeHighlight(step.codeLines);
+      
+      // Update progress
+      document.getElementById('progressText').textContent = 
+        `${visualizationStep} / ${visualizationSteps.length - 1}`;
+      
+      // Update buttons
+      document.getElementById('prevBtn').disabled = visualizationStep === 0;
+      document.getElementById('nextBtn').disabled = visualizationStep === visualizationSteps.length - 1;
+    }
+
+    // UPDATE STACK DISPLAY
+    function updateStackDisplay(stackIndices) {
+      const display = document.getElementById('stackDisplay');
+      display.innerHTML = '';
+      
+      if (stackIndices.length === 0) {
+        display.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-style: italic; padding: 20px;">Empty backpack...</div>';
+      } else {
+        stackIndices.forEach((idx, i) => {
+          const item = document.createElement('div');
+          item.className = 'stack-item';
+          item.style.animationDelay = `${i * 0.1}s`;
+          item.textContent = `${heights[idx]} [${idx}]`;
+          display.appendChild(item);
+        });
+      }
+    }
+
+    // UPDATE CODE HIGHLIGHTING
+    function updateCodeHighlight(activeLines = []) {
+      document.querySelectorAll('.code-line').forEach((line, idx) => {
+        line.classList.remove('revealed');
+        const storyMap = document.getElementById(`codeStory${idx}`);
+        if (storyMap) {
+          storyMap.style.display = 'none';
+        }
+      });
+
+      activeLines.forEach(lineIdx => {
+        const codeLine = document.querySelector(`[data-step="${lineIdx}"]`);
+        const storyMap = document.getElementById(`codeStory${lineIdx}`);
+        
+        if (codeLine) {
+          codeLine.classList.add('revealed');
+        }
+        if (storyMap) {
+          storyMap.style.display = 'block';
+        }
+      });
+    }
+
+    // NAVIGATION FUNCTIONS
+    function nextStep() {
+      if (visualizationStep < visualizationSteps.length - 1) {
+        visualizationStep++;
+        updateVisualization();
+      }
+    }
+
+    function previousStep() {
+      if (visualizationStep > 0) {
+        visualizationStep--;
+        updateVisualization();
+      }
+    }
+
+    function resetVisualization() {
+      visualizationStep = 0;
+      updateVisualization();
+    }
+
+    // INITIALIZE ON LOAD
+    window.addEventListener('load', () => {
+      initializeVisualization();
+      updateVisualization();
+    });
+
+    // KEYBOARD SHORTCUTS
+    document.addEventListener('keydown', (e) => {
+      if (currentTab === 2) {
+        if (e.key === 'ArrowRight') {
+          nextStep();
+        } else if (e.key === 'ArrowLeft') {
+          previousStep();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
