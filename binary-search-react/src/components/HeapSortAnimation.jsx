@@ -10,6 +10,7 @@ export default function HeapSortAnimation(){
   const [comparing, setComparing] = useState([]);
   const [sorted, setSorted] = useState([]);
   const [speed, setSpeed] = useState(1000);
+  const [viewMode, setViewMode] = useState('boxes');
   const runningRef = useRef(false);
   const pausedRef = useRef(false);
   const logsEndRef = useRef(null);
@@ -112,7 +113,7 @@ export default function HeapSortAnimation(){
       <h2 className="section-title">Heap Sort Animation</h2>
       
       <div style={{ marginBottom: 16 }}>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12, flexWrap:'wrap' }}>
           <input 
             type="text" 
             value={inputValue} 
@@ -123,9 +124,14 @@ export default function HeapSortAnimation(){
           />
           <button className="btn-blue" onClick={applyInput}>Set Array</button>
           <button className="btn-green" onClick={resetArray}>Reset</button>
+          <div style={{display:'flex',gap:4,marginLeft:'auto'}}>
+            <button className={viewMode==='boxes'?'btn-blue':'btn-green'} onClick={()=>setViewMode('boxes')} style={{padding:'6px 12px'}}>📦 Boxes</button>
+            <button className={viewMode==='bars'?'btn-blue':'btn-green'} onClick={()=>setViewMode('bars')} style={{padding:'6px 12px'}}>📊 Bars</button>
+          </div>
         </div>
       </div>
 
+      {viewMode==='boxes'?(
       <div style={{display:'flex',gap:8,justifyContent:'center',margin:'20px 0',flexWrap:'wrap'}}>
         {arr.map((v,i)=>{
           let bgColor = 'var(--bg-card)';
@@ -160,6 +166,37 @@ export default function HeapSortAnimation(){
           </div>
         )})}
       </div>
+      ):(
+        <div style={{display:'flex',gap:4,alignItems:'flex-end',justifyContent:'center',margin:'20px 0',height:300}}>
+          {arr.map((v,i)=>{
+            const maxVal=Math.max(...arr);
+            const heightPercent=(v/maxVal)*100;
+            let barGradient='linear-gradient(180deg,var(--accent-green) 0%,#059669 100%)';
+            let barBorder='2px solid var(--accent-green)';
+            let barShadow='none';
+            if(sorted.includes(i)){
+              barGradient='linear-gradient(180deg,#10b981 0%,#059669 100%)';
+              barBorder='2px solid #34d399';
+              barShadow='0 0 20px rgba(16,185,129,0.5)';
+            }else if(comparing.includes(i)){
+              barGradient='linear-gradient(180deg,#f59e0b 0%,#d97706 100%)';
+              barBorder='2px solid #fbbf24';
+              barShadow='0 0 20px rgba(245,158,11,0.5)';
+            }
+            return (
+              <div key={i} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
+                <div style={{fontSize:11,color:'var(--text-secondary)',fontFamily:'Fira Code'}}>{v}</div>
+                <div style={{
+                  width:50,height:`${heightPercent*2}px`,background:barGradient,
+                  borderRadius:'4px 4px 0 0',transition:'all 0.3s ease',
+                  border:barBorder,boxShadow:barShadow
+                }}></div>
+                <div style={{fontSize:10,color:'var(--text-secondary)',fontFamily:'Fira Code'}}>[{i}]</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <div style={{display:'flex',gap:12,alignItems:'center',justifyContent:'center',marginTop:16,flexWrap:'wrap'}}>
         <button className="btn-blue" onClick={start}>{running && !paused ? '⏸' : '▶'} {running && !paused ? 'Pause' : 'Play'}</button>

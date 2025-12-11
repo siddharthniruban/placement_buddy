@@ -11,6 +11,7 @@ export default function QuickSortSimulator2(){
   const [pivot, setPivot] = useState(-1);
   const [comparing, setComparing] = useState([]);
   const [speed, setSpeed] = useState(1);
+  const [viewMode, setViewMode] = useState('boxes');
   const runningRef = useRef(false);
   const pausedRef = useRef(false);
 
@@ -134,8 +135,14 @@ export default function QuickSortSimulator2(){
           />
           <span style={{fontSize:14,color:'var(--text-primary)',minWidth:30}}>{speed}x</span>
         </div>
+        <div style={{display:'flex',gap:8,alignItems:'center',marginLeft:'auto'}}>
+          <span style={{fontSize:14,color:'var(--text-secondary)'}}>View:</span>
+          <button onClick={()=>setViewMode('boxes')} className={viewMode==='boxes'?'btn-blue':'btn-gray'} style={{padding:'6px 12px',fontSize:13}}>Boxes</button>
+          <button onClick={()=>setViewMode('bars')} className={viewMode==='bars'?'btn-blue':'btn-gray'} style={{padding:'6px 12px',fontSize:13}}>Bars</button>
+        </div>
       </div>
 
+      {viewMode === 'boxes' && (
       <div style={{display:'flex',gap:8,justifyContent:'center',flexWrap:'wrap',marginBottom:16}}>
         {arr.map((v,i)=>{
           let bgColor = 'var(--bg-card)';
@@ -170,6 +177,34 @@ export default function QuickSortSimulator2(){
           </div>
         )})}
       </div>
+      )}
+
+      {viewMode === 'bars' && (
+      <div style={{display:'flex',gap:4,alignItems:'flex-end',justifyContent:'center',marginBottom:16,height:250,padding:'20px 10px',background:'var(--bg-card)',borderRadius:8,border:'1px solid var(--border)'}}>
+        {arr.map((v,i)=> {
+          const maxVal = Math.max(...arr);
+          const height = (v / maxVal) * 200;
+          let barColor = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+          if (pivot === i) barColor = 'var(--accent-orange)';
+          else if (comparing.includes(i)) barColor = '#3b82f6';
+          return (
+            <div key={i} style={{display:'flex',flexDirection:'column',alignItems:'center',flex:1,maxWidth:60}}>
+              <div style={{fontSize:11,color:'var(--text-secondary)',marginBottom:4}}>{v}</div>
+              <div style={{
+                width:'100%',
+                height:height,
+                background: barColor,
+                borderRadius:4,
+                transition:'all 0.35s ease',
+                opacity: (pivot === i || comparing.includes(i)) ? 1 : 0.7,
+                transform: (pivot === i || comparing.includes(i)) ? 'scale(1.05)' : 'scale(1)'
+              }}></div>
+              <div style={{fontSize:10,color:'var(--text-secondary)',marginTop:4}}>[{i}]</div>
+            </div>
+          );
+        })}
+      </div>
+      )}
 
       <div className="log-box">{logs.map((l,i)=>(<div key={i}>{l}</div>))}</div>
     </div>
