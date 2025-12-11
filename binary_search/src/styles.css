@@ -1,0 +1,60 @@
+body {
+  background: #0a0e27;
+  color: #f1f5f9;
+  font-family: Inter, sans-serif;
+}
+.container {
+  max-width: 1000px;
+  margin: auto;
+  padding: 20px;
+}
+.header {
+  padding: 30px;
+  background: #1e293b;
+  border-radius: 12px;
+  text-align: center;
+}
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0;
+}
+.tab {
+  padding: 10px 20px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-weight: 600;
+}
+.tab.active {
+  color: #3b82f6;
+  border-bottom: 2px solid #3b82f6;
+}
+.section {
+  background: #1a1f3a;
+  padding: 20px;
+  border-radius: 12px;
+}
+.btn-blue {
+  background: #3b82f6;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.btn-green {
+  background: #10b981;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.log-box {
+  margin-top: 15px;
+  background: rgba(255,255,255,0.05);
+  padding: 15px;
+  border-radius: 8px;
+}

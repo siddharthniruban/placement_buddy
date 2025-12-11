@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Binary Search Algorithm</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0a0e27;
+      --bg-card: #1a1f3a;
+      --accent-blue: #3b82f6;
+      --accent-green: #10b981;
+      --accent-orange: #f59e0b;
+      --accent-purple: #8b5cf6;
+      --accent-red: #ef4444;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --border: rgba(255, 255, 255, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      padding: 40px 30px;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border-radius: 16px;
+      margin-bottom: 40px;
+      border: 1px solid var(--border);
+    }
+
+    .day-badge {
+      display: inline-block;
+      background: var(--accent-blue);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .header h1 {
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+      color: var(--text-primary);
+      font-weight: 800;
+    }
+
+    .header .subtitle {
+      font-size: 1rem;
+      color: var(--text-secondary);
+    }
+
+    /* Tab Navigation */
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      border-bottom: 2px solid var(--border);
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .tab {
+      padding: 12px 24px;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+      white-space: nowrap;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .tab:hover {
+      color: var(--text-primary);
+    }
+
+    .tab.active {
+      color: var(--accent-blue);
+      border-bottom-color: var(--accent-blue);
+    }
+
+    /* Tab Content */
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Section */
+    .section {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 25px;
+      border: 1px solid var(--border);
+    }
+
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--accent-blue);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-subtitle {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      margin-bottom: 15px;
+      font-weight: 500;
+    }
+
+    /* Code Block */
+    .code-block {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      margin: 15px 0;
+      overflow-x: auto;
+    }
+
+    .code-block pre {
+      margin: 0;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: #e6edf3;
+    }
+
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 15px;
+      background: rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid var(--border);
+      border-radius: 8px 8px 0 0;
+      margin: -20px -20px 15px -20px;
+    }
+
+    .code-language {
+      font-size: 0.8rem;
+      color: var(--accent-blue);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    /* List Styles */
+    .styled-list {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .styled-list li {
+      padding: 12px 0;
+      padding-left: 30px;
+      position: relative;
+      color: var(--text-secondary);
+    }
+
+    .styled-list li:before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: var(--accent-blue);
+      font-weight: bold;
+    }
+
+    /* Complexity Box */
+    .complexity-box {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin: 20px 0;
+    }
+
+    .complexity-item {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid var(--accent-blue);
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .complexity-label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .complexity-value {
+      font-size: 1.3rem;
+      color: var(--accent-blue);
+      font-weight: 700;
+      font-family: 'Fira Code', monospace;
+    }
+
+    /* Example Box */
+    .example-box {
+      background: rgba(16, 185, 129, 0.1);
+      border-left: 4px solid var(--accent-green);
+      padding: 20px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+
+    .example-title {
+      color: var(--accent-green);
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .example-content {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+    }
+
+    /* Note Box */
+    .note-box {
+      background: rgba(139, 92, 246, 0.1);
+      border-left: 4px solid var(--accent-purple);
+      padding: 20px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+
+    .note-title {
+      color: var(--accent-purple);
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    /* Algorithm Steps */
+    .algo-steps {
+      counter-reset: step-counter;
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .algo-steps li {
+      counter-increment: step-counter;
+      padding: 15px;
+      margin: 10px 0;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      border-left: 3px solid var(--accent-orange);
+      position: relative;
+      padding-left: 50px;
+    }
+
+    .algo-steps li:before {
+      content: counter(step-counter);
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--accent-orange);
+      color: white;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.85rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 1.8rem;
+      }
+
+      .section {
+        padding: 20px;
+      }
+
+      .complexity-box {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="day-badge">Searching Algorithm</div>
+      <h1>Binary Search Algorithm</h1>
+      <p class="subtitle">Efficient searching technique for sorted arrays</p>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="tabs">
+      <button class="tab active" onclick="openTab(event, 'problem')">Problem</button>
+      <button class="tab" onclick="openTab(event, 'approach')">Approach</button>
+      <button class="tab" onclick="openTab(event, 'iterative')">Iterative Solution</button>
+      <button class="tab" onclick="openTab(event, 'recursive')">Recursive Solution</button>
+      <button class="tab" onclick="openTab(event, 'complexity')">Complexity</button>
+    </div>
+
+    <!-- Problem Tab -->
+    <div id="problem" class="tab-content active">
+      <div class="section">
+        <h2 class="section-title">📋 Problem Statement</h2>
+        <p style="margin-bottom: 20px;">
+          Given a sorted array of n integers and a target value, write a function to search for the target in the array. 
+          If the target exists, return its index. Otherwise, return -1.
+        </p>
+        <p>
+          Binary search is a highly efficient searching algorithm that works on sorted arrays by repeatedly dividing 
+          the search interval in half. It compares the target value to the middle element of the array and eliminates 
+          half of the search space in each iteration.
+        </p>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">📝 Examples</h2>
+        
+        <div class="example-box">
+          <div class="example-title">Example 1:</div>
+          <div class="example-content">
+            <strong>Input:</strong> arr = [1, 3, 5, 7, 9, 11, 13, 15], target = 7<br>
+            <strong>Output:</strong> 3<br>
+            <strong>Explanation:</strong> The element 7 is found at index 3
+          </div>
+        </div>
+
+        <div class="example-box">
+          <div class="example-title">Example 2:</div>
+          <div class="example-content">
+            <strong>Input:</strong> arr = [2, 4, 6, 8, 10, 12], target = 5<br>
+            <strong>Output:</strong> -1<br>
+            <strong>Explanation:</strong> The element 5 is not present in the array
+          </div>
+        </div>
+
+        <div class="example-box">
+          <div class="example-title">Example 3:</div>
+          <div class="example-content">
+            <strong>Input:</strong> arr = [1, 2, 3, 4, 5], target = 1<br>
+            <strong>Output:</strong> 0<br>
+            <strong>Explanation:</strong> The element 1 is found at index 0 (first position)
+          </div>
+        </div>
+
+        <div class="example-box">
+          <div class="example-title">Example 4:</div>
+          <div class="example-content">
+            <strong>Input:</strong> arr = [10, 20, 30, 40, 50], target = 50<br>
+            <strong>Output:</strong> 4<br>
+            <strong>Explanation:</strong> The element 50 is found at index 4 (last position)
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">⚙️ Constraints</h2>
+        <ul class="styled-list">
+          <li>1 ≤ n ≤ 10<sup>6</sup></li>
+          <li>Array elements are sorted in ascending order</li>
+          <li>Array elements are distinct (no duplicates)</li>
+          <li>-10<sup>9</sup> ≤ arr[i], target ≤ 10<sup>9</sup></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Approach Tab -->
+    <div id="approach" class="tab-content">
+      <div class="section">
+        <h2 class="section-title">💡 Algorithm Approach</h2>
+        <p style="margin-bottom: 20px;">
+          Binary Search uses a <strong>divide-and-conquer</strong> strategy. The key insight is that in a sorted array, 
+          we can eliminate half of the remaining elements in each comparison by checking the middle element.
+        </p>
+
+        <h3 class="section-subtitle">Core Concept:</h3>
+        <ol class="algo-steps">
+          <li>Start with two pointers: <code>left</code> at index 0 and <code>right</code> at the last index</li>
+          <li>Calculate the middle index: <code>mid = left + (right - left) / 2</code></li>
+          <li>Compare the middle element with the target:
+            <ul style="margin-top: 10px; margin-left: 20px;">
+              <li>If <code>arr[mid] == target</code>, we found it! Return <code>mid</code></li>
+              <li>If <code>arr[mid] < target</code>, search the right half (set <code>left = mid + 1</code>)</li>
+              <li>If <code>arr[mid] > target</code>, search the left half (set <code>right = mid - 1</code>)</li>
+            </ul>
+          </li>
+          <li>Repeat until the target is found or <code>left > right</code></li>
+          <li>If not found, return -1</li>
+        </ol>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">🎯 Interactive Animation</h2>
+        <p style="margin-bottom: 20px;">Watch how binary search finds the target value step by step:</p>
+        
+        <div style="background: rgba(255, 255, 255, 0.03); padding: 25px; border-radius: 12px; margin: 20px 0;">
+          <!-- Array Input -->
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-weight: 600;">
+              Target to Search:
+            </label>
+            <input type="number" id="searchTarget" value="11" 
+                   style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); 
+                          padding: 10px 15px; border-radius: 6px; font-size: 1rem; width: 150px; margin-right: 15px;">
+            <button onclick="startAnimation()" 
+                    style="background: var(--accent-blue); color: white; border: none; padding: 10px 24px; 
+                           border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.95rem; 
+                           font-family: 'Inter', sans-serif; transition: all 0.3s;">
+              Start Search
+            </button>
+            <button onclick="resetAnimation()" 
+                    style="background: var(--accent-red); color: white; border: none; padding: 10px 24px; 
+                           border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.95rem; 
+                           font-family: 'Inter', sans-serif; margin-left: 10px; transition: all 0.3s;">
+              Reset
+            </button>
+          </div>
+
+          <!-- Array Visualization -->
+          <div id="arrayContainer" style="display: flex; gap: 8px; justify-content: center; margin: 30px 0; flex-wrap: wrap;">
+            <!-- Array elements will be inserted here -->
+          </div>
+
+          <!-- Status Display -->
+          <div id="statusDisplay" style="background: rgba(59, 130, 246, 0.1); border-left: 4px solid var(--accent-blue); 
+                                          padding: 15px 20px; border-radius: 6px; margin-top: 25px; min-height: 60px;">
+            <div style="color: var(--accent-blue); font-weight: 600; margin-bottom: 5px;">Status:</div>
+            <div id="statusText" style="color: var(--text-secondary); font-family: 'Fira Code', monospace; font-size: 0.9rem;">
+              Click "Start Search" to begin the animation
+            </div>
+          </div>
+
+          <!-- Step Counter -->
+          <div style="text-align: center; margin-top: 20px; color: var(--text-secondary); font-size: 0.9rem;">
+            <span style="font-weight: 600;">Step:</span> <span id="stepCounter">0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="note-box">
+          <div class="note-title">⚠️ Important Note</div>
+          <p>Use <code>mid = left + (right - left) / 2</code> instead of <code>mid = (left + right) / 2</code> to avoid integer overflow when dealing with large values.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Iterative Solution Tab -->
+    <div id="iterative" class="tab-content">
+      <div class="section">
+        <h2 class="section-title">🔄 Iterative Implementation</h2>
+        <p style="margin-bottom: 20px;">
+          The iterative approach uses a while loop to repeatedly narrow down the search range.
+        </p>
+
+        <h3 class="section-subtitle">C++ Implementation:</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-language">C++</span>
+          </div>
+          <pre>int binarySearch(vector&lt;int&gt;& arr, int target) {
+    int left = 0;
+    int right = arr.size() - 1;
+    
+    while (left &lt;= right) {
+        int mid = left + (right - left) / 2;
+        
+        // Target found
+        if (arr[mid] == target) {
+            return mid;
+        }
+        
+        // Target is in right half
+        if (arr[mid] &lt; target) {
+            left = mid + 1;
+        }
+        // Target is in left half
+        else {
+            right = mid - 1;
+        }
+    }
+    
+    // Target not found
+    return -1;
+}</pre>
+        </div>
+
+        <h3 class="section-subtitle">Java Implementation with Live Execution:</h3>
+        
+        <div style="background: rgba(255, 255, 255, 0.03); padding: 25px; border-radius: 12px; margin: 20px 0;">
+          <!-- Control Panel -->
+          <div style="margin-bottom: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+            <div>
+              <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-weight: 600; font-size: 0.9rem;">
+                Target Value:
+              </label>
+              <input type="number" id="javaSearchTarget" value="11" 
+                     style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); 
+                            padding: 10px 15px; border-radius: 6px; font-size: 1rem; width: 120px;">
+            </div>
+            <div style="margin-top: 20px;">
+              <button onclick="startJavaAnimation()" 
+                      style="background: var(--accent-blue); color: white; border: none; padding: 10px 24px; 
+                             border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.95rem; 
+                             font-family: 'Inter', sans-serif; transition: all 0.3s; margin-right: 10px;">
+                ▶ Execute Code
+              </button>
+              <button onclick="resetJavaAnimation()" 
+                      style="background: var(--accent-red); color: white; border: none; padding: 10px 24px; 
+                             border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.95rem; 
+                             font-family: 'Inter', sans-serif; transition: all 0.3s;">
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <!-- Code with line highlighting -->
+          <div class="code-block" style="position: relative;">
+            <div class="code-header">
+              <span class="code-language">Java</span>
+              <span style="font-size: 0.75rem; color: var(--accent-green);">● Live Execution</span>
+            </div>
+            <pre id="javaCode" style="line-height: 1.8;"><span id="java-line-1">public static int binarySearch(int[] arr, int target) {</span>
+<span id="java-line-2">    int left = 0;</span>
+<span id="java-line-3">    int right = arr.length - 1;</span>
+<span id="java-line-4">    </span>
+<span id="java-line-5">    while (left &lt;= right) {</span>
+<span id="java-line-6">        int mid = left + (right - left) / 2;</span>
+<span id="java-line-7">        </span>
+<span id="java-line-8">        if (arr[mid] == target) {</span>
+<span id="java-line-9">            return mid;</span>
+<span id="java-line-10">        }</span>
+<span id="java-line-11">        </span>
+<span id="java-line-12">        if (arr[mid] &lt; target) {</span>
+<span id="java-line-13">            left = mid + 1;</span>
+<span id="java-line-14">        } else {</span>
+<span id="java-line-15">            right = mid - 1;</span>
+<span id="java-line-16">        }</span>
+<span id="java-line-17">    }</span>
+<span id="java-line-18">    </span>
+<span id="java-line-19">    return -1;</span>
+<span id="java-line-20">}</span></pre>
+          </div>
+
+          <!-- Variables Display -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px;">
+            <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid var(--accent-blue); border-radius: 8px; padding: 15px;">
+              <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px;">LEFT</div>
+              <div id="javaVarLeft" style="font-size: 1.5rem; color: var(--accent-blue); font-weight: 700; font-family: 'Fira Code', monospace;">-</div>
+            </div>
+            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-red); border-radius: 8px; padding: 15px;">
+              <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px;">RIGHT</div>
+              <div id="javaVarRight" style="font-size: 1.5rem; color: var(--accent-red); font-weight: 700; font-family: 'Fira Code', monospace;">-</div>
+            </div>
+            <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid var(--accent-orange); border-radius: 8px; padding: 15px;">
+              <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px;">MID</div>
+              <div id="javaVarMid" style="font-size: 1.5rem; color: var(--accent-orange); font-weight: 700; font-family: 'Fira Code', monospace;">-</div>
+            </div>
+            <div style="background: rgba(139, 92, 246, 0.1); border: 1px solid var(--accent-purple); border-radius: 8px; padding: 15px;">
+              <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px;">TARGET</div>
+              <div id="javaVarTarget" style="font-size: 1.5rem; color: var(--accent-purple); font-weight: 700; font-family: 'Fira Code', monospace;">-</div>
+            </div>
+          </div>
+
+          <!-- Array Visualization for Java -->
+          <div id="javaArrayContainer" style="display: flex; gap: 8px; justify-content: center; margin: 25px 0; flex-wrap: wrap;">
+            <!-- Array elements will be inserted here -->
+          </div>
+
+          <!-- Execution Log -->
+          <div id="javaExecutionLog" style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--accent-green); 
+                                              padding: 15px 20px; border-radius: 6px; margin-top: 20px; min-height: 60px; max-height: 150px; overflow-y: auto;">
+            <div style="color: var(--accent-green); font-weight: 600; margin-bottom: 5px;">Execution Log:</div>
+            <div id="javaLogText" style="color: var(--text-secondary); font-family: 'Fira Code', monospace; font-size: 0.85rem;">
+              Click "Execute Code" to start
+            </div>
+          </div>
+        </div>
+
+        <h3 class="section-subtitle">Python Implementation:</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-language">Python</span>
+          </div>
+          <pre>def binary_search(arr, target):
+    left = 0
+    right = len(arr) - 1
+    
+    while left &lt;= right:
+        mid = left + (right - left) // 2
+        
+        if arr[mid] == target:
+            return mid
+        
+        if arr[mid] &lt; target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    
+    return -1</pre>
+        </div>
+
+        <h3 class="section-subtitle">JavaScript Implementation:</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-language">JavaScript</span>
+          </div>
+          <pre>function binarySearch(arr, target) {
+    let left = 0;
+    let right = arr.length - 1;
+    
+    while (left &lt;= right) {
+        const mid = left + Math.floor((right - left) / 2);
+        
+        if (arr[mid] === target) {
+            return mid;
+        }
+        
+        if (arr[mid] &lt; target) {
+            left = mid + 1;
+        } else {
+            right = mid - 1;
+        }
+    }
+    
+    return -1;
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recursive Solution Tab -->
+    <div id="recursive" class="tab-content">
+      <div class="section">
+        <h2 class="section-title">🔁 Recursive Implementation</h2>
+        <p style="margin-bottom: 20px;">
+          The recursive approach breaks down the problem into smaller subproblems by searching in either the left or right half.
+        </p>
+
+        <h3 class="section-subtitle">C++ Implementation:</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-language">C++</span>
+          </div>
+          <pre>int binarySearchRecursive(vector&lt;int&gt;& arr, int target, int left, int right) {
+    // Base case: search space is exhausted
+    if (left &gt; right) {
+        return -1;
+    }
+    
+    int mid = left + (right - left) / 2;
+    
+    // Target found
+    if (arr[mid] == target) {
+        return mid;
+    }
+    
+    // Search right half
+    if (arr[mid] &lt; target) {
+        return binarySearchRecursive(arr, target, mid + 1, right);
+    }
+    
+    // Search left half
+    return binarySearchRecursive(arr, target, left, mid - 1);
+}
+
+// Wrapper function
+int binarySearch(vector&lt;int&gt;& arr, int target) {
+    return binarySearchRecursive(arr, target, 0, arr.size() - 1);
+}</pre>
+        </div>
+
+        <h3 class="section-subtitle">Java Implementation:</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-language">Java</span>
+          </div>
+          <pre>public static int binarySearchRecursive(int[] arr, int target, int left, int right) {
+    if (left &gt; right) {
+        return -1;
+    }
+    
+    int mid = left + (right - left) / 2;
+    
+    if (arr[mid] == target) {
+        return mid;
+    }
+    
+    if (arr[mid] &lt; target) {
+        return binarySearchRecursive(arr, target, mid + 1, right);
+    }
+    
+    return binarySearchRecursive(arr, target, left, mid - 1);
+}
+
+public static int binarySearch(int[] arr, int target) {
+    return binarySearchRecursive(arr, target, 0, arr.length - 1);
+}</pre>
+        </div>
+
+        <h3 class="section-subtitle">Python Implementation:</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-language">Python</span>
+          </div>
+          <pre>def binary_search_recursive(arr, target, left, right):
+    if left &gt; right:
+        return -1
+    
+    mid = left + (right - left) // 2
+    
+    if arr[mid] == target:
+        return mid
+    
+    if arr[mid] &lt; target:
+        return binary_search_recursive(arr, target, mid + 1, right)
+    
+    return binary_search_recursive(arr, target, left, mid - 1)
+
+def binary_search(arr, target):
+    return binary_search_recursive(arr, target, 0, len(arr) - 1)</pre>
+        </div>
+
+        <h3 class="section-subtitle">JavaScript Implementation:</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-language">JavaScript</span>
+          </div>
+          <pre>function binarySearchRecursive(arr, target, left, right) {
+    if (left &gt; right) {
+        return -1;
+    }
+    
+    const mid = left + Math.floor((right - left) / 2);
+    
+    if (arr[mid] === target) {
+        return mid;
+    }
+    
+    if (arr[mid] &lt; target) {
+        return binarySearchRecursive(arr, target, mid + 1, right);
+    }
+    
+    return binarySearchRecursive(arr, target, left, mid - 1);
+}
+
+function binarySearch(arr, target) {
+    return binarySearchRecursive(arr, target, 0, arr.length - 1);
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Complexity Tab -->
+    <div id="complexity" class="tab-content">
+      <div class="section">
+        <h2 class="section-title">⏱️ Time & Space Complexity</h2>
+        
+        <h3 class="section-subtitle">Iterative Approach:</h3>
+        <div class="complexity-box">
+          <div class="complexity-item">
+            <div class="complexity-label">Time Complexity</div>
+            <div class="complexity-value">O(log n)</div>
+          </div>
+          <div class="complexity-item">
+            <div class="complexity-label">Space Complexity</div>
+            <div class="complexity-value">O(1)</div>
+          </div>
+        </div>
+
+        <h3 class="section-subtitle">Recursive Approach:</h3>
+        <div class="complexity-box">
+          <div class="complexity-item">
+            <div class="complexity-label">Time Complexity</div>
+            <div class="complexity-value">O(log n)</div>
+          </div>
+          <div class="complexity-item">
+            <div class="complexity-label">Space Complexity</div>
+            <div class="complexity-value">O(log n)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">📊 Complexity Analysis</h2>
+        
+        <h3 class="section-subtitle">Time Complexity: O(log n)</h3>
+        <p style="margin-bottom: 15px;">
+          Binary search halves the search space in each iteration. If we start with n elements:
+        </p>
+        <ul class="styled-list">
+          <li>After 1st comparison: n/2 elements remain</li>
+          <li>After 2nd comparison: n/4 elements remain</li>
+          <li>After 3rd comparison: n/8 elements remain</li>
+          <li>After k comparisons: n/2<sup>k</sup> elements remain</li>
+        </ul>
+        <p style="margin-top: 15px;">
+          The algorithm stops when we have 1 element left: n/2<sup>k</sup> = 1, which gives us k = log₂(n).
+          Therefore, the time complexity is <strong>O(log n)</strong>.
+        </p>
+
+        <h3 class="section-subtitle" style="margin-top: 30px;">Space Complexity:</h3>
+        <p style="margin-bottom: 15px;"><strong>Iterative:</strong> O(1)</p>
+        <ul class="styled-list">
+          <li>Uses only a constant amount of extra space for variables (left, right, mid)</li>
+          <li>No additional data structures or recursive call stack</li>
+        </ul>
+
+        <p style="margin: 15px 0;"><strong>Recursive:</strong> O(log n)</p>
+        <ul class="styled-list">
+          <li>Each recursive call adds a frame to the call stack</li>
+          <li>Maximum depth of recursion is log n (same as time complexity)</li>
+          <li>Therefore, space complexity is O(log n) due to the call stack</li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">🆚 Comparison with Linear Search</h2>
+        
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+            <thead>
+              <tr style="background: rgba(59, 130, 246, 0.1); border-bottom: 2px solid var(--accent-blue);">
+                <th style="padding: 12px; text-align: left; color: var(--accent-blue);">Aspect</th>
+                <th style="padding: 12px; text-align: left; color: var(--accent-blue);">Binary Search</th>
+                <th style="padding: 12px; text-align: left; color: var(--accent-blue);">Linear Search</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 12px;">Time Complexity</td>
+                <td style="padding: 12px; color: var(--accent-green);">O(log n)</td>
+                <td style="padding: 12px;">O(n)</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 12px;">Space Complexity</td>
+                <td style="padding: 12px;">O(1) iterative</td>
+                <td style="padding: 12px;">O(1)</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 12px;">Pre-requisite</td>
+                <td style="padding: 12px;">Array must be sorted</td>
+                <td style="padding: 12px; color: var(--accent-green);">No requirement</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 12px;">Best for</td>
+                <td style="padding: 12px; color: var(--accent-green);">Large sorted datasets</td>
+                <td style="padding: 12px;">Small or unsorted arrays</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px;">Example (n=1M)</td>
+                <td style="padding: 12px; color: var(--accent-green);">~20 comparisons</td>
+                <td style="padding: 12px;">~500,000 comparisons (avg)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="note-box">
+          <div class="note-title">💡 Key Takeaway</div>
+          <p>
+            Binary Search is <strong>exponentially faster</strong> than Linear Search for large datasets. 
+            For an array of 1 million elements, binary search needs at most 20 comparisons, while linear 
+            search would need up to 1 million comparisons in the worst case!
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function openTab(evt, tabName) {
+      const tabContents = document.getElementsByClassName("tab-content");
+      for (let i = 0; i < tabContents.length; i++) {
+        tabContents[i].classList.remove("active");
+      }
+
+      const tabs = document.getElementsByClassName("tab");
+      for (let i = 0; i < tabs.length; i++) {
+        tabs[i].classList.remove("active");
+      }
+
+      document.getElementById(tabName).classList.add("active");
+      evt.currentTarget.classList.add("active");
+    }
+
+    // Binary Search Animation
+    const array = [1, 3, 5, 7, 9, 11, 13, 15];
+    let animationInProgress = false;
+    let currentStep = 0;
+
+    function createArrayElement(value, index, label = '') {
+      const cell = document.createElement('div');
+      cell.id = `cell-${index}`;
+      cell.style.cssText = `
+        width: 60px;
+        height: 60px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-card);
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        font-family: 'Fira Code', monospace;
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: var(--text-primary);
+        position: relative;
+        transition: all 0.5s ease;
+      `;
+      
+      cell.innerHTML = `
+        <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 2px;">${index}</div>
+        <div>${value}</div>
+        ${label ? `<div style="position: absolute; bottom: -25px; font-size: 0.75rem; color: var(--accent-orange); font-weight: 700;">${label}</div>` : ''}
+      `;
+      
+      return cell;
+    }
+
+    function initializeArray() {
+      const container = document.getElementById('arrayContainer');
+      container.innerHTML = '';
+      array.forEach((value, index) => {
+        container.appendChild(createArrayElement(value, index));
+      });
+    }
+
+    function updateCell(index, state) {
+      const cell = document.getElementById(`cell-${index}`);
+      if (!cell) return;
+
+      switch(state) {
+        case 'left':
+          cell.style.borderColor = 'var(--accent-green)';
+          cell.style.background = 'rgba(16, 185, 129, 0.15)';
+          cell.style.transform = 'translateY(-5px)';
+          break;
+        case 'right':
+          cell.style.borderColor = 'var(--accent-red)';
+          cell.style.background = 'rgba(239, 68, 68, 0.15)';
+          cell.style.transform = 'translateY(-5px)';
+          break;
+        case 'mid':
+          cell.style.borderColor = 'var(--accent-orange)';
+          cell.style.background = 'rgba(245, 158, 11, 0.2)';
+          cell.style.transform = 'scale(1.15) translateY(-8px)';
+          cell.style.boxShadow = '0 4px 20px rgba(245, 158, 11, 0.4)';
+          break;
+        case 'found':
+          cell.style.borderColor = 'var(--accent-green)';
+          cell.style.background = 'rgba(16, 185, 129, 0.3)';
+          cell.style.transform = 'scale(1.2) translateY(-10px)';
+          cell.style.boxShadow = '0 4px 25px rgba(16, 185, 129, 0.5)';
+          break;
+        case 'eliminated':
+          cell.style.opacity = '0.3';
+          cell.style.transform = 'scale(0.9)';
+          break;
+        case 'active':
+          cell.style.opacity = '1';
+          cell.style.transform = 'scale(1)';
+          break;
+        default:
+          cell.style.borderColor = 'var(--border)';
+          cell.style.background = 'var(--bg-card)';
+          cell.style.transform = 'scale(1)';
+          cell.style.boxShadow = 'none';
+      }
+    }
+
+    function resetAllCells() {
+      array.forEach((_, index) => {
+        const cell = document.getElementById(`cell-${index}`);
+        if (cell) {
+          cell.style.borderColor = 'var(--border)';
+          cell.style.background = 'var(--bg-card)';
+          cell.style.transform = 'scale(1)';
+          cell.style.boxShadow = 'none';
+          cell.style.opacity = '1';
+        }
+      });
+    }
+
+    function updateStatus(message) {
+      document.getElementById('statusText').innerHTML = message;
+    }
+
+    function updateStepCounter(step) {
+      document.getElementById('stepCounter').textContent = step;
+    }
+
+    async function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function animateBinarySearch(target) {
+      let left = 0;
+      let right = array.length - 1;
+      let step = 0;
+
+      while (left <= right) {
+        step++;
+        updateStepCounter(step);
+
+        const mid = Math.floor(left + (right - left) / 2);
+
+        // Highlight current range
+        for (let i = 0; i < array.length; i++) {
+          if (i < left || i > right) {
+            updateCell(i, 'eliminated');
+          } else {
+            updateCell(i, 'active');
+          }
+        }
+        await sleep(800);
+
+        // Highlight pointers
+        updateCell(left, 'left');
+        updateCell(right, 'right');
+        updateStatus(`Step ${step}: Checking range [${left}, ${right}] → left = ${array[left]}, right = ${array[right]}`);
+        await sleep(1000);
+
+        // Highlight middle element
+        updateCell(mid, 'mid');
+        updateStatus(`Step ${step}: Middle index = ${mid}, value = ${array[mid]}, target = ${target}`);
+        await sleep(1200);
+
+        // Check if found
+        if (array[mid] === target) {
+          updateCell(mid, 'found');
+          updateStatus(`🎉 <strong>Target ${target} found at index ${mid}!</strong> Search completed in ${step} steps.`);
+          return mid;
+        }
+
+        // Decide which half to search
+        if (array[mid] < target) {
+          updateStatus(`Step ${step}: ${array[mid]} < ${target} → Search right half (eliminate left)`);
+          for (let i = left; i <= mid; i++) {
+            updateCell(i, 'eliminated');
+          }
+          left = mid + 1;
+        } else {
+          updateStatus(`Step ${step}: ${array[mid]} > ${target} → Search left half (eliminate right)`);
+          for (let i = mid; i <= right; i++) {
+            updateCell(i, 'eliminated');
+          }
+          right = mid - 1;
+        }
+        
+        await sleep(1500);
+        resetAllCells();
+      }
+
+      updateStatus(`❌ <strong>Target ${target} not found in the array.</strong> Search completed in ${step} steps.`);
+      return -1;
+    }
+
+    async function startAnimation() {
+      if (animationInProgress) {
+        updateStatus('⚠️ Animation already in progress. Please wait...');
+        return;
+      }
+
+      const target = parseInt(document.getElementById('searchTarget').value);
+      
+      if (isNaN(target)) {
+        updateStatus('❌ Please enter a valid number');
+        return;
+      }
+
+      animationInProgress = true;
+      resetAllCells();
+      currentStep = 0;
+      updateStepCounter(0);
+      updateStatus(`🔍 Starting binary search for target: ${target}...`);
+      await sleep(1000);
+
+      await animateBinarySearch(target);
+      animationInProgress = false;
+    }
+
+    function resetAnimation() {
+      if (animationInProgress) {
+        updateStatus('⚠️ Cannot reset while animation is running');
+        return;
+      }
+      
+      resetAllCells();
+      currentStep = 0;
+      updateStepCounter(0);
+      updateStatus('Click "Start Search" to begin the animation');
+    }
+
+    // Initialize array on page load
+    window.addEventListener('load', () => {
+      initializeArray();
+      initializeJavaArray();
+    });
+
+    // Java Code Animation
+    let javaAnimationInProgress = false;
+    const javaArray = [1, 3, 5, 7, 9, 11, 13, 15];
+    let executionLogs = [];
+
+    function initializeJavaArray() {
+      const container = document.getElementById('javaArrayContainer');
+      container.innerHTML = '';
+      javaArray.forEach((value, index) => {
+        container.appendChild(createJavaArrayElement(value, index));
+      });
+    }
+
+    function createJavaArrayElement(value, index) {
+      const cell = document.createElement('div');
+      cell.id = `java-cell-${index}`;
+      cell.style.cssText = `
+        width: 60px;
+        height: 60px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-card);
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        font-family: 'Fira Code', monospace;
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: var(--text-primary);
+        position: relative;
+        transition: all 0.5s ease;
+      `;
+      
+      cell.innerHTML = `
+        <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 2px;">[${index}]</div>
+        <div>${value}</div>
+      `;
+      
+      return cell;
+    }
+
+    function highlightJavaLine(lineNumber, duration = 1000) {
+      // Remove previous highlights
+      for (let i = 1; i <= 20; i++) {
+        const line = document.getElementById(`java-line-${i}`);
+        if (line) {
+          line.style.background = 'transparent';
+          line.style.borderLeft = 'none';
+          line.style.paddingLeft = '0';
+        }
+      }
+
+      // Highlight current line
+      const currentLine = document.getElementById(`java-line-${lineNumber}`);
+      if (currentLine) {
+        currentLine.style.background = 'rgba(245, 158, 11, 0.2)';
+        currentLine.style.borderLeft = '4px solid var(--accent-orange)';
+        currentLine.style.paddingLeft = '10px';
+        currentLine.style.transition = 'all 0.3s ease';
+      }
+
+      return sleep(duration);
+    }
+
+    function updateJavaVariables(left, right, mid, target) {
+      document.getElementById('javaVarLeft').textContent = left !== null ? left : '-';
+      document.getElementById('javaVarRight').textContent = right !== null ? right : '-';
+      document.getElementById('javaVarMid').textContent = mid !== null ? mid : '-';
+      document.getElementById('javaVarTarget').textContent = target !== null ? target : '-';
+    }
+
+    function updateJavaCell(index, state) {
+      const cell = document.getElementById(`java-cell-${index}`);
+      if (!cell) return;
+
+      switch(state) {
+        case 'left':
+          cell.style.borderColor = 'var(--accent-blue)';
+          cell.style.background = 'rgba(59, 130, 246, 0.2)';
+          cell.style.transform = 'translateY(-5px)';
+          break;
+        case 'right':
+          cell.style.borderColor = 'var(--accent-red)';
+          cell.style.background = 'rgba(239, 68, 68, 0.2)';
+          cell.style.transform = 'translateY(-5px)';
+          break;
+        case 'mid':
+          cell.style.borderColor = 'var(--accent-orange)';
+          cell.style.background = 'rgba(245, 158, 11, 0.3)';
+          cell.style.transform = 'scale(1.15) translateY(-8px)';
+          cell.style.boxShadow = '0 4px 20px rgba(245, 158, 11, 0.5)';
+          break;
+        case 'found':
+          cell.style.borderColor = 'var(--accent-green)';
+          cell.style.background = 'rgba(16, 185, 129, 0.4)';
+          cell.style.transform = 'scale(1.25) translateY(-10px)';
+          cell.style.boxShadow = '0 4px 25px rgba(16, 185, 129, 0.6)';
+          break;
+        case 'eliminated':
+          cell.style.opacity = '0.25';
+          cell.style.transform = 'scale(0.85)';
+          break;
+        default:
+          cell.style.borderColor = 'var(--border)';
+          cell.style.background = 'var(--bg-card)';
+          cell.style.transform = 'scale(1)';
+          cell.style.boxShadow = 'none';
+          cell.style.opacity = '1';
+      }
+    }
+
+    function resetAllJavaCells() {
+      javaArray.forEach((_, index) => {
+        updateJavaCell(index, 'default');
+      });
+    }
+
+    function addExecutionLog(message) {
+      executionLogs.push(`→ ${message}`);
+      const logContainer = document.getElementById('javaLogText');
+      logContainer.innerHTML = executionLogs.join('<br>');
+      // Auto-scroll to bottom
+      document.getElementById('javaExecutionLog').scrollTop = document.getElementById('javaExecutionLog').scrollHeight;
+    }
+
+    function clearExecutionLog() {
+      executionLogs = [];
+      document.getElementById('javaLogText').innerHTML = 'Execution started...';
+    }
+
+    async function executeJavaBinarySearch(target) {
+      let left = 0;
+      let right = javaArray.length - 1;
+      let iteration = 0;
+
+      // Line 1: Function declaration
+      await highlightJavaLine(1, 800);
+      addExecutionLog('Entering binarySearch function');
+
+      // Line 2: Initialize left
+      await highlightJavaLine(2, 900);
+      updateJavaVariables(left, null, null, target);
+      addExecutionLog(`Initialize: left = ${left}`);
+
+      // Line 3: Initialize right
+      await highlightJavaLine(3, 900);
+      updateJavaVariables(left, right, null, target);
+      addExecutionLog(`Initialize: right = ${right} (arr.length - 1)`);
+
+      // Line 5: Start while loop
+      await highlightJavaLine(5, 800);
+
+      while (left <= right) {
+        iteration++;
+        addExecutionLog(`--- Iteration ${iteration} ---`);
+        addExecutionLog(`Checking condition: left(${left}) <= right(${right}) = true`);
+
+        // Highlight active range
+        for (let i = 0; i < javaArray.length; i++) {
+          if (i < left || i > right) {
+            updateJavaCell(i, 'eliminated');
+          } else {
+            updateJavaCell(i, 'default');
+          }
+        }
+        await sleep(700);
+
+        // Line 6: Calculate mid
+        await highlightJavaLine(6, 1000);
+        const mid = Math.floor(left + (right - left) / 2);
+        updateJavaVariables(left, right, mid, target);
+        addExecutionLog(`Calculate: mid = ${left} + (${right} - ${left}) / 2 = ${mid}`);
+        
+        updateJavaCell(left, 'left');
+        updateJavaCell(right, 'right');
+        updateJavaCell(mid, 'mid');
+        await sleep(1000);
+
+        // Line 8: Check if target found
+        await highlightJavaLine(8, 1000);
+        addExecutionLog(`Compare: arr[${mid}] (${javaArray[mid]}) == target (${target})?`);
+
+        if (javaArray[mid] === target) {
+          await sleep(800);
+          // Line 9: Return mid
+          await highlightJavaLine(9, 1200);
+          updateJavaCell(mid, 'found');
+          addExecutionLog(`✓ Match found! Returning index ${mid}`);
+          addExecutionLog(`🎉 Target ${target} found at index ${mid}`);
+          return mid;
+        }
+
+        addExecutionLog(`✗ No match. Continue searching...`);
+        await sleep(600);
+
+        // Line 12: Check if target is in right half
+        await highlightJavaLine(12, 1000);
+        addExecutionLog(`Compare: arr[${mid}] (${javaArray[mid]}) < target (${target})?`);
+
+        if (javaArray[mid] < target) {
+          await sleep(600);
+          // Line 13: Move to right half
+          await highlightJavaLine(13, 1000);
+          addExecutionLog(`✓ True. Search right half.`);
+          
+          // Eliminate left half
+          for (let i = left; i <= mid; i++) {
+            updateJavaCell(i, 'eliminated');
+          }
+          
+          left = mid + 1;
+          updateJavaVariables(left, right, null, target);
+          addExecutionLog(`Update: left = ${mid} + 1 = ${left}`);
+          await sleep(1000);
+        } else {
+          await sleep(600);
+          // Line 15: Move to left half
+          await highlightJavaLine(14, 800);
+          await highlightJavaLine(15, 1000);
+          addExecutionLog(`✗ False. Search left half.`);
+          
+          // Eliminate right half
+          for (let i = mid; i <= right; i++) {
+            updateJavaCell(i, 'eliminated');
+          }
+          
+          right = mid - 1;
+          updateJavaVariables(left, right, null, target);
+          addExecutionLog(`Update: right = ${mid} - 1 = ${right}`);
+          await sleep(1000);
+        }
+
+        resetAllJavaCells();
+        
+        // Line 17: Loop back
+        await highlightJavaLine(17, 600);
+        await highlightJavaLine(5, 800);
+      }
+
+      // Exit while loop - condition false
+      addExecutionLog(`Checking condition: left(${left}) <= right(${right}) = false`);
+      addExecutionLog(`Exiting loop - target not found`);
+      await sleep(800);
+
+      // Line 19: Return -1
+      await highlightJavaLine(19, 1200);
+      addExecutionLog(`Returning -1 (target not found)`);
+      addExecutionLog(`❌ Target ${target} not found in array`);
+      
+      return -1;
+    }
+
+    async function startJavaAnimation() {
+      if (javaAnimationInProgress) {
+        addExecutionLog('⚠️ Animation already running...');
+        return;
+      }
+
+      const target = parseInt(document.getElementById('javaSearchTarget').value);
+      
+      if (isNaN(target)) {
+        alert('Please enter a valid number');
+        return;
+      }
+
+      javaAnimationInProgress = true;
+      clearExecutionLog();
+      resetAllJavaCells();
+      updateJavaVariables(null, null, null, null);
+
+      await executeJavaBinarySearch(target);
+      
+      javaAnimationInProgress = false;
+    }
+
+    function resetJavaAnimation() {
+      if (javaAnimationInProgress) {
+        alert('Cannot reset while animation is running');
+        return;
+      }
+
+      // Clear highlights
+      for (let i = 1; i <= 20; i++) {
+        const line = document.getElementById(`java-line-${i}`);
+        if (line) {
+          line.style.background = 'transparent';
+          line.style.borderLeft = 'none';
+          line.style.paddingLeft = '0';
+        }
+      }
+
+      resetAllJavaCells();
+      updateJavaVariables(null, null, null, null);
+      clearExecutionLog();
+      document.getElementById('javaLogText').innerHTML = 'Click "Execute Code" to start';
+    }
+  </script>
+</body>
+</html>
