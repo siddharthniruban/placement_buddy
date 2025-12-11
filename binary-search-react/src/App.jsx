@@ -3,10 +3,10 @@ import BinarySearchPageFixed from "./pages/BinarySearchPageFixed";
 import LinearSearchPage from "./pages/LinearSearchPage";
 import JumpSearchPage from "./pages/JumpSearchPage";
 import InterpolationSearchPage from "./pages/InterpolationSearchPage";
-import BubbleSortPage from "./pages/BubbleSortPage";
-import MergeSortPage from "./pages/MergeSortPage";
-import QuickSortPage from "./pages/QuickSortPage";
-import HeapSortPage from "./pages/HeapSortPage";
+const BubbleSortPage = React.lazy(() => import("./pages/BubbleSortPage"));
+const MergeSortPage = React.lazy(() => import("./pages/MergeSortPage"));
+const QuickSortPage = React.lazy(() => import("./pages/QuickSortPage"));
+const HeapSortPage = React.lazy(() => import("./pages/HeapSortPage"));
 
 export default function App() {
   const [selected, setSelected] = useState("Binary Search");
@@ -63,6 +63,7 @@ export default function App() {
         </div>
 
         <div style={{ flex: 1, padding: 20 }}>
+          <React.Suspense fallback={<div>Loading...</div>}>
           {selected === "Binary Search" ? (
             <BinarySearchPageFixed />
           ) : selected === "Linear Search" ? (
@@ -89,6 +90,7 @@ export default function App() {
               </div>
             </div>
           )}
+        </React.Suspense>
         </div>
       </div>
     </div>
