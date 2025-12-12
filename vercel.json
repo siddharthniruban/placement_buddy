@@ -1,0 +1,16 @@
+{
+  "routes": [
+    {
+      "src": "/rat_maze_visualizer.html",
+      "dest": "/rat_maze_visualizer.html"
+    },
+    {
+      "src": "/static-html/(.*)",
+      "dest": "/static-html/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}
