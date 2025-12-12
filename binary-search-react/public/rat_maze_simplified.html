@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rat in a Maze - Visual Algorithm Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            color: white;
+            padding: 24px 32px;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 24px;
+            padding: 24px;
+        }
+
+        /* Left Panel - Visualization */
+        .visualization-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .grid-container {
+            background: #f8fafc;
+            padding: 32px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 450px;
+            position: relative;
+        }
+
+        .grid {
+            display: inline-grid;
+            gap: 4px;
+        }
+
+        .cell {
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .cell.blocked {
+            background: #1e293b;
+            color: #64748b;
+        }
+
+        .cell.open {
+            background: white;
+            border-color: #e2e8f0;
+            color: #cbd5e1;
+        }
+
+        .cell.start {
+            background: #2563eb;
+            color: white;
+            border-color: #1e40af;
+        }
+
+        .cell.end {
+            background: #10b981;
+            color: white;
+            border-color: #059669;
+        }
+
+        .cell.visiting {
+            background: #f59e0b;
+            color: white;
+            animation: pulse 0.6s ease;
+        }
+
+        .cell.path {
+            background: #10b981;
+            color: white;
+        }
+
+        .cell.backtrack {
+            background: #ef4444;
+            color: white;
+            animation: fadeOut 0.3s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0.6; }
+        }
+
+        .arrow {
+            position: absolute;
+            font-size: 2.5em;
+            animation: arrowMove 0.5s ease;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .arrow.forward {
+            color: #10b981;
+            filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.5));
+        }
+
+        .arrow.backward {
+            color: #ef4444;
+            filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.5));
+        }
+
+        @keyframes arrowMove {
+            0% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 1; transform: scale(1.15); }
+            100% { opacity: 0; transform: scale(1); }
+        }
+
+        .direction-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.4em;
+            opacity: 0.7;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .control-group h4 {
+            font-size: 0.85em;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #64748b;
+            color: white;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .speed-control input {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .speed-control span {
+            font-size: 0.9em;
+            color: #64748b;
+            min-width: 50px;
+        }
+
+        /* Right Panel - Algorithm & Data */
+        .info-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: #f8fafc;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .card-header h3 {
+            font-size: 0.95em;
+            color: #1e293b;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 16px;
+        }
+
+        /* Language Tabs */
+        .language-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            background: #f8fafc;
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .lang-tab {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85em;
+            transition: all 0.2s ease;
+            color: #64748b;
+        }
+
+        .lang-tab.active {
+            background: white;
+            color: #2563eb;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .lang-tab:hover:not(.active) {
+            background: rgba(255,255,255,0.5);
+        }
+
+        /* Algorithm Code */
+        .code-box {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 16px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85em;
+            line-height: 1.6;
+        }
+
+        .code-line {
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            color: #e2e8f0;
+        }
+
+        .code-line.executing {
+            background: #f59e0b;
+            color: white;
+            transform: translateX(4px);
+            box-shadow: -4px 0 0 #ef4444;
+        }
+
+        .code-line.executed {
+            background: rgba(37, 99, 235, 0.15);
+        }
+
+        .keyword {
+            color: #c084fc;
+            font-weight: 600;
+        }
+
+        .function {
+            color: #60a5fa;
+        }
+
+        .comment {
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        .string {
+            color: #34d399;
+        }
+
+        .number {
+            color: #fbbf24;
+        }
+
+        /* Variables Display */
+        .variables {
+            display: grid;
+            gap: 8px;
+        }
+
+        .var-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: #f8fafc;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+
+        .var-label {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .var-value {
+            color: #1e293b;
+            font-weight: 600;
+            font-family: 'Consolas', monospace;
+        }
+
+        /* Algorithm Code */
+        .code-box {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 16px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85em;
+            line-height: 1.6;
+        }
+
+        /* Recursion Stack */
+        .stack-container {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .stack-frame {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            color: white;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border-left: 4px solid #1e40af;
+            animation: stackPush 0.3s ease;
+        }
+
+        .stack-frame.active {
+            border-left-color: #f59e0b;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .stack-frame.returning {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        @keyframes stackPush {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .frame-header {
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 0.95em;
+        }
+
+        .frame-params {
+            font-size: 0.85em;
+            opacity: 0.9;
+        }
+
+        .frame-params span {
+            background: rgba(255,255,255,0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-right: 6px;
+            display: inline-block;
+            margin-top: 4px;
+        }
+
+        .stack-depth {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 0.9em;
+        }
+
+        .stack-depth span {
+            color: #64748b;
+        }
+
+        .stack-depth strong {
+            color: #2563eb;
+        }
+
+        .stack-empty {
+            text-align: center;
+            color: #94a3b8;
+            padding: 32px;
+            font-style: italic;
+        }
+
+        /* View Toggle */
+        .view-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            background: #f8fafc;
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+            color: #64748b;
+        }
+
+        .toggle-btn.active {
+            background: white;
+            color: #2563eb;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .toggle-btn:hover:not(.active) {
+            background: rgba(255,255,255,0.5);
+        }
+
+        /* Graph View */
+        .graph-container {
+            max-height: 400px;
+            overflow: auto;
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .graph-node {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .graph-node circle {
+            transition: all 0.3s ease;
+        }
+
+        .graph-node.active circle {
+            filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.6));
+            animation: graphNodePulse 1s ease infinite;
+        }
+
+        @keyframes graphNodePulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.08);
+            }
+        }
+
+        .graph-node text {
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .graph-link {
+            fill: none;
+            stroke: #cbd5e1;
+            stroke-width: 2;
+            transition: all 0.3s ease;
+        }
+
+        .graph-link.active {
+            stroke: #f59e0b;
+            stroke-width: 3;
+        }
+
+        .graph-arrow {
+            fill: #cbd5e1;
+            transition: all 0.3s ease;
+        }
+
+        .graph-arrow.active {
+            fill: #f59e0b;
+        }
+
+        /* Node colors by status */
+        .node-default {
+            fill: url(#gradientBlue);
+        }
+
+        .node-active {
+            fill: url(#gradientOrange);
+        }
+
+        .node-success {
+            fill: url(#gradientGreen);
+        }
+
+        .node-failed {
+            fill: url(#gradientGray);
+            opacity: 0.5;
+        }
+
+        .node-returning {
+            fill: url(#gradientRed);
+        }
+
+        #graphSvg {
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Custom Grid Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5em;
+            color: #1e293b;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2em;
+            color: #64748b;
+            cursor: pointer;
+            padding: 0;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: #f8fafc;
+            color: #1e293b;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .size-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 10px;
+        }
+
+        .size-control label {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .size-control input {
+            width: 80px;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .instructions {
+            background: #eff6ff;
+            border-left: 4px solid #2563eb;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .instructions p {
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+            color: #1e293b;
+        }
+
+        .instructions li {
+            margin: 6px 0;
+            line-height: 1.5;
+        }
+
+        .custom-grid-container {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 10px;
+            min-height: 200px;
+        }
+
+        .custom-grid-container .hint {
+            color: #64748b;
+            text-align: center;
+            align-self: center;
+        }
+
+        .custom-grid-edit {
+            display: inline-grid;
+            gap: 4px;
+            background: white;
+            padding: 12px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .custom-cell {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+        }
+
+        .custom-cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .custom-cell.open {
+            background: white;
+        }
+
+        .custom-cell.blocked {
+            background: #1e293b;
+            color: #64748b;
+        }
+
+        .custom-cell.start {
+            background: #2563eb;
+            color: white;
+            cursor: default;
+        }
+
+        .custom-cell.end {
+            background: #10b981;
+            color: white;
+            cursor: default;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐀 Rat in a Maze Pathfinding</h1>
+            <p>Visualize the Backtracking Algorithm Step-by-Step</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Left: Visualization -->
+            <div class="visualization-panel">
+                <div class="grid-container">
+                    <div class="grid" id="grid"></div>
+                </div>
+
+                <div class="control-group">
+                    <h4>Controls</h4>
+                    <div class="button-row">
+                        <button class="btn-primary" onclick="startVisualization()">▶ Start</button>
+                        <button class="btn-warning" onclick="stepForward()">→ Step</button>
+                        <button class="btn-danger" onclick="resetVisualization()">⟲ Reset</button>
+                        <button class="btn-success" onclick="findAllPaths()">⚡ Find All</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h4>Settings</h4>
+                    <div class="button-row" style="margin-bottom: 12px;">
+                        <button class="btn-secondary" onclick="loadPreset(1)">Example 1 (4×4)</button>
+                        <button class="btn-secondary" onclick="loadPreset(2)">Example 2 (2×2)</button>
+                        <button class="btn-secondary" onclick="loadPreset(3)">Complex (5×5)</button>
+                        <button class="btn-primary" onclick="openCustomInput()">✏️ Custom Grid</button>
+                    </div>
+                    <div class="speed-control">
+                        <span>Speed:</span>
+                        <input type="range" id="speedControl" min="100" max="2000" value="800" step="100">
+                        <span id="speedValue">800ms</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Algorithm & Info -->
+            <div class="info-panel">
+                <!-- Current State Variables -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>💾 Current State</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="variables">
+                            <div class="var-row">
+                                <span class="var-label">Position:</span>
+                                <span class="var-value" id="varPosition">(0, 0)</span>
+                            </div>
+                            <div class="var-row">
+                                <span class="var-label">Path:</span>
+                                <span class="var-value" id="varPath">""</span>
+                            </div>
+                            <div class="var-row">
+                                <span class="var-label">Direction:</span>
+                                <span class="var-value" id="varDirection">-</span>
+                            </div>
+                            <div class="var-row">
+                                <span class="var-label">Status:</span>
+                                <span class="var-value" id="varStatus">Ready</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Algorithm Code -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>💻 Algorithm - Live Execution</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="language-tabs">
+                            <button class="lang-tab active" onclick="switchLanguage('pseudo')">Pseudocode</button>
+                            <button class="lang-tab" onclick="switchLanguage('python')">Python</button>
+                            <button class="lang-tab" onclick="switchLanguage('java')">Java</button>
+                        </div>
+                        <div class="code-box" id="codeBoxPseudo">
+<div class="code-line" data-line="1"><span class="keyword">function</span> <span class="function">findPaths</span>(x, y, path, visited):</div>
+<div class="code-line" data-line="2">    <span class="comment">// Base case: reached destination</span></div>
+<div class="code-line" data-line="3">    <span class="keyword">if</span> x == n-1 <span class="keyword">and</span> y == n-1:</div>
+<div class="code-line" data-line="4">        result.add(path)</div>
+<div class="code-line" data-line="5">        <span class="keyword">return</span></div>
+<div class="code-line" data-line="6"></div>
+<div class="code-line" data-line="7">    <span class="comment">// Mark current cell as visited</span></div>
+<div class="code-line" data-line="8">    visited[x][y] = <span class="keyword">true</span></div>
+<div class="code-line" data-line="9"></div>
+<div class="code-line" data-line="10">    <span class="comment">// Try all 4 directions: D, L, R, U</span></div>
+<div class="code-line" data-line="11">    directions = [D, L, R, U]</div>
+<div class="code-line" data-line="12">    <span class="keyword">for each</span> direction:</div>
+<div class="code-line" data-line="13">        newX, newY = getNext(x, y, direction)</div>
+<div class="code-line" data-line="14">        <span class="keyword">if</span> isSafe(newX, newY, visited):</div>
+<div class="code-line" data-line="15">            findPaths(newX, newY, path + direction, visited)</div>
+<div class="code-line" data-line="16"></div>
+<div class="code-line" data-line="17">    <span class="comment">// Backtrack: unmark the cell</span></div>
+<div class="code-line" data-line="18">    visited[x][y] = <span class="keyword">false</span></div>
+                        </div>
+                        <div class="code-box" id="codeBoxPython" style="display: none;">
+<div class="code-line" data-line="1"><span class="keyword">def</span> <span class="function">find_paths</span>(x, y, path, visited, result):</div>
+<div class="code-line" data-line="2">    <span class="comment"># Base case: reached destination</span></div>
+<div class="code-line" data-line="3">    <span class="keyword">if</span> x == n - <span class="number">1</span> <span class="keyword">and</span> y == n - <span class="number">1</span>:</div>
+<div class="code-line" data-line="4">        result.append(path)</div>
+<div class="code-line" data-line="5">        <span class="keyword">return</span></div>
+<div class="code-line" data-line="6"></div>
+<div class="code-line" data-line="7">    <span class="comment"># Mark current cell as visited</span></div>
+<div class="code-line" data-line="8">    visited[x][y] = <span class="keyword">True</span></div>
+<div class="code-line" data-line="9"></div>
+<div class="code-line" data-line="10">    <span class="comment"># Try all 4 directions: D, L, R, U</span></div>
+<div class="code-line" data-line="11">    directions = [(<span class="number">1</span>, <span class="number">0</span>, <span class="string">'D'</span>), (<span class="number">0</span>, -<span class="number">1</span>, <span class="string">'L'</span>), (<span class="number">0</span>, <span class="number">1</span>, <span class="string">'R'</span>), (-<span class="number">1</span>, <span class="number">0</span>, <span class="string">'U'</span>)]</div>
+<div class="code-line" data-line="12">    <span class="keyword">for</span> dx, dy, direction <span class="keyword">in</span> directions:</div>
+<div class="code-line" data-line="13">        new_x, new_y = x + dx, y + dy</div>
+<div class="code-line" data-line="14">        <span class="keyword">if</span> is_safe(new_x, new_y, visited):</div>
+<div class="code-line" data-line="15">            find_paths(new_x, new_y, path + direction, visited, result)</div>
+<div class="code-line" data-line="16"></div>
+<div class="code-line" data-line="17">    <span class="comment"># Backtrack: unmark the cell</span></div>
+<div class="code-line" data-line="18">    visited[x][y] = <span class="keyword">False</span></div>
+                        </div>
+                        <div class="code-box" id="codeBoxJava" style="display: none;">
+<div class="code-line" data-line="1"><span class="keyword">void</span> <span class="function">findPaths</span>(<span class="keyword">int</span> x, <span class="keyword">int</span> y, String path, <span class="keyword">boolean</span>[][] visited) {</div>
+<div class="code-line" data-line="2">    <span class="comment">// Base case: reached destination</span></div>
+<div class="code-line" data-line="3">    <span class="keyword">if</span> (x == n - <span class="number">1</span> && y == n - <span class="number">1</span>) {</div>
+<div class="code-line" data-line="4">        result.add(path);</div>
+<div class="code-line" data-line="5">        <span class="keyword">return</span>;</div>
+<div class="code-line" data-line="6">    }</div>
+<div class="code-line" data-line="7"></div>
+<div class="code-line" data-line="8">    <span class="comment">// Mark current cell as visited</span></div>
+<div class="code-line" data-line="9">    visited[x][y] = <span class="keyword">true</span>;</div>
+<div class="code-line" data-line="10"></div>
+<div class="code-line" data-line="11">    <span class="comment">// Try all 4 directions: D, L, R, U</span></div>
+<div class="code-line" data-line="12">    <span class="keyword">int</span>[][] directions = {{<span class="number">1</span>, <span class="number">0</span>}, {<span class="number">0</span>, -<span class="number">1</span>}, {<span class="number">0</span>, <span class="number">1</span>}, {-<span class="number">1</span>, <span class="number">0</span>}};</div>
+<div class="code-line" data-line="13">    String[] dirChars = {<span class="string">"D"</span>, <span class="string">"L"</span>, <span class="string">"R"</span>, <span class="string">"U"</span>};</div>
+<div class="code-line" data-line="14">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i < <span class="number">4</span>; i++) {</div>
+<div class="code-line" data-line="15">        <span class="keyword">int</span> newX = x + directions[i][<span class="number">0</span>];</div>
+<div class="code-line" data-line="16">        <span class="keyword">int</span> newY = y + directions[i][<span class="number">1</span>];</div>
+<div class="code-line" data-line="17">        <span class="keyword">if</span> (isSafe(newX, newY, visited)) {</div>
+<div class="code-line" data-line="18">            findPaths(newX, newY, path + dirChars[i], visited);</div>
+<div class="code-line" data-line="19">        }</div>
+<div class="code-line" data-line="20">    }</div>
+<div class="code-line" data-line="21"></div>
+<div class="code-line" data-line="22">    <span class="comment">// Backtrack: unmark the cell</span></div>
+<div class="code-line" data-line="23">    visited[x][y] = <span class="keyword">false</span>;</div>
+<div class="code-line" data-line="24">}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recursion Visualization -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📚 Recursion Visualization</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="view-toggle">
+                            <button class="toggle-btn active" onclick="switchRecursionView('stack')">📚 Stack</button>
+                            <button class="toggle-btn" onclick="switchRecursionView('graph')">⭕ Graph</button>
+                        </div>
+                        <div class="stack-depth">
+                            <span>Current Depth: <strong id="stackDepth">0</strong></span>
+                            <span>Max Depth: <strong id="maxDepth">0</strong></span>
+                        </div>
+                        <div class="stack-container" id="recursionStack">
+                            <div class="stack-empty">No active recursive calls</div>
+                        </div>
+                        <div class="graph-container" id="recursionGraph" style="display: none;">
+                            <svg id="graphSvg" width="100%" height="400"></svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Grid Modal -->
+    <div id="customModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create Custom Grid</h2>
+                <button class="modal-close" onclick="closeCustomInput()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="size-control">
+                    <label>Grid Size (n×n):</label>
+                    <input type="number" id="gridSizeInput" min="2" max="8" value="4">
+                    <button class="btn-primary" onclick="createCustomGrid()">Create Grid</button>
+                </div>
+                <div class="instructions">
+                    <p><strong>Instructions:</strong></p>
+                    <ul>
+                        <li>Click cells to toggle between Open (white) and Blocked (dark)</li>
+                        <li>Start (🐀) is always at top-left (0,0)</li>
+                        <li>End (🧀) is always at bottom-right (n-1, n-1)</li>
+                        <li>Make sure there's at least one path from start to end!</li>
+                    </ul>
+                </div>
+                <div class="custom-grid-container" id="customGridContainer">
+                    <p class="hint">Set grid size and click "Create Grid" to start</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-danger" onclick="closeCustomInput()">Cancel</button>
+                <button class="btn-success" onclick="applyCustomGrid()">Apply Grid</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let grid = [];
+        let n = 4;
+        let animationSpeed = 800;
+        let isAnimating = false;
+        let foundPaths = [];
+        let currentSteps = [];
+        let stepIndex = 0;
+        let stats = {
+            pathsFound: 0,
+            currentStep: 0,
+            backtracks: 0,
+            cellsVisited: 0
+        };
+        let callStack = [];
+        let maxDepth = 0;
+        let recursionTree = null;
+        let currentTreeNode = null;
+        let treeNodeIdCounter = 0;
+        let currentView = 'stack';
+        let currentLanguage = 'pseudo';
+        let customGridData = null;
+
+        const directions = {
+            'D': [1, 0],
+            'U': [-1, 0],
+            'R': [0, 1],
+            'L': [0, -1]
+        };
+
+        function initGrid(preset) {
+            switch(preset) {
+                case 1:
+                    n = 4;
+                    grid = [
+                        [1, 0, 0, 0],
+                        [1, 1, 0, 1],
+                        [1, 1, 0, 0],
+                        [0, 1, 1, 1]
+                    ];
+                    break;
+                case 2:
+                    n = 2;
+                    grid = [
+                        [1, 0],
+                        [1, 0]
+                    ];
+                    break;
+                case 3:
+                    n = 5;
+                    grid = [
+                        [1, 0, 1, 1, 1],
+                        [1, 1, 1, 0, 1],
+                        [0, 1, 0, 1, 1],
+                        [1, 1, 1, 1, 0],
+                        [1, 0, 0, 1, 1]
+                    ];
+                    break;
+            }
+            renderGrid();
+            resetStats();
+        }
+
+        function renderGrid() {
+            const gridElement = document.getElementById('grid');
+            gridElement.innerHTML = '';
+            gridElement.style.gridTemplateColumns = `repeat(${n}, 70px)`;
+
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < n; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.id = `cell-${i}-${j}`;
+
+                    if (grid[i][j] === 0) {
+                        cell.classList.add('blocked');
+                        cell.textContent = '⬛';
+                    } else {
+                        cell.classList.add('open');
+                    }
+
+                    if (i === 0 && j === 0) {
+                        cell.classList.remove('open');
+                        cell.classList.add('start');
+                        cell.textContent = '🐀';
+                    } else if (i === n-1 && j === n-1 && grid[i][j] === 1) {
+                        cell.classList.remove('open');
+                        cell.classList.add('end');
+                        cell.textContent = '🧀';
+                    }
+
+                    gridElement.appendChild(cell);
+                }
+            }
+        }
+
+        function isSafe(x, y, visited) {
+            return x >= 0 && x < n && y >= 0 && y < n && 
+                   grid[x][y] === 1 && !visited[x][y];
+        }
+
+        function findAllPathsRecursive(x, y, path, visited, allPaths, depth = 0) {
+            currentSteps.push({
+                type: 'call',
+                x, y, path, depth,
+                message: `📞 Calling findPaths(${x}, ${y}, "${path}")`
+            });
+
+            if (x === n-1 && y === n-1) {
+                allPaths.push(path);
+                currentSteps.push({
+                    type: 'found',
+                    x, y, path, depth,
+                    message: `✓ Path found: ${path}`
+                });
+                currentSteps.push({
+                    type: 'return',
+                    x, y, path, depth,
+                    message: `↩️ Returning from findPaths(${x}, ${y})`
+                });
+                return;
+            }
+
+            visited[x][y] = true;
+            currentSteps.push({
+                type: 'visit',
+                x, y, path, depth,
+                message: `Visiting cell (${x}, ${y}), path: ${path || 'START'}`
+            });
+
+            const dirOrder = ['D', 'L', 'R', 'U'];
+            
+            for (let dir of dirOrder) {
+                const [dx, dy] = directions[dir];
+                const newX = x + dx;
+                const newY = y + dy;
+
+                if (isSafe(newX, newY, visited)) {
+                    currentSteps.push({
+                        type: 'explore',
+                        x: newX, y: newY,
+                        fromX: x, fromY: y,
+                        dir: dir, depth: depth,
+                        message: `Trying ${dir} from (${x}, ${y}) to (${newX}, ${newY})`
+                    });
+                    findAllPathsRecursive(newX, newY, path + dir, visited, allPaths, depth + 1);
+                }
+            }
+
+            visited[x][y] = false;
+            currentSteps.push({
+                type: 'backtrack',
+                x, y, path, depth,
+                message: `⬅ Backtracking from (${x}, ${y})`
+            });
+            
+            currentSteps.push({
+                type: 'return',
+                x, y, path, depth,
+                message: `↩️ Returning from findPaths(${x}, ${y})`
+            });
+        }
+
+        function findAllPaths() {
+            if (grid[0][0] === 0 || grid[n-1][n-1] === 0) {
+                alert('Start or end cell is blocked!');
+                return;
+            }
+
+            resetVisualization();
+            foundPaths = [];
+            currentSteps = [];
+            
+            const visited = Array(n).fill(null).map(() => Array(n).fill(false));
+            findAllPathsRecursive(0, 0, '', visited, foundPaths);
+            
+            updateStats();
+        }
+
+        async function startVisualization() {
+            if (isAnimating) return;
+            if (currentSteps.length === 0) {
+                findAllPaths();
+            }
+            
+            isAnimating = true;
+            stepIndex = 0;
+            
+            for (let i = 0; i < currentSteps.length; i++) {
+                if (!isAnimating) break;
+                stepIndex = i;
+                await executeStep(currentSteps[i]);
+                await sleep(animationSpeed);
+            }
+            
+            isAnimating = false;
+        }
+
+        async function stepForward() {
+            if (currentSteps.length === 0) {
+                findAllPaths();
+            }
+            
+            if (stepIndex < currentSteps.length) {
+                await executeStep(currentSteps[stepIndex]);
+                stepIndex++;
+            }
+        }
+
+        async function executeStep(step) {
+            const cell = document.getElementById(`cell-${step.x}-${step.y}`);
+            
+            stats.currentStep++;
+            updateVariableDisplay(step);
+            clearCodeHighlights();
+            
+            switch(step.type) {
+                case 'call':
+                    pushToCallStack(step);
+                    highlightCodeLine(1);
+                    break;
+                    
+                case 'visit':
+                    cell.classList.add('visiting');
+                    stats.cellsVisited++;
+                    updateActiveCallFrame(step);
+                    
+                    highlightCodeLine(1);
+                    await sleep(animationSpeed / 4);
+                    highlightCodeLine(3);
+                    await sleep(animationSpeed / 4);
+                    
+                    if (step.x === n-1 && step.y === n-1) {
+                        highlightCodeLine(4);
+                        await sleep(animationSpeed / 4);
+                        highlightCodeLine(5);
+                    } else {
+                        highlightCodeLine(8);
+                    }
+                    break;
+                    
+                case 'explore':
+                    const targetCell = document.getElementById(`cell-${step.x}-${step.y}`);
+                    targetCell.classList.add('visiting');
+                    
+                    highlightCodeLine(12);
+                    await sleep(animationSpeed / 4);
+                    highlightCodeLine(13);
+                    await sleep(animationSpeed / 4);
+                    highlightCodeLine(14);
+                    await sleep(animationSpeed / 4);
+                    highlightCodeLine(15);
+                    
+                    if (step.fromX !== undefined && step.fromY !== undefined) {
+                        showArrow(step.fromX, step.fromY, step.x, step.y, step.dir, 'forward');
+                    }
+                    break;
+                    
+                case 'backtrack':
+                    cell.classList.remove('visiting');
+                    cell.classList.add('backtrack');
+                    
+                    highlightCodeLine(17);
+                    await sleep(animationSpeed / 4);
+                    highlightCodeLine(18);
+                    
+                    showBacktrackArrow(step.x, step.y);
+                    
+                    setTimeout(() => {
+                        cell.classList.remove('backtrack');
+                    }, 300);
+                    stats.backtracks++;
+                    break;
+                    
+                case 'found':
+                    cell.classList.add('path');
+                    stats.pathsFound++;
+                    
+                    // Mark tree node as success
+                    if (currentTreeNode) {
+                        currentTreeNode.status = 'success';
+                        if (currentView === 'graph') {
+                            renderGraph();
+                        }
+                    }
+                    
+                    highlightCodeLine(3);
+                    await sleep(animationSpeed / 4);
+                    highlightCodeLine(4);
+                    await sleep(animationSpeed / 4);
+                    highlightCodeLine(5);
+                    break;
+                    
+                case 'return':
+                    popFromCallStack(step);
+                    highlightCodeLine(5);
+                    break;
+            }
+        }
+
+        function highlightCodeLine(lineNumber) {
+            const codeBoxes = ['codeBoxPseudo', 'codeBoxPython', 'codeBoxJava'];
+            
+            codeBoxes.forEach(boxId => {
+                const line = document.querySelector(`#${boxId} .code-line[data-line="${lineNumber}"]`);
+                if (line) {
+                    line.classList.add('executing');
+                    line.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    
+                    setTimeout(() => {
+                        line.classList.remove('executing');
+                        line.classList.add('executed');
+                    }, animationSpeed / 2);
+                }
+            });
+        }
+
+        function clearCodeHighlights() {
+            const lines = document.querySelectorAll('.code-line');
+            lines.forEach(line => {
+                line.classList.remove('executing');
+            });
+        }
+
+        function switchLanguage(lang) {
+            currentLanguage = lang;
+            
+            // Update tab buttons
+            document.querySelectorAll('.lang-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Show/hide code boxes
+            document.getElementById('codeBoxPseudo').style.display = lang === 'pseudo' ? 'block' : 'none';
+            document.getElementById('codeBoxPython').style.display = lang === 'python' ? 'block' : 'none';
+            document.getElementById('codeBoxJava').style.display = lang === 'java' ? 'block' : 'none';
+        }
+
+        function updateVariableDisplay(step) {
+            document.getElementById('varPosition').textContent = `(${step.x}, ${step.y})`;
+            document.getElementById('varPath').textContent = `"${step.path || ''}"`;
+            
+            if (step.dir) {
+                const dirNames = { 'D': 'Down ⬇', 'U': 'Up ⬆', 'R': 'Right ➡', 'L': 'Left ⬅' };
+                document.getElementById('varDirection').textContent = dirNames[step.dir] || '-';
+            } else {
+                document.getElementById('varDirection').textContent = '-';
+            }
+            
+            const statusMessages = {
+                'call': '📞 Function Call',
+                'visit': '🔍 Visiting',
+                'explore': '🚀 Exploring',
+                'backtrack': '↩️ Backtracking',
+                'found': '✅ Path Found!',
+                'return': '⬅️ Returning'
+            };
+            document.getElementById('varStatus').textContent = statusMessages[step.type] || 'Running';
+        }
+
+        function pushToCallStack(step) {
+            callStack.push({
+                x: step.x,
+                y: step.y,
+                path: step.path,
+                depth: step.depth
+            });
+            
+            if (step.depth > maxDepth) {
+                maxDepth = step.depth;
+                document.getElementById('maxDepth').textContent = maxDepth;
+            }
+            
+            // Build tree structure for graph view
+            const newNode = {
+                id: treeNodeIdCounter++,
+                gridX: step.x,
+                gridY: step.y,
+                path: step.path,
+                depth: step.depth,
+                children: [],
+                parent: currentTreeNode,
+                status: 'active'
+            };
+            
+            if (recursionTree === null) {
+                recursionTree = newNode;
+            } else if (currentTreeNode) {
+                currentTreeNode.children.push(newNode);
+            }
+            
+            currentTreeNode = newNode;
+            
+            renderCallStack();
+            if (currentView === 'graph') {
+                renderGraph();
+            }
+        }
+
+        function popFromCallStack(step) {
+            if (callStack.length > 0) {
+                const frame = callStack[callStack.length - 1];
+                const frameElement = document.querySelector(`.stack-frame[data-depth="${frame.depth}"]`);
+                
+                // Update tree node status
+                if (currentTreeNode) {
+                    currentTreeNode.status = 'returning';
+                    currentTreeNode = currentTreeNode.parent;
+                }
+                
+                if (frameElement) {
+                    frameElement.classList.add('returning');
+                    setTimeout(() => {
+                        callStack.pop();
+                        renderCallStack();
+                        if (currentView === 'graph') {
+                            renderGraph();
+                        }
+                    }, 300);
+                } else {
+                    callStack.pop();
+                    renderCallStack();
+                    if (currentView === 'graph') {
+                        renderGraph();
+                    }
+                }
+            }
+        }
+
+        function updateActiveCallFrame(step) {
+            const frames = document.querySelectorAll('.stack-frame');
+            frames.forEach(frame => frame.classList.remove('active'));
+            
+            const currentFrame = document.querySelector(`.stack-frame[data-depth="${step.depth}"]`);
+            if (currentFrame) {
+                currentFrame.classList.add('active');
+            }
+        }
+
+        function renderCallStack() {
+            const stackContainer = document.getElementById('recursionStack');
+            document.getElementById('stackDepth').textContent = callStack.length;
+            
+            if (callStack.length === 0) {
+                stackContainer.innerHTML = '<div class="stack-empty">No active recursive calls</div>';
+                return;
+            }
+            
+            let html = '';
+            
+            for (let i = callStack.length - 1; i >= 0; i--) {
+                const frame = callStack[i];
+                const isActive = i === callStack.length - 1;
+                
+                html += `
+                    <div class="stack-frame ${isActive ? 'active' : ''}" data-depth="${frame.depth}">
+                        <div class="frame-header">🔄 findPaths() - Depth ${frame.depth}</div>
+                        <div class="frame-params">
+                            <span>x: ${frame.x}</span>
+                            <span>y: ${frame.y}</span>
+                            <span>path: "${frame.path}"</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            stackContainer.innerHTML = html;
+            stackContainer.scrollTop = stackContainer.scrollHeight;
+        }
+
+        function showArrow(fromX, fromY, toX, toY, direction, type) {
+            const fromCell = document.getElementById(`cell-${fromX}-${fromY}`);
+            const toCell = document.getElementById(`cell-${toX}-${toY}`);
+            
+            if (!fromCell || !toCell) return;
+            
+            const arrowSymbols = {
+                'D': '⬇',
+                'U': '⬆',
+                'R': '➡',
+                'L': '⬅'
+            };
+            
+            const arrow = document.createElement('div');
+            arrow.className = `arrow ${type}`;
+            arrow.textContent = arrowSymbols[direction];
+            
+            const fromRect = fromCell.getBoundingClientRect();
+            const toRect = toCell.getBoundingClientRect();
+            const gridContainer = document.querySelector('.grid-container');
+            const containerRect = gridContainer.getBoundingClientRect();
+            
+            arrow.style.position = 'absolute';
+            arrow.style.left = `${(fromRect.left + toRect.left) / 2 - containerRect.left}px`;
+            arrow.style.top = `${(fromRect.top + toRect.top) / 2 - containerRect.top}px`;
+            
+            gridContainer.appendChild(arrow);
+            
+            setTimeout(() => {
+                arrow.remove();
+            }, 500);
+            
+            addDirectionIndicator(toCell, direction);
+        }
+
+        function showBacktrackArrow(x, y) {
+            const cell = document.getElementById(`cell-${x}-${y}`);
+            if (!cell) return;
+            
+            const arrow = document.createElement('div');
+            arrow.className = 'arrow backward';
+            arrow.textContent = '↩';
+            arrow.style.position = 'absolute';
+            arrow.style.fontSize = '2em';
+            
+            cell.style.position = 'relative';
+            cell.appendChild(arrow);
+            
+            setTimeout(() => {
+                arrow.remove();
+            }, 500);
+        }
+
+        function addDirectionIndicator(cell, direction) {
+            const arrowSymbols = {
+                'D': '↓',
+                'U': '↑',
+                'R': '→',
+                'L': '←'
+            };
+            
+            const existing = cell.querySelector('.direction-indicator');
+            if (existing) {
+                existing.remove();
+            }
+            
+            const indicator = document.createElement('div');
+            indicator.className = 'direction-indicator';
+            indicator.textContent = arrowSymbols[direction];
+            
+            cell.style.position = 'relative';
+            cell.appendChild(indicator);
+        }
+
+        function resetVisualization() {
+            isAnimating = false;
+            stepIndex = 0;
+            currentSteps = [];
+            foundPaths = [];
+            callStack = [];
+            maxDepth = 0;
+            recursionTree = null;
+            currentTreeNode = null;
+            treeNodeIdCounter = 0;
+            document.getElementById('maxDepth').textContent = '0';
+            
+            renderGrid();
+            resetStats();
+            
+            const arrows = document.querySelectorAll('.arrow');
+            arrows.forEach(arrow => arrow.remove());
+            
+            const lines = document.querySelectorAll('.code-line');
+            lines.forEach(line => {
+                line.classList.remove('executing', 'executed');
+            });
+            
+            document.getElementById('varPosition').textContent = '(0, 0)';
+            document.getElementById('varPath').textContent = '""';
+            document.getElementById('varDirection').textContent = '-';
+            document.getElementById('varStatus').textContent = 'Ready';
+            
+            renderCallStack();
+            if (currentView === 'graph') {
+                renderGraph();
+            }
+        }
+
+        function resetStats() {
+            stats = {
+                pathsFound: 0,
+                currentStep: 0,
+                backtracks: 0,
+                cellsVisited: 0
+            };
+        }
+
+        function updateStats() {
+            stats.pathsFound = foundPaths.length;
+        }
+
+        function loadPreset(preset) {
+            resetVisualization();
+            initGrid(preset);
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function switchRecursionView(view) {
+            currentView = view;
+            
+            // Update toggle buttons
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Toggle visibility
+            const stackView = document.getElementById('recursionStack');
+            const graphView = document.getElementById('recursionGraph');
+            
+            if (view === 'stack') {
+                stackView.style.display = 'block';
+                graphView.style.display = 'none';
+            } else if (view === 'graph') {
+                stackView.style.display = 'none';
+                graphView.style.display = 'block';
+                renderGraph();
+            }
+        }
+
+        function renderGraph() {
+            const svg = document.getElementById('graphSvg');
+            
+            if (!recursionTree) {
+                svg.innerHTML = '';
+                return;
+            }
+            
+            // Clear previous content
+            svg.innerHTML = '';
+            
+            // Add gradient definitions
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            
+            const gradients = [
+                { id: 'gradientBlue', colors: ['#2563eb', '#1e40af'] },
+                { id: 'gradientOrange', colors: ['#f59e0b', '#d97706'] },
+                { id: 'gradientGreen', colors: ['#10b981', '#059669'] },
+                { id: 'gradientGray', colors: ['#94a3b8', '#64748b'] },
+                { id: 'gradientRed', colors: ['#ef4444', '#dc2626'] }
+            ];
+            
+            gradients.forEach(grad => {
+                const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+                gradient.setAttribute('id', grad.id);
+                gradient.setAttribute('x1', '0%');
+                gradient.setAttribute('y1', '0%');
+                gradient.setAttribute('x2', '100%');
+                gradient.setAttribute('y2', '100%');
+                
+                const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+                stop1.setAttribute('offset', '0%');
+                stop1.setAttribute('stop-color', grad.colors[0]);
+                
+                const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+                stop2.setAttribute('offset', '100%');
+                stop2.setAttribute('stop-color', grad.colors[1]);
+                
+                gradient.appendChild(stop1);
+                gradient.appendChild(stop2);
+                defs.appendChild(gradient);
+            });
+            
+            svg.appendChild(defs);
+            
+            // Calculate tree layout
+            const nodes = [];
+            const links = [];
+            
+            function calculateLayout(node, depth = 0, leftBound = 0, rightBound = 700, parentX = null, parentY = null) {
+                if (!node) return;
+                
+                const x = (leftBound + rightBound) / 2;
+                const y = 50 + depth * 70;
+                
+                node.svgX = x;
+                node.svgY = y;
+                
+                nodes.push(node);
+                
+                if (parentX !== null && parentY !== null) {
+                    links.push({
+                        x1: parentX,
+                        y1: parentY,
+                        x2: x,
+                        y2: y,
+                        targetNode: node
+                    });
+                }
+                
+                if (node.children && node.children.length > 0) {
+                    const childWidth = (rightBound - leftBound) / node.children.length;
+                    node.children.forEach((child, i) => {
+                        const childLeft = leftBound + i * childWidth;
+                        const childRight = childLeft + childWidth;
+                        calculateLayout(child, depth + 1, childLeft, childRight, x, y);
+                    });
+                }
+            }
+            
+            calculateLayout(recursionTree, 0);
+            
+            // Adjust SVG height based on max depth
+            const maxY = Math.max(...nodes.map(n => n.svgY)) + 50;
+            svg.setAttribute('height', maxY);
+            
+            // Draw links first
+            links.forEach(link => {
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                
+                const midY = (link.y1 + link.y2) / 2;
+                const d = `M ${link.x1} ${link.y1} C ${link.x1} ${midY}, ${link.x2} ${midY}, ${link.x2} ${link.y2}`;
+                
+                path.setAttribute('d', d);
+                path.setAttribute('class', 'graph-link');
+                
+                if (link.targetNode === currentTreeNode) {
+                    path.classList.add('active');
+                }
+                
+                svg.appendChild(path);
+                
+                // Add arrowhead
+                const arrowSize = 5;
+                const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                const points = `${link.x2},${link.y2-25} ${link.x2-arrowSize},${link.y2-25-arrowSize} ${link.x2+arrowSize},${link.y2-25-arrowSize}`;
+                arrow.setAttribute('points', points);
+                arrow.setAttribute('class', 'graph-arrow');
+                
+                if (link.targetNode === currentTreeNode) {
+                    arrow.classList.add('active');
+                }
+                
+                svg.appendChild(arrow);
+            });
+            
+            // Draw nodes
+            nodes.forEach(node => {
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('class', 'graph-node');
+                g.setAttribute('transform', `translate(${node.svgX}, ${node.svgY})`);
+                
+                // Circle
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('r', '28');
+                
+                let statusClass = 'node-default';
+                if (node === currentTreeNode) {
+                    statusClass = 'node-active';
+                    g.classList.add('active');
+                } else if (node.status === 'success') {
+                    statusClass = 'node-success';
+                } else if (node.status === 'failed') {
+                    statusClass = 'node-failed';
+                } else if (node.status === 'returning') {
+                    statusClass = 'node-returning';
+                }
+                
+                circle.setAttribute('class', statusClass);
+                g.appendChild(circle);
+                
+                // Position text
+                const text1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text1.setAttribute('text-anchor', 'middle');
+                text1.setAttribute('y', '-4');
+                text1.setAttribute('fill', 'white');
+                text1.setAttribute('font-size', '11');
+                text1.setAttribute('font-weight', 'bold');
+                text1.textContent = `(${node.gridX},${node.gridY})`;
+                g.appendChild(text1);
+                
+                // Path text
+                const text2 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text2.setAttribute('text-anchor', 'middle');
+                text2.setAttribute('y', '8');
+                text2.setAttribute('fill', 'white');
+                text2.setAttribute('font-size', '9');
+                text2.textContent = `"${node.path}"`;
+                g.appendChild(text2);
+                
+                // Depth badge
+                const text3 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text3.setAttribute('text-anchor', 'middle');
+                text3.setAttribute('y', '18');
+                text3.setAttribute('fill', 'white');
+                text3.setAttribute('font-size', '8');
+                text3.setAttribute('opacity', '0.8');
+                text3.textContent = `D${node.depth}`;
+                g.appendChild(text3);
+                
+                svg.appendChild(g);
+            });
+        }
+
+        document.getElementById('speedControl').addEventListener('input', (e) => {
+            animationSpeed = 2100 - parseInt(e.target.value);
+            document.getElementById('speedValue').textContent = e.target.value + 'ms';
+        });
+
+        // Custom Grid Functions
+        function openCustomInput() {
+            document.getElementById('customModal').classList.add('active');
+        }
+
+        function closeCustomInput() {
+            document.getElementById('customModal').classList.remove('active');
+        }
+
+        function createCustomGrid() {
+            const size = parseInt(document.getElementById('gridSizeInput').value);
+            
+            if (size < 2 || size > 8) {
+                alert('Grid size must be between 2 and 8');
+                return;
+            }
+
+            const container = document.getElementById('customGridContainer');
+            container.innerHTML = '';
+
+            // Initialize grid with all cells open (1)
+            customGridData = Array(size).fill(null).map(() => Array(size).fill(1));
+
+            const gridElement = document.createElement('div');
+            gridElement.className = 'custom-grid-edit';
+            gridElement.style.gridTemplateColumns = `repeat(${size}, 50px)`;
+
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'custom-cell open';
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+
+                    // Start and End cells
+                    if (i === 0 && j === 0) {
+                        cell.classList.remove('open');
+                        cell.classList.add('start');
+                        cell.textContent = '🐀';
+                    } else if (i === size - 1 && j === size - 1) {
+                        cell.classList.remove('open');
+                        cell.classList.add('end');
+                        cell.textContent = '🧀';
+                    } else {
+                        // Make other cells clickable
+                        cell.addEventListener('click', toggleCustomCell);
+                    }
+
+                    gridElement.appendChild(cell);
+                }
+            }
+
+            container.appendChild(gridElement);
+        }
+
+        function toggleCustomCell(event) {
+            const cell = event.target;
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+
+            if (customGridData[row][col] === 1) {
+                // Change to blocked
+                customGridData[row][col] = 0;
+                cell.classList.remove('open');
+                cell.classList.add('blocked');
+                cell.textContent = '⬛';
+            } else {
+                // Change to open
+                customGridData[row][col] = 1;
+                cell.classList.remove('blocked');
+                cell.classList.add('open');
+                cell.textContent = '';
+            }
+        }
+
+        function applyCustomGrid() {
+            if (!customGridData) {
+                alert('Please create a grid first!');
+                return;
+            }
+
+            const size = customGridData.length;
+
+            // Check if start and end are accessible
+            if (customGridData[0][0] === 0) {
+                alert('Start cell (0,0) cannot be blocked!');
+                return;
+            }
+            if (customGridData[size-1][size-1] === 0) {
+                alert('End cell cannot be blocked!');
+                return;
+            }
+
+            // Apply the custom grid
+            n = size;
+            grid = customGridData.map(row => [...row]); // Deep copy
+
+            closeCustomInput();
+            resetVisualization();
+            renderGrid();
+        }
+
+        initGrid(1);
+    </script>
+</body>
+</html>
