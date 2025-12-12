@@ -1,0 +1,2025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rat in a Maze - Visual Study Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .top-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .bottom-section {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+        }
+
+        .visualization-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .grid-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            min-height: 500px;
+            position: relative;
+        }
+
+        .grid {
+            display: inline-grid;
+            gap: 3px;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .cell {
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+            font-weight: bold;
+        }
+
+        .cell.blocked {
+            background: #2c3e50;
+            color: #7f8c8d;
+        }
+
+        .cell.open {
+            background: #ecf0f1;
+            color: #95a5a6;
+        }
+
+        .cell.start {
+            background: #3498db;
+            color: white;
+        }
+
+        .cell.end {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .cell.visiting {
+            background: #f39c12;
+            color: white;
+            animation: pulse 0.5s ease;
+        }
+
+        .cell.path {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .cell.backtrack {
+            background: #e67e22;
+            color: white;
+            animation: fadeOut 0.3s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0.5; }
+        }
+
+        .cell::after {
+            content: attr(data-coords);
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            font-size: 0.3em;
+            opacity: 0.5;
+        }
+
+        .arrow {
+            position: absolute;
+            font-size: 2.5em;
+            animation: arrowMove 0.5s ease;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .arrow.forward {
+            color: #2ecc71;
+            text-shadow: 0 0 10px rgba(46, 204, 113, 0.8);
+        }
+
+        .arrow.backward {
+            color: #e74c3c;
+            text-shadow: 0 0 10px rgba(231, 76, 60, 0.8);
+        }
+
+        @keyframes arrowMove {
+            0% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1);
+            }
+        }
+
+        .direction-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5em;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-success {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .info-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #3498db;
+        }
+
+        .info-box h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .algorithm-steps {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .step {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            background: #ecf0f1;
+            border-left: 3px solid #95a5a6;
+            font-size: 0.9em;
+        }
+
+        .step.active {
+            background: #3498db;
+            color: white;
+            border-left-color: #2980b9;
+        }
+
+        .paths-found {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .path-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: #2ecc71;
+            color: white;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.95em;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-box .label {
+            color: #7f8c8d;
+            font-size: 0.85em;
+            margin-bottom: 5px;
+        }
+
+        .stat-box .value {
+            color: #2c3e50;
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            background: white;
+            border-radius: 5px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .speed-control input {
+            flex: 1;
+        }
+
+        .preset-grids {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .preset-btn {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .code-box {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            overflow-x: auto;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .code-box .keyword {
+            color: #e74c3c;
+        }
+
+        .code-box .function {
+            color: #3498db;
+        }
+
+        .code-box .comment {
+            color: #95a5a6;
+        }
+
+        .code-line {
+            padding: 4px 8px;
+            margin: 2px 0;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            line-height: 1.6;
+        }
+
+        .code-line.executing {
+            background: #f39c12;
+            color: white;
+            transform: translateX(5px);
+            box-shadow: -3px 0 0 #e67e22;
+            animation: codeHighlight 0.5s ease;
+        }
+
+        .code-line.executed {
+            background: rgba(52, 152, 219, 0.2);
+        }
+
+        @keyframes codeHighlight {
+            0%, 100% { 
+                transform: translateX(5px);
+            }
+            50% { 
+                transform: translateX(8px);
+            }
+        }
+
+        .execution-marker {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #e74c3c;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .variable-display {
+            background: rgba(52, 152, 219, 0.1);
+            border-left: 3px solid #3498db;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .variable-display .var-label {
+            color: #7f8c8d;
+            font-weight: bold;
+        }
+
+        .variable-display .var-value {
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        .recursion-stack {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 350px;
+            overflow-y: auto;
+            min-height: 100px;
+        }
+
+        .stack-frame {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border-left: 4px solid #e74c3c;
+            position: relative;
+            animation: stackPush 0.3s ease;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        .stack-frame.active {
+            border-left-color: #f39c12;
+            box-shadow: 0 5px 20px rgba(243, 156, 18, 0.4);
+            animation: stackActive 0.5s ease infinite;
+        }
+
+        .stack-frame.returning {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            animation: stackPop 0.3s ease;
+        }
+
+        @keyframes stackPush {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes stackPop {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+        }
+
+        @keyframes stackActive {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.02);
+            }
+        }
+
+        .stack-frame .frame-header {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stack-frame .frame-depth {
+            background: rgba(255,255,255,0.2);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.85em;
+        }
+
+        .stack-frame .frame-params {
+            font-size: 0.9em;
+            opacity: 0.95;
+            line-height: 1.6;
+        }
+
+        .stack-frame .frame-params span {
+            background: rgba(255,255,255,0.15);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin: 2px;
+            display: inline-block;
+        }
+
+        .stack-empty {
+            text-align: center;
+            color: #95a5a6;
+            padding: 30px;
+            font-style: italic;
+        }
+
+        .stack-arrow {
+            text-align: center;
+            color: #3498db;
+            font-size: 1.5em;
+            margin: -5px 0;
+            animation: arrowBounce 1s ease infinite;
+        }
+
+        @keyframes arrowBounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .recursion-view-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            background: #ecf0f1;
+            padding: 5px;
+            border-radius: 8px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #7f8c8d;
+        }
+
+        .toggle-btn.active {
+            background: white;
+            color: #2c3e50;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .toggle-btn:hover:not(.active) {
+            background: rgba(255,255,255,0.5);
+        }
+
+        .recursion-depth-info {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        .recursion-tree {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            max-height: 350px;
+            overflow: auto;
+            min-height: 100px;
+            position: relative;
+        }
+
+        .tree-empty {
+            text-align: center;
+            color: #95a5a6;
+            padding: 30px;
+            font-style: italic;
+        }
+
+        .tree-node {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            margin: 15px 0;
+        }
+
+        .tree-node-wrapper {
+            position: relative;
+            padding-left: 0;
+        }
+
+        .tree-node-wrapper.has-children {
+            padding-left: 40px;
+        }
+
+        /* Vertical line connecting to children */
+        .tree-node-wrapper.has-children > .tree-node::after {
+            content: '';
+            position: absolute;
+            left: 29px;
+            top: 35px;
+            width: 2px;
+            height: calc(100% - 20px);
+            background: #bdc3c7;
+        }
+
+        /* Horizontal line to each child */
+        .tree-node-children > .tree-node-wrapper::before {
+            content: '';
+            position: absolute;
+            left: -40px;
+            top: 20px;
+            width: 30px;
+            height: 2px;
+            background: #bdc3c7;
+        }
+
+        /* Vertical connector for children group */
+        .tree-node-children {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .tree-node-children::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 20px;
+            width: 2px;
+            background: #bdc3c7;
+        }
+
+        .tree-node-content {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            animation: treeNodeAppear 0.3s ease;
+            position: relative;
+            white-space: nowrap;
+            min-width: 180px;
+        }
+
+        .tree-node-content.active {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4);
+            animation: treeNodePulse 1s ease infinite;
+            transform: scale(1.05);
+        }
+
+        .tree-node-content.success {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        }
+
+        .tree-node-content.failed {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            opacity: 0.6;
+        }
+
+        .tree-node-content.returning {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            animation: treeNodeReturn 0.5s ease;
+        }
+
+        @keyframes treeNodeAppear {
+            from {
+                opacity: 0;
+                transform: translateX(-20px) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        @keyframes treeNodePulse {
+            0%, 100% {
+                transform: scale(1.05);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        @keyframes treeNodeReturn {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0.6;
+            }
+        }
+
+        .tree-node-icon {
+            font-size: 1.2em;
+        }
+
+        .tree-node-label {
+            font-weight: bold;
+            font-size: 0.95em;
+        }
+
+        .tree-node-params {
+            font-size: 0.85em;
+            opacity: 0.9;
+            background: rgba(255,255,255,0.15);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .tree-node-depth {
+            background: rgba(255,255,255,0.2);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.75em;
+            font-weight: bold;
+        }
+
+        /* Root node special styling */
+        .tree-node-wrapper:first-child > .tree-node > .tree-node-content {
+            border: 2px solid #3498db;
+        }
+
+        /* Graph view styles */
+        .recursion-graph {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow: auto;
+            min-height: 100px;
+        }
+
+        .graph-node {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .graph-node circle {
+            transition: all 0.3s ease;
+        }
+
+        .graph-node.active circle {
+            r: 32;
+            filter: drop-shadow(0 0 10px rgba(243, 156, 18, 0.8));
+            animation: graphNodePulse 1s ease infinite;
+        }
+
+        @keyframes graphNodePulse {
+            0%, 100% {
+                r: 32;
+            }
+            50% {
+                r: 35;
+            }
+        }
+
+        .graph-node text {
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .graph-link {
+            fill: none;
+            stroke: #bdc3c7;
+            stroke-width: 2;
+            transition: all 0.3s ease;
+        }
+
+        .graph-link.active {
+            stroke: #f39c12;
+            stroke-width: 3;
+            animation: graphLinkPulse 1s ease infinite;
+        }
+
+        @keyframes graphLinkPulse {
+            0%, 100% {
+                stroke-width: 3;
+            }
+            50% {
+                stroke-width: 4;
+            }
+        }
+
+        .graph-arrow {
+            fill: #bdc3c7;
+            transition: all 0.3s ease;
+        }
+
+        .graph-arrow.active {
+            fill: #f39c12;
+        }
+
+        /* Node colors by status */
+        .node-default {
+            fill: url(#gradientPurple);
+        }
+
+        .node-active {
+            fill: url(#gradientOrange);
+        }
+
+        .node-success {
+            fill: url(#gradientGreen);
+        }
+
+        .node-failed {
+            fill: url(#gradientGray);
+            opacity: 0.6;
+        }
+
+        .node-returning {
+            fill: url(#gradientRed);
+        }
+
+        #graphSvg {
+            display: block;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 1200px) {
+            .top-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .bottom-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐀 Rat in a Maze</h1>
+            <p>Visual Backtracking Algorithm Study Guide</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Top Section: Visualization and Algorithm side by side -->
+            <div class="top-section">
+                <div class="visualization-panel">
+                    <div class="grid-container">
+                        <div class="grid" id="grid"></div>
+                    </div>
+
+                    <div class="controls">
+                        <button class="btn-primary" onclick="startVisualization()">▶ Start</button>
+                        <button class="btn-warning" onclick="stepForward()">→ Step</button>
+                        <button class="btn-danger" onclick="resetVisualization()">⟲ Reset</button>
+                        <button class="btn-success" onclick="findAllPaths()">⚡ Find All</button>
+                    </div>
+
+                    <div class="info-box">
+                        <h3>Preset Grids</h3>
+                        <div class="preset-grids">
+                            <button class="btn-primary preset-btn" onclick="loadPreset(1)">Example 1</button>
+                            <button class="btn-primary preset-btn" onclick="loadPreset(2)">Example 2</button>
+                            <button class="btn-primary preset-btn" onclick="loadPreset(3)">Complex</button>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <h3>Speed Control</h3>
+                        <div class="speed-control">
+                            <span>Slow</span>
+                            <input type="range" id="speedControl" min="100" max="2000" value="800" step="100">
+                            <span>Fast</span>
+                            <span id="speedValue">800ms</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Algorithm section moved here -->
+                <div class="algorithm-panel">
+                    <div class="info-box">
+                        <h3>Algorithm (Backtracking) - Live Execution</h3>
+                        <div class="code-box" id="codeBox">
+<div class="code-line" data-line="1"><span class="keyword">function</span> <span class="function">findPaths</span>(x, y, path, visited):</div>
+<div class="code-line" data-line="2">    <span class="comment">// Base case: reached destination</span></div>
+<div class="code-line" data-line="3">    <span class="keyword">if</span> x == n-1 <span class="keyword">and</span> y == n-1:</div>
+<div class="code-line" data-line="4">        result.add(path)</div>
+<div class="code-line" data-line="5">        <span class="keyword">return</span></div>
+<div class="code-line" data-line="6"></div>
+<div class="code-line" data-line="7">    <span class="comment">// Mark current cell as visited</span></div>
+<div class="code-line" data-line="8">    visited[x][y] = <span class="keyword">true</span></div>
+<div class="code-line" data-line="9"></div>
+<div class="code-line" data-line="10">    <span class="comment">// Try all 4 directions: D, L, R, U</span></div>
+<div class="code-line" data-line="11">    directions = [D, L, R, U]</div>
+<div class="code-line" data-line="12">    <span class="keyword">for each</span> direction:</div>
+<div class="code-line" data-line="13">        newX, newY = getNext(x, y, direction)</div>
+<div class="code-line" data-line="14">        <span class="keyword">if</span> isSafe(newX, newY, visited):</div>
+<div class="code-line" data-line="15">            findPaths(newX, newY, path + direction, visited)</div>
+<div class="code-line" data-line="16"></div>
+<div class="code-line" data-line="17">    <span class="comment">// Backtrack: unmark the cell</span></div>
+<div class="code-line" data-line="18">    visited[x][y] = <span class="keyword">false</span></div>
+                        </div>
+                        <div class="variable-display" id="variableDisplay">
+                            <div><span class="var-label">Current Position:</span> <span class="var-value" id="varPosition">(0, 0)</span></div>
+                            <div><span class="var-label">Path:</span> <span class="var-value" id="varPath">""</span></div>
+                            <div><span class="var-label">Direction:</span> <span class="var-value" id="varDirection">-</span></div>
+                            <div><span class="var-label">Status:</span> <span class="var-value" id="varStatus">Ready</span></div>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <h3>📚 Recursion Visualization</h3>
+                        <div class="recursion-view-toggle">
+                            <button class="toggle-btn active" onclick="switchRecursionView('stack')">📚 Stack</button>
+                            <button class="toggle-btn" onclick="switchRecursionView('tree')">🌳 Tree</button>
+                            <button class="toggle-btn" onclick="switchRecursionView('graph')">⭕ Graph</button>
+                        </div>
+                        <div class="recursion-depth-info">
+                            <span>Current Depth: <strong id="stackDepth">0</strong></span>
+                            <span>Max Depth: <strong id="maxDepth">0</strong></span>
+                        </div>
+                        <div class="recursion-stack" id="recursionStack">
+                            <div class="stack-empty">No active calls</div>
+                        </div>
+                        <div class="recursion-tree" id="recursionTree" style="display: none;">
+                            <div class="tree-empty">No calls yet - Start visualization</div>
+                        </div>
+                        <div class="recursion-graph" id="recursionGraph" style="display: none;">
+                            <svg id="graphSvg" width="100%" height="400"></svg>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <h3>Legend</h3>
+                        <div class="legend">
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: #3498db;">🐀</div>
+                                <span>Start</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: #e74c3c;">🧀</div>
+                                <span>End</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: #2c3e50;"></div>
+                                <span>Blocked</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: #ecf0f1;"></div>
+                                <span>Open</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: #f39c12;"></div>
+                                <span>Visiting</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: #2ecc71;"></div>
+                                <span>Path</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Section: Statistics and Info -->
+            <div class="bottom-section">
+                <div class="left-panel">
+                    <div class="info-box">
+                        <h3>Statistics</h3>
+                        <div class="stats">
+                            <div class="stat-box">
+                                <div class="label">Paths Found</div>
+                                <div class="value" id="pathsFound">0</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="label">Current Step</div>
+                                <div class="value" id="currentStep">0</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="label">Backtracks</div>
+                                <div class="value" id="backtracks">0</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="label">Cells Visited</div>
+                                <div class="value" id="cellsVisited">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <h3>Paths Found</h3>
+                        <div class="paths-found" id="pathsList">
+                            <p style="color: #7f8c8d; text-align: center;">No paths found yet</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <div class="info-box">
+                        <h3>Current Step</h3>
+                        <div class="algorithm-steps" id="stepsList">
+                            <div class="step active">Ready to start visualization</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let grid = [];
+        let n = 4;
+        let animationSpeed = 800;
+        let isAnimating = false;
+        let foundPaths = [];
+        let currentSteps = [];
+        let stepIndex = 0;
+        let stats = {
+            pathsFound: 0,
+            currentStep: 0,
+            backtracks: 0,
+            cellsVisited: 0
+        };
+        let callStack = []; // Track recursion call stack
+        let recursionTree = null; // Root of the recursion tree
+        let currentTreeNode = null; // Current node in tree
+        let treeNodeIdCounter = 0; // Unique ID for each tree node
+        let maxDepth = 0; // Track maximum recursion depth
+        let currentView = 'stack'; // Current visualization view
+
+        // Direction mappings
+        const directions = {
+            'D': [1, 0],   // Down
+            'U': [-1, 0],  // Up
+            'R': [0, 1],   // Right
+            'L': [0, -1]   // Left
+        };
+
+        function initGrid(preset) {
+            switch(preset) {
+                case 1:
+                    n = 4;
+                    grid = [
+                        [1, 0, 0, 0],
+                        [1, 1, 0, 1],
+                        [1, 1, 0, 0],
+                        [0, 1, 1, 1]
+                    ];
+                    break;
+                case 2:
+                    n = 2;
+                    grid = [
+                        [1, 0],
+                        [1, 0]
+                    ];
+                    break;
+                case 3:
+                    n = 5;
+                    grid = [
+                        [1, 0, 1, 1, 1],
+                        [1, 1, 1, 0, 1],
+                        [0, 1, 0, 1, 1],
+                        [1, 1, 1, 1, 0],
+                        [1, 0, 0, 1, 1]
+                    ];
+                    break;
+            }
+            renderGrid();
+            resetStats();
+        }
+
+        function renderGrid() {
+            const gridElement = document.getElementById('grid');
+            gridElement.innerHTML = '';
+            gridElement.style.gridTemplateColumns = `repeat(${n}, 70px)`;
+
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < n; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.id = `cell-${i}-${j}`;
+                    cell.setAttribute('data-coords', `${i},${j}`);
+
+                    if (grid[i][j] === 0) {
+                        cell.classList.add('blocked');
+                        cell.textContent = '⬛';
+                    } else {
+                        cell.classList.add('open');
+                    }
+
+                    if (i === 0 && j === 0) {
+                        cell.classList.remove('open');
+                        cell.classList.add('start');
+                        cell.textContent = '🐀';
+                    } else if (i === n-1 && j === n-1 && grid[i][j] === 1) {
+                        cell.classList.remove('open');
+                        cell.classList.add('end');
+                        cell.textContent = '🧀';
+                    }
+
+                    gridElement.appendChild(cell);
+                }
+            }
+        }
+
+        function isSafe(x, y, visited) {
+            return x >= 0 && x < n && y >= 0 && y < n && 
+                   grid[x][y] === 1 && !visited[x][y];
+        }
+
+        function findAllPathsRecursive(x, y, path, visited, allPaths, depth = 0) {
+            // Push to call stack
+            currentSteps.push({
+                type: 'call',
+                x, y,
+                path: path,
+                depth: depth,
+                message: `📞 Calling findPaths(${x}, ${y}, "${path}")`
+            });
+
+            // Base case: reached destination
+            if (x === n-1 && y === n-1) {
+                allPaths.push(path);
+                currentSteps.push({
+                    type: 'found',
+                    x, y,
+                    path: path,
+                    depth: depth,
+                    message: `✓ Path found: ${path}`
+                });
+                currentSteps.push({
+                    type: 'return',
+                    x, y,
+                    path: path,
+                    depth: depth,
+                    message: `↩️ Returning from findPaths(${x}, ${y})`
+                });
+                return;
+            }
+
+            // Mark current cell as visited
+            visited[x][y] = true;
+            currentSteps.push({
+                type: 'visit',
+                x, y,
+                path: path,
+                depth: depth,
+                message: `Visiting cell (${x}, ${y}), current path: ${path || 'START'}`
+            });
+
+            // Try all 4 directions in order: D, L, R, U
+            const dirOrder = ['D', 'L', 'R', 'U'];
+            
+            for (let dir of dirOrder) {
+                const [dx, dy] = directions[dir];
+                const newX = x + dx;
+                const newY = y + dy;
+
+                if (isSafe(newX, newY, visited)) {
+                    currentSteps.push({
+                        type: 'explore',
+                        x: newX,
+                        y: newY,
+                        fromX: x,
+                        fromY: y,
+                        dir: dir,
+                        depth: depth,
+                        message: `Trying ${dir} from (${x}, ${y}) to (${newX}, ${newY})`
+                    });
+                    findAllPathsRecursive(newX, newY, path + dir, visited, allPaths, depth + 1);
+                }
+            }
+
+            // Backtrack
+            visited[x][y] = false;
+            currentSteps.push({
+                type: 'backtrack',
+                x, y,
+                path: path,
+                depth: depth,
+                message: `⬅ Backtracking from (${x}, ${y})`
+            });
+            
+            currentSteps.push({
+                type: 'return',
+                x, y,
+                path: path,
+                depth: depth,
+                message: `↩️ Returning from findPaths(${x}, ${y})`
+            });
+        }
+
+        function findAllPaths() {
+            if (grid[0][0] === 0 || grid[n-1][n-1] === 0) {
+                alert('Start or end cell is blocked!');
+                return;
+            }
+
+            resetVisualization();
+            foundPaths = [];
+            currentSteps = [];
+            
+            const visited = Array(n).fill(null).map(() => Array(n).fill(false));
+            findAllPathsRecursive(0, 0, '', visited, foundPaths);
+            
+            displayPaths();
+            updateStats();
+        }
+
+        async function startVisualization() {
+            if (isAnimating) return;
+            if (currentSteps.length === 0) {
+                findAllPaths();
+            }
+            
+            isAnimating = true;
+            stepIndex = 0;
+            
+            for (let i = 0; i < currentSteps.length; i++) {
+                if (!isAnimating) break;
+                stepIndex = i;
+                await executeStep(currentSteps[i]);
+                await sleep(animationSpeed);
+            }
+            
+            isAnimating = false;
+        }
+
+        async function stepForward() {
+            if (currentSteps.length === 0) {
+                findAllPaths();
+            }
+            
+            if (stepIndex < currentSteps.length) {
+                await executeStep(currentSteps[stepIndex]);
+                stepIndex++;
+            }
+        }
+
+        async function executeStep(step) {
+            const cell = document.getElementById(`cell-${step.x}-${step.y}`);
+            
+            updateStepDisplay(step.message);
+            stats.currentStep++;
+            
+            // Update variable display
+            updateVariableDisplay(step);
+            
+            // Clear previous highlights
+            clearCodeHighlights();
+            
+            switch(step.type) {
+                case 'call':
+                    // Push to call stack
+                    pushToCallStack(step);
+                    highlightCodeLine(1);
+                    break;
+                    
+                case 'visit':
+                    cell.classList.add('visiting');
+                    stats.cellsVisited++;
+                    
+                    // Update current call as active
+                    updateActiveCallFrame(step);
+                    
+                    // Highlight lines 1, 3, 7, 8
+                    highlightCodeLine(1);
+                    await sleep(animationSpeed / 4);
+                    highlightCodeLine(3);
+                    await sleep(animationSpeed / 4);
+                    
+                    if (step.x === n-1 && step.y === n-1) {
+                        // Reached destination
+                        highlightCodeLine(4);
+                        await sleep(animationSpeed / 4);
+                        highlightCodeLine(5);
+                    } else {
+                        highlightCodeLine(8);
+                    }
+                    break;
+                    
+                case 'explore':
+                    const targetCell = document.getElementById(`cell-${step.x}-${step.y}`);
+                    targetCell.classList.add('visiting');
+                    
+                    // Highlight exploration lines 10-15
+                    highlightCodeLine(12);
+                    await sleep(animationSpeed / 4);
+                    highlightCodeLine(13);
+                    await sleep(animationSpeed / 4);
+                    highlightCodeLine(14);
+                    await sleep(animationSpeed / 4);
+                    highlightCodeLine(15);
+                    
+                    // Show arrow from previous cell to current cell
+                    if (step.fromX !== undefined && step.fromY !== undefined) {
+                        showArrow(step.fromX, step.fromY, step.x, step.y, step.dir, 'forward');
+                    }
+                    break;
+                    
+                case 'backtrack':
+                    cell.classList.remove('visiting');
+                    cell.classList.add('backtrack');
+                    
+                    // Highlight backtrack lines 17, 18
+                    highlightCodeLine(17);
+                    await sleep(animationSpeed / 4);
+                    highlightCodeLine(18);
+                    
+                    // Show backward arrow
+                    showBacktrackArrow(step.x, step.y);
+                    
+                    setTimeout(() => {
+                        cell.classList.remove('backtrack');
+                    }, 300);
+                    stats.backtracks++;
+                    break;
+                    
+                case 'found':
+                    cell.classList.add('path');
+                    stats.pathsFound++;
+                    
+                    // Mark tree node as success
+                    if (currentTreeNode) {
+                        currentTreeNode.status = 'success';
+                        renderTree();
+                    }
+                    
+                    // Highlight success lines
+                    highlightCodeLine(3);
+                    await sleep(animationSpeed / 4);
+                    highlightCodeLine(4);
+                    await sleep(animationSpeed / 4);
+                    highlightCodeLine(5);
+                    break;
+                    
+                case 'return':
+                    // Pop from call stack
+                    popFromCallStack(step);
+                    highlightCodeLine(5);
+                    break;
+            }
+            
+            updateStatsDisplay();
+        }
+
+        function highlightCodeLine(lineNumber) {
+            const line = document.querySelector(`.code-line[data-line="${lineNumber}"]`);
+            if (line) {
+                line.classList.add('executing');
+                line.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                
+                // Remove highlight after a short delay and mark as executed
+                setTimeout(() => {
+                    line.classList.remove('executing');
+                    line.classList.add('executed');
+                }, animationSpeed / 2);
+            }
+        }
+
+        function clearCodeHighlights() {
+            const lines = document.querySelectorAll('.code-line');
+            lines.forEach(line => {
+                line.classList.remove('executing');
+            });
+        }
+
+        function updateVariableDisplay(step) {
+            document.getElementById('varPosition').textContent = `(${step.x}, ${step.y})`;
+            document.getElementById('varPath').textContent = `"${step.path || ''}"`;
+            
+            if (step.dir) {
+                const dirNames = { 'D': 'Down ⬇', 'U': 'Up ⬆', 'R': 'Right ➡', 'L': 'Left ⬅' };
+                document.getElementById('varDirection').textContent = dirNames[step.dir] || '-';
+            } else {
+                document.getElementById('varDirection').textContent = '-';
+            }
+            
+            const statusMessages = {
+                'call': '📞 Function Call',
+                'visit': '🔍 Visiting cell',
+                'explore': '🚀 Exploring direction',
+                'backtrack': '↩️ Backtracking',
+                'found': '✅ Path found!',
+                'return': '⬅️ Returning'
+            };
+            document.getElementById('varStatus').textContent = statusMessages[step.type] || 'Running';
+        }
+
+        function pushToCallStack(step) {
+            callStack.push({
+                x: step.x,
+                y: step.y,
+                path: step.path,
+                depth: step.depth
+            });
+            
+            // Update max depth
+            if (step.depth > maxDepth) {
+                maxDepth = step.depth;
+                document.getElementById('maxDepth').textContent = maxDepth;
+            }
+            
+            // Build tree structure
+            const newNode = {
+                id: treeNodeIdCounter++,
+                gridX: step.x,  // Grid position
+                gridY: step.y,  // Grid position
+                path: step.path,
+                depth: step.depth,
+                children: [],
+                parent: currentTreeNode,
+                status: 'active' // active, success, failed, returning
+            };
+            
+            if (recursionTree === null) {
+                recursionTree = newNode;
+            } else if (currentTreeNode) {
+                currentTreeNode.children.push(newNode);
+            }
+            
+            currentTreeNode = newNode;
+            
+            renderCallStack();
+            renderTree();
+        }
+
+        function popFromCallStack(step) {
+            if (callStack.length > 0) {
+                const frame = callStack[callStack.length - 1];
+                const frameElement = document.querySelector(`.stack-frame[data-depth="${frame.depth}"]`);
+                
+                // Update tree node status
+                if (currentTreeNode) {
+                    currentTreeNode.status = 'returning';
+                    currentTreeNode = currentTreeNode.parent;
+                }
+                
+                if (frameElement) {
+                    frameElement.classList.add('returning');
+                    setTimeout(() => {
+                        callStack.pop();
+                        renderCallStack();
+                        renderTree();
+                    }, 300);
+                } else {
+                    callStack.pop();
+                    renderCallStack();
+                    renderTree();
+                }
+            }
+        }
+
+        function updateActiveCallFrame(step) {
+            const frames = document.querySelectorAll('.stack-frame');
+            frames.forEach(frame => frame.classList.remove('active'));
+            
+            const currentFrame = document.querySelector(`.stack-frame[data-depth="${step.depth}"]`);
+            if (currentFrame) {
+                currentFrame.classList.add('active');
+            }
+        }
+
+        function renderCallStack() {
+            const stackContainer = document.getElementById('recursionStack');
+            document.getElementById('stackDepth').textContent = callStack.length;
+            
+            if (callStack.length === 0) {
+                stackContainer.innerHTML = '<div class="stack-empty">No active calls</div>';
+                return;
+            }
+            
+            let html = '';
+            
+            // Render stack from bottom to top (oldest to newest)
+            for (let i = callStack.length - 1; i >= 0; i--) {
+                const frame = callStack[i];
+                const isActive = i === callStack.length - 1;
+                
+                html += `
+                    <div class="stack-frame ${isActive ? 'active' : ''}" data-depth="${frame.depth}">
+                        <div class="frame-header">
+                            <span>🔄 findPaths()</span>
+                            <span class="frame-depth">Depth ${frame.depth}</span>
+                        </div>
+                        <div class="frame-params">
+                            <span>x: ${frame.x}</span>
+                            <span>y: ${frame.y}</span>
+                            <span>path: "${frame.path}"</span>
+                        </div>
+                    </div>
+                `;
+                
+                if (i > 0) {
+                    html += '<div class="stack-arrow">⬆</div>';
+                }
+            }
+            
+            stackContainer.innerHTML = html;
+            
+            // Scroll to bottom to show most recent call
+            stackContainer.scrollTop = stackContainer.scrollHeight;
+        }
+
+        function renderTree() {
+            const treeContainer = document.getElementById('recursionTree');
+            
+            if (!recursionTree) {
+                treeContainer.innerHTML = '<div class="tree-empty">No calls yet - Start visualization</div>';
+                return;
+            }
+            
+            treeContainer.innerHTML = renderTreeNode(recursionTree, true);
+            
+            // Scroll to show active node
+            const activeNode = treeContainer.querySelector('.tree-node-content.active');
+            if (activeNode) {
+                activeNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            
+            // Also render graph view
+            renderGraph();
+        }
+
+        function renderTreeNode(node, isRoot = false) {
+            if (!node) return '';
+            
+            const statusClass = node.status;
+            const isActive = node === currentTreeNode;
+            const hasChildren = node.children && node.children.length > 0;
+            
+            // Direction arrow based on where we came from
+            let directionIcon = '🐀'; // Root starts with rat
+            if (!isRoot && node.parent) {
+                const dx = node.gridX - node.parent.gridX;
+                const dy = node.gridY - node.parent.gridY;
+                if (dx === 1) directionIcon = '⬇️';
+                else if (dx === -1) directionIcon = '⬆️';
+                else if (dy === 1) directionIcon = '➡️';
+                else if (dy === -1) directionIcon = '⬅️';
+            }
+            
+            let html = `<div class="tree-node-wrapper ${hasChildren ? 'has-children' : ''}">`;
+            html += `<div class="tree-node">`;
+            
+            html += `
+                <div class="tree-node-content ${statusClass} ${isActive ? 'active' : ''}" data-node-id="${node.id}">
+                    <span class="tree-node-icon">${directionIcon}</span>
+                    <span class="tree-node-label">(${node.gridX},${node.gridY})</span>
+                    <span class="tree-node-params">"${node.path}"</span>
+                    <span class="tree-node-depth">D${node.depth}</span>
+                </div>
+            `;
+            
+            html += `</div>`; // close tree-node
+            
+            if (hasChildren) {
+                html += `<div class="tree-node-children">`;
+                for (const child of node.children) {
+                    html += renderTreeNode(child);
+                }
+                html += `</div>`;
+            }
+            
+            html += `</div>`; // close tree-node-wrapper
+            return html;
+        }
+
+        function renderGraph() {
+            const svg = document.getElementById('graphSvg');
+            
+            if (!recursionTree) {
+                return;
+            }
+            
+            // Clear previous content
+            svg.innerHTML = '';
+            
+            // Add gradient definitions
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            
+            const gradients = [
+                { id: 'gradientPurple', colors: ['#667eea', '#764ba2'] },
+                { id: 'gradientOrange', colors: ['#f39c12', '#e67e22'] },
+                { id: 'gradientGreen', colors: ['#2ecc71', '#27ae60'] },
+                { id: 'gradientGray', colors: ['#95a5a6', '#7f8c8d'] },
+                { id: 'gradientRed', colors: ['#e74c3c', '#c0392b'] }
+            ];
+            
+            gradients.forEach(grad => {
+                const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+                gradient.setAttribute('id', grad.id);
+                gradient.setAttribute('x1', '0%');
+                gradient.setAttribute('y1', '0%');
+                gradient.setAttribute('x2', '100%');
+                gradient.setAttribute('y2', '100%');
+                
+                const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+                stop1.setAttribute('offset', '0%');
+                stop1.setAttribute('stop-color', grad.colors[0]);
+                
+                const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+                stop2.setAttribute('offset', '100%');
+                stop2.setAttribute('stop-color', grad.colors[1]);
+                
+                gradient.appendChild(stop1);
+                gradient.appendChild(stop2);
+                defs.appendChild(gradient);
+            });
+            
+            svg.appendChild(defs);
+            
+            // Calculate tree layout
+            const nodes = [];
+            const links = [];
+            
+            function calculateLayout(node, depth = 0, leftBound = 0, rightBound = 800, parentX = null, parentY = null) {
+                if (!node) return;
+                
+                const x = (leftBound + rightBound) / 2;
+                const y = 60 + depth * 80;
+                
+                node.x = x;
+                node.y = y;
+                
+                nodes.push(node);
+                
+                if (parentX !== null && parentY !== null) {
+                    links.push({
+                        x1: parentX,
+                        y1: parentY,
+                        x2: x,
+                        y2: y,
+                        targetNode: node
+                    });
+                }
+                
+                if (node.children && node.children.length > 0) {
+                    const childWidth = (rightBound - leftBound) / node.children.length;
+                    node.children.forEach((child, i) => {
+                        const childLeft = leftBound + i * childWidth;
+                        const childRight = childLeft + childWidth;
+                        calculateLayout(child, depth + 1, childLeft, childRight, x, y);
+                    });
+                }
+            }
+            
+            calculateLayout(recursionTree, 0);
+            
+            // Adjust SVG height based on max depth
+            const maxY = Math.max(...nodes.map(n => n.y)) + 60;
+            svg.setAttribute('height', maxY);
+            
+            // Draw links first (so they appear behind nodes)
+            links.forEach(link => {
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                
+                // Curved path
+                const midY = (link.y1 + link.y2) / 2;
+                const d = `M ${link.x1} ${link.y1} 
+                          C ${link.x1} ${midY}, ${link.x2} ${midY}, ${link.x2} ${link.y2}`;
+                
+                path.setAttribute('d', d);
+                path.setAttribute('class', 'graph-link');
+                
+                // Highlight active path
+                if (link.targetNode === currentTreeNode) {
+                    path.classList.add('active');
+                }
+                
+                svg.appendChild(path);
+                
+                // Add arrowhead
+                const arrowSize = 6;
+                const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                const points = `${link.x2},${link.y2-30} ${link.x2-arrowSize},${link.y2-30-arrowSize} ${link.x2+arrowSize},${link.y2-30-arrowSize}`;
+                arrow.setAttribute('points', points);
+                arrow.setAttribute('class', 'graph-arrow');
+                
+                if (link.targetNode === currentTreeNode) {
+                    arrow.classList.add('active');
+                }
+                
+                svg.appendChild(arrow);
+            });
+            
+            // Draw nodes
+            nodes.forEach(node => {
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('class', 'graph-node');
+                g.setAttribute('transform', `translate(${node.x}, ${node.y})`);
+                
+                // Circle
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('r', '30');
+                
+                let statusClass = 'node-default';
+                if (node === currentTreeNode) {
+                    statusClass = 'node-active';
+                    g.classList.add('active');
+                } else if (node.status === 'success') {
+                    statusClass = 'node-success';
+                } else if (node.status === 'failed') {
+                    statusClass = 'node-failed';
+                } else if (node.status === 'returning') {
+                    statusClass = 'node-returning';
+                }
+                
+                circle.setAttribute('class', statusClass);
+                g.appendChild(circle);
+                
+                // Position text (using grid coordinates)
+                const text1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text1.setAttribute('text-anchor', 'middle');
+                text1.setAttribute('y', '-5');
+                text1.setAttribute('fill', 'white');
+                text1.setAttribute('font-size', '11');
+                text1.setAttribute('font-weight', 'bold');
+                text1.textContent = `(${node.gridX},${node.gridY})`;
+                g.appendChild(text1);
+                
+                // Path text
+                const text2 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text2.setAttribute('text-anchor', 'middle');
+                text2.setAttribute('y', '8');
+                text2.setAttribute('fill', 'white');
+                text2.setAttribute('font-size', '9');
+                text2.textContent = `"${node.path}"`;
+                g.appendChild(text2);
+                
+                // Depth badge
+                const text3 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text3.setAttribute('text-anchor', 'middle');
+                text3.setAttribute('y', '20');
+                text3.setAttribute('fill', 'white');
+                text3.setAttribute('font-size', '8');
+                text3.setAttribute('opacity', '0.8');
+                text3.textContent = `D${node.depth}`;
+                g.appendChild(text3);
+                
+                svg.appendChild(g);
+            });
+        }
+
+        function switchRecursionView(view) {
+            currentView = view;
+            
+            // Update toggle buttons
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Toggle visibility
+            const stackView = document.getElementById('recursionStack');
+            const treeView = document.getElementById('recursionTree');
+            const graphView = document.getElementById('recursionGraph');
+            
+            stackView.style.display = 'none';
+            treeView.style.display = 'none';
+            graphView.style.display = 'none';
+            
+            if (view === 'stack') {
+                stackView.style.display = 'block';
+            } else if (view === 'tree') {
+                treeView.style.display = 'block';
+            } else if (view === 'graph') {
+                graphView.style.display = 'block';
+                renderGraph(); // Re-render to ensure it's up to date
+            }
+        }
+
+        function showArrow(fromX, fromY, toX, toY, direction, type) {
+            const fromCell = document.getElementById(`cell-${fromX}-${fromY}`);
+            const toCell = document.getElementById(`cell-${toX}-${toY}`);
+            
+            if (!fromCell || !toCell) return;
+            
+            const arrowSymbols = {
+                'D': '⬇',
+                'U': '⬆',
+                'R': '➡',
+                'L': '⬅'
+            };
+            
+            const arrow = document.createElement('div');
+            arrow.className = `arrow ${type}`;
+            arrow.textContent = arrowSymbols[direction];
+            
+            // Position arrow between cells
+            const fromRect = fromCell.getBoundingClientRect();
+            const toRect = toCell.getBoundingClientRect();
+            const gridContainer = document.querySelector('.grid-container');
+            const containerRect = gridContainer.getBoundingClientRect();
+            
+            arrow.style.position = 'absolute';
+            arrow.style.left = `${(fromRect.left + toRect.left) / 2 - containerRect.left}px`;
+            arrow.style.top = `${(fromRect.top + toRect.top) / 2 - containerRect.top}px`;
+            
+            gridContainer.appendChild(arrow);
+            
+            // Remove arrow after animation
+            setTimeout(() => {
+                arrow.remove();
+            }, 500);
+            
+            // Add direction indicator to target cell
+            addDirectionIndicator(toCell, direction);
+        }
+
+        function showBacktrackArrow(x, y) {
+            const cell = document.getElementById(`cell-${x}-${y}`);
+            if (!cell) return;
+            
+            const arrow = document.createElement('div');
+            arrow.className = 'arrow backward';
+            arrow.textContent = '↩';
+            arrow.style.position = 'absolute';
+            arrow.style.fontSize = '2em';
+            
+            cell.style.position = 'relative';
+            cell.appendChild(arrow);
+            
+            setTimeout(() => {
+                arrow.remove();
+            }, 500);
+        }
+
+        function addDirectionIndicator(cell, direction) {
+            const arrowSymbols = {
+                'D': '↓',
+                'U': '↑',
+                'R': '→',
+                'L': '←'
+            };
+            
+            // Remove existing indicator
+            const existing = cell.querySelector('.direction-indicator');
+            if (existing) {
+                existing.remove();
+            }
+            
+            const indicator = document.createElement('div');
+            indicator.className = 'direction-indicator';
+            indicator.textContent = arrowSymbols[direction];
+            
+            cell.style.position = 'relative';
+            cell.appendChild(indicator);
+        }
+
+        function updateStepDisplay(message) {
+            const stepsList = document.getElementById('stepsList');
+            const stepDiv = document.createElement('div');
+            stepDiv.className = 'step active';
+            stepDiv.textContent = message;
+            
+            const oldActive = stepsList.querySelector('.step.active');
+            if (oldActive) {
+                oldActive.classList.remove('active');
+            }
+            
+            stepsList.insertBefore(stepDiv, stepsList.firstChild);
+            
+            if (stepsList.children.length > 20) {
+                stepsList.removeChild(stepsList.lastChild);
+            }
+        }
+
+        function displayPaths() {
+            const pathsList = document.getElementById('pathsList');
+            if (foundPaths.length === 0) {
+                pathsList.innerHTML = '<p style="color: #7f8c8d; text-align: center;">No paths exist</p>';
+            } else {
+                pathsList.innerHTML = foundPaths.map((path, idx) => 
+                    `<div class="path-item">Path ${idx + 1}: ${path}</div>`
+                ).join('');
+            }
+        }
+
+        function resetVisualization() {
+            isAnimating = false;
+            stepIndex = 0;
+            currentSteps = [];
+            foundPaths = [];
+            callStack = [];
+            recursionTree = null;
+            currentTreeNode = null;
+            treeNodeIdCounter = 0;
+            maxDepth = 0;
+            document.getElementById('maxDepth').textContent = '0';
+            
+            renderGrid();
+            resetStats();
+            document.getElementById('stepsList').innerHTML = '<div class="step active">Ready to start visualization</div>';
+            
+            // Clear any remaining arrows
+            const arrows = document.querySelectorAll('.arrow');
+            arrows.forEach(arrow => arrow.remove());
+            
+            // Clear code highlights
+            const lines = document.querySelectorAll('.code-line');
+            lines.forEach(line => {
+                line.classList.remove('executing', 'executed');
+            });
+            
+            // Reset variable display
+            document.getElementById('varPosition').textContent = '(0, 0)';
+            document.getElementById('varPath').textContent = '""';
+            document.getElementById('varDirection').textContent = '-';
+            document.getElementById('varStatus').textContent = 'Ready';
+            
+            // Reset call stack display
+            renderCallStack();
+            renderTree();
+        }
+
+        function resetStats() {
+            stats = {
+                pathsFound: 0,
+                currentStep: 0,
+                backtracks: 0,
+                cellsVisited: 0
+            };
+            updateStatsDisplay();
+            document.getElementById('pathsList').innerHTML = '<p style="color: #7f8c8d; text-align: center;">No paths found yet</p>';
+        }
+
+        function updateStatsDisplay() {
+            document.getElementById('pathsFound').textContent = stats.pathsFound;
+            document.getElementById('currentStep').textContent = stats.currentStep;
+            document.getElementById('backtracks').textContent = stats.backtracks;
+            document.getElementById('cellsVisited').textContent = stats.cellsVisited;
+        }
+
+        function loadPreset(preset) {
+            resetVisualization();
+            initGrid(preset);
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Speed control
+        document.getElementById('speedControl').addEventListener('input', (e) => {
+            animationSpeed = 2100 - parseInt(e.target.value);
+            document.getElementById('speedValue').textContent = e.target.value + 'ms';
+        });
+
+        // Initialize with first preset
+        initGrid(1);
+    </script>
+</body>
+</html>
