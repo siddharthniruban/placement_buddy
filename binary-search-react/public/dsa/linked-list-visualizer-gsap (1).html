@@ -1,0 +1,2010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Linked List Visualizer - GSAP Edition</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 20px;
+      margin: 0;
+      background: #f8f9fa;
+    }
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .container {
+      max-width: 1800px;
+      margin: 0 auto;
+    }
+    .input-section {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .input-section label {
+      display: inline-block;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    .input-section input, .input-section select {
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .input-section button {
+      padding: 8px 16px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .input-section button:hover {
+      background: #45a049;
+    }
+    .main-content {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .visualization-panel {
+      flex: 1;
+      min-width: 0;
+    }
+    .code-panel {
+      width: 600px;
+      background: #1e1e1e;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      position: sticky;
+      top: 20px;
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+    }
+    .code-panel h3 {
+      color: #fff;
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 16px;
+      border-bottom: 2px solid #4CAF50;
+      padding-bottom: 8px;
+    }
+    .code-container {
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #d4d4d4;
+    }
+    .code-line {
+      padding: 2px 8px;
+      border-radius: 3px;
+      transition: all 0.3s ease;
+      white-space: pre;
+    }
+    .code-line.active {
+      background: #4CAF50;
+      color: white;
+      font-weight: 600;
+      border-left: 3px solid #fff;
+      padding-left: 5px;
+    }
+    .problem-info {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .problem-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+    .problem-number {
+      font-size: 18px;
+      font-weight: 700;
+      color: #2196F3;
+    }
+    .problem-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #333;
+      flex: 1;
+    }
+    .difficulty {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .difficulty.easy {
+      background: #d4edda;
+      color: #155724;
+    }
+    .difficulty.medium {
+      background: #fff3cd;
+      color: #856404;
+    }
+    .difficulty.hard {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    .problem-description {
+      color: #555;
+      line-height: 1.6;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .problem-tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      background: #e3f2fd;
+      color: #1976d2;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .visualizer-section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    #list-container {
+      margin-top: 30px;
+      margin-bottom: 30px;
+      min-height: 200px;
+      position: relative;
+      padding: 70px 30px 50px 30px;
+      overflow-x: auto;
+      overflow-y: visible;
+    }
+    .list-wrapper {
+      display: flex;
+      align-items: center;
+      position: relative;
+      min-width: max-content;
+      padding: 30px 0;
+    }
+    .list-label {
+      font-weight: 700;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 10px;
+      margin-top: 20px;
+    }
+    .node-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-right: 15px;
+    }
+    .node {
+      display: flex;
+      background: white;
+      border: 3px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .node.head {
+      border-color: #4CAF50;
+      box-shadow: 0 0 15px rgba(76, 175, 80, 0.4);
+    }
+    .node.tail {
+      border-color: #2196F3;
+      box-shadow: 0 0 15px rgba(33, 150, 243, 0.4);
+    }
+    .node.slow {
+      border-color: #ff9800;
+      box-shadow: 0 0 20px rgba(255, 152, 0, 0.5);
+    }
+    .node.fast {
+      border-color: #e91e63;
+      box-shadow: 0 0 20px rgba(233, 30, 99, 0.5);
+    }
+    .node.prev {
+      border-color: #9c27b0;
+      box-shadow: 0 0 15px rgba(156, 39, 176, 0.4);
+    }
+    .node.current {
+      border-color: #00bcd4;
+      box-shadow: 0 0 20px rgba(0, 188, 212, 0.5);
+    }
+    .node.highlight {
+      background: #fff3cd;
+      border-color: #ffc107;
+    }
+    .node.cycle {
+      background: #ffcdd2;
+      border-color: #f44336;
+    }
+    .node.deleted {
+      opacity: 0.3;
+      border-color: #999;
+      background: #f5f5f5;
+    }
+    .node.merged {
+      background: #c8e6c9;
+    }
+    .node-data {
+      padding: 15px 20px;
+      font-weight: 700;
+      font-size: 18px;
+      color: #333;
+      min-width: 50px;
+      text-align: center;
+    }
+    .node-next {
+      padding: 15px 12px;
+      background: #e0e0e0;
+      border-left: 2px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 45px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .arrow {
+      margin: 0 8px;
+      font-size: 28px;
+      color: #333;
+      font-weight: bold;
+    }
+    .arrow.cycle-arrow {
+      color: #f44336;
+    }
+    .null-indicator {
+      padding: 12px 18px;
+      background: #f44336;
+      color: white;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      margin: 0 10px;
+    }
+    .pointer-label {
+      position: absolute;
+      top: -35px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      z-index: 10;
+    }
+    .pointer-label.head-label { background: #4CAF50; color: white; }
+    .pointer-label.tail-label { background: #2196F3; color: white; }
+    .pointer-label.slow-label { background: #ff9800; color: white; }
+    .pointer-label.fast-label { background: #e91e63; color: white; }
+    .pointer-label.prev-label { background: #9c27b0; color: white; }
+    .pointer-label.curr-label { background: #00bcd4; color: white; }
+    .pointer-label.p1-label { background: #673ab7; color: white; }
+    .pointer-label.p2-label { background: #3f51b5; color: white; }
+    .pointer-label.dummy-label { background: #795548; color: white; }
+    .arrow-down {
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 18px;
+      color: #666;
+      z-index: 9;
+    }
+    #controls {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    #controls button {
+      margin-right: 8px;
+      margin-bottom: 8px;
+      padding: 8px 16px;
+      background: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    #controls button:hover {
+      background: #0b7dda;
+    }
+    #description {
+      margin-top: 15px;
+      padding: 12px;
+      background: #e3f2fd;
+      border-left: 4px solid #2196F3;
+      border-radius: 4px;
+      font-style: italic;
+      min-height: 20px;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+    #step-indicator {
+      margin-top: 8px;
+      font-size: 0.95rem;
+      color: #666;
+      font-weight: 600;
+    }
+    .result-box {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+    }
+    .result-box.success {
+      background: #d4edda;
+      border: 2px solid #28a745;
+      color: #155724;
+    }
+    .result-box.info {
+      background: #d1ecf1;
+      border: 2px solid #17a2b8;
+      color: #0c5460;
+    }
+    .result-box.warning {
+      background: #fff3cd;
+      border: 2px solid #ffc107;
+      color: #856404;
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 15px;
+      padding: 12px;
+      background: #f9f9f9;
+      border-radius: 6px;
+      font-size: 0.8rem;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-box {
+      width: 25px;
+      height: 20px;
+      border: 2px solid #333;
+      border-radius: 3px;
+    }
+    .code-keyword { color: #569cd6; }
+    .code-function { color: #dcdcaa; }
+    .code-string { color: #ce9178; }
+    .code-number { color: #b5cea8; }
+    .code-comment { color: #6a9955; font-style: italic; }
+    .code-operator { color: #d4d4d4; }
+    @media (max-width: 1400px) {
+      .main-content {
+        flex-direction: column;
+      }
+      .code-panel {
+        width: 100%;
+        position: relative;
+        top: 0;
+        max-height: 500px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔗 Linked List Visualizer - GSAP Edition</h1>
+
+    <div class="input-section">
+      <label>
+        Problem:
+        <select id="problem-select">
+          <option value="detectCycle">Detect Cycle</option>
+          <option value="nthFromEnd">Remove N-th from End</option>
+          <option value="mergeSorted">Merge Two Sorted Lists</option>
+          <option value="reverseList">Reverse Linked List</option>
+          <option value="middleNode">Find Middle Node</option>
+          <option value="removeDuplicates">Remove Duplicates</option>
+          <option value="palindrome">Palindrome Check</option>
+          <option value="intersection">Intersection of Two Lists</option>
+        </select>
+      </label>
+
+      <label id="list1-label">
+        <span>List 1:</span>
+        <input id="input-list1" type="text" value="1,2,3,4,5" size="25" />
+      </label>
+
+      <label id="list2-label" style="display: none;">
+        <span>List 2:</span>
+        <input id="input-list2" type="text" value="2,4,6" size="25" />
+      </label>
+
+      <label id="param-label">
+        <span>N:</span>
+        <input id="param-input" type="number" value="2" style="width: 70px;" />
+      </label>
+
+      <label id="cycle-label" style="display: none;">
+        <span>Cycle at:</span>
+        <input id="cycle-input" type="number" value="2" style="width: 70px;" placeholder="-1 for no cycle" />
+      </label>
+
+      <button id="generate-btn">Solve</button>
+    </div>
+
+    <div class="main-content">
+      <div class="visualization-panel">
+        <div id="problem-info" class="problem-info"></div>
+        
+        <div class="visualizer-section">
+          <div id="list-container"></div>
+
+          <div id="controls">
+            <button id="prev-btn">⏮ Previous</button>
+            <button id="play-btn">▶ Play</button>
+            <button id="pause-btn">⏸ Pause</button>
+            <button id="next-btn">⏭ Next</button>
+            <button id="reset-btn">🔄 Reset</button>
+            <label style="margin-left: 8px;">
+              Speed (ms):
+              <input id="speed-input" type="number" value="1000" min="300" max="3000" step="100" style="width: 70px;" />
+            </label>
+          </div>
+
+          <div id="description"></div>
+          <div id="step-indicator"></div>
+          <div id="result-box" class="result-box" style="display: none;"></div>
+
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-box" style="border-color: #4CAF50; box-shadow: 0 0 5px rgba(76, 175, 80, 0.4);"></div>
+              <span>Head</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box" style="border-color: #ff9800;"></div>
+              <span>Slow</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box" style="border-color: #e91e63;"></div>
+              <span>Fast</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box" style="border-color: #00bcd4;"></div>
+              <span>Current</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box" style="border-color: #9c27b0;"></div>
+              <span>Previous</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box" style="background: #ffcdd2; border-color: #f44336;"></div>
+              <span>Cycle</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="code-panel">
+        <h3 id="code-title">📝 Algorithm Code</h3>
+        <div class="code-container" id="code-display"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==================== GSAP ANIMATION HELPERS ====================
+    const GSAP_ANIMATIONS = {
+      highlightNode(element) {
+        gsap.to(element, {
+          scale: 1.15,
+          duration: 0.4,
+          ease: "back.out(1.7)"
+        });
+      },
+
+      unhighlightNode(element) {
+        gsap.to(element, {
+          scale: 1,
+          duration: 0.3,
+          ease: "power2.out"
+        });
+      },
+
+      movePointer(element, targetX) {
+        gsap.to(element, {
+          x: targetX,
+          duration: 0.6,
+          ease: "power2.inOut"
+        });
+      },
+
+      fadeOut(element) {
+        gsap.to(element, {
+          opacity: 0,
+          scale: 0.8,
+          duration: 0.4,
+          ease: "power2.in"
+        });
+      },
+
+      fadeIn(element) {
+        gsap.fromTo(element,
+          { opacity: 0, y: 20 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.4,
+            ease: "power2.out"
+          }
+        );
+      },
+
+      pulseCodeLine(element) {
+        gsap.fromTo(element,
+          { x: 0 },
+          {
+            x: 4,
+            duration: 0.25,
+            yoyo: true,
+            repeat: 1,
+            ease: "power1.inOut"
+          }
+        );
+      },
+
+      glowEffect(element, color) {
+        gsap.to(element, {
+          boxShadow: `0 0 25px ${color}`,
+          duration: 0.3,
+          yoyo: true,
+          repeat: 1
+        });
+      },
+
+      shake(element) {
+        gsap.fromTo(element,
+          { x: 0 },
+          {
+            x: -5,
+            duration: 0.1,
+            repeat: 5,
+            yoyo: true,
+            ease: "power1.inOut"
+          }
+        );
+      },
+
+      bounce(element) {
+        gsap.fromTo(element,
+          { y: 0 },
+          {
+            y: -10,
+            duration: 0.3,
+            yoyo: true,
+            repeat: 1,
+            ease: "power1.out"
+          }
+        );
+      }
+    };
+
+    // ==================== LEETCODE PROBLEM DATA ====================
+    const LEETCODE_PROBLEMS = {
+      detectCycle: {
+        number: "141/142",
+        title: "Linked List Cycle Detection",
+        difficulty: "medium",
+        description: "Given head of a linked list, determine if the linked list has a cycle in it. Use Floyd's Cycle Detection Algorithm (tortoise and hare): slow pointer moves one step, fast pointer moves two steps. If they meet, there's a cycle.",
+        tags: ["Linked List", "Two Pointers", "Hash Table"],
+        link: "https://leetcode.com/problems/linked-list-cycle/"
+      },
+      nthFromEnd: {
+        number: "19",
+        title: "Remove Nth Node From End of List",
+        difficulty: "medium",
+        description: "Given the head of a linked list, remove the nth node from the end of the list and return its head. Use two pointers with a gap of n nodes between them. When the fast pointer reaches the end, the slow pointer will be at the (n+1)th node from the end.",
+        tags: ["Linked List", "Two Pointers"],
+        link: "https://leetcode.com/problems/remove-nth-node-from-end-of-list/"
+      },
+      mergeSorted: {
+        number: "21",
+        title: "Merge Two Sorted Lists",
+        difficulty: "easy",
+        description: "You are given the heads of two sorted linked lists list1 and list2. Merge the two lists in a one sorted list. The list should be made by splicing together the nodes of the first two lists. Return the head of the merged linked list.",
+        tags: ["Linked List", "Recursion"],
+        link: "https://leetcode.com/problems/merge-two-sorted-lists/"
+      },
+      reverseList: {
+        number: "206",
+        title: "Reverse Linked List",
+        difficulty: "easy",
+        description: "Given the head of a singly linked list, reverse the list, and return the reversed list. This is done iteratively by reversing the next pointers using three pointers: prev, current, and next.",
+        tags: ["Linked List", "Recursion"],
+        link: "https://leetcode.com/problems/reverse-linked-list/"
+      },
+      middleNode: {
+        number: "876",
+        title: "Middle of the Linked List",
+        difficulty: "easy",
+        description: "Given the head of a singly linked list, return the middle node of the linked list. If there are two middle nodes, return the second middle node. Use slow and fast pointers: when fast reaches the end, slow will be at the middle.",
+        tags: ["Linked List", "Two Pointers"],
+        link: "https://leetcode.com/problems/middle-of-the-linked-list/"
+      },
+      removeDuplicates: {
+        number: "83",
+        title: "Remove Duplicates from Sorted List",
+        difficulty: "easy",
+        description: "Given the head of a sorted linked list, delete all duplicates such that each element appears only once. Return the linked list sorted as well.",
+        tags: ["Linked List"],
+        link: "https://leetcode.com/problems/remove-duplicates-from-sorted-list/"
+      },
+      palindrome: {
+        number: "234",
+        title: "Palindrome Linked List",
+        difficulty: "easy",
+        description: "Given the head of a singly linked list, return true if it is a palindrome or false otherwise. Find the middle, reverse the second half, then compare both halves.",
+        tags: ["Linked List", "Two Pointers", "Stack", "Recursion"],
+        link: "https://leetcode.com/problems/palindrome-linked-list/"
+      },
+      intersection: {
+        number: "160",
+        title: "Intersection of Two Linked Lists",
+        difficulty: "easy",
+        description: "Given the heads of two singly linked lists headA and headB, return the node at which the two lists intersect. If the two linked lists have no intersection at all, return null.",
+        tags: ["Hash Table", "Linked List", "Two Pointers"],
+        link: "https://leetcode.com/problems/intersection-of-two-linked-lists/"
+      }
+    };
+
+    function displayProblemInfo(operation) {
+      const problemInfo = document.getElementById("problem-info");
+      const problem = LEETCODE_PROBLEMS[operation];
+      
+      if (!problem) {
+        problemInfo.innerHTML = "";
+        return;
+      }
+      
+      const numberDisplay = `<span class="problem-number">#${problem.number}</span>`;
+      const linkButton = problem.link 
+        ? `<a href="${problem.link}" target="_blank" style="padding: 6px 12px; background: #2196F3; color: white; text-decoration: none; border-radius: 4px; font-size: 12px; font-weight: 600;">View on LeetCode</a>`
+        : '';
+      
+      problemInfo.innerHTML = `
+        <div class="problem-header">
+          ${numberDisplay}
+          <div class="problem-title">${problem.title}</div>
+          <span class="difficulty ${problem.difficulty}">${problem.difficulty}</span>
+          ${linkButton}
+        </div>
+        <div class="problem-description">${problem.description}</div>
+        <div class="problem-tags">
+          ${problem.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+        </div>
+      `;
+    }
+
+    // ==================== CODE TEMPLATES ====================
+    const CODE_TEMPLATES = {
+      detectCycle: `<span class="code-keyword">function</span> <span class="code-function">hasCycle</span>(head) {
+  <span class="code-keyword">if</span> (!head || !head.next) <span class="code-keyword">return false</span>;
+  
+  <span class="code-keyword">let</span> slow = head;
+  <span class="code-keyword">let</span> fast = head;
+  
+  <span class="code-keyword">while</span> (fast && fast.next) {
+    slow = slow.next;
+    fast = fast.next.next;
+    
+    <span class="code-keyword">if</span> (slow === fast) {
+      <span class="code-keyword">return true</span>; <span class="code-comment">// Cycle detected</span>
+    }
+  }
+  
+  <span class="code-keyword">return false</span>;
+}`,
+
+      nthFromEnd: `<span class="code-keyword">function</span> <span class="code-function">removeNthFromEnd</span>(head, n) {
+  <span class="code-keyword">let</span> dummy = <span class="code-keyword">new</span> <span class="code-function">ListNode</span>(<span class="code-number">0</span>);
+  dummy.next = head;
+  <span class="code-keyword">let</span> slow = dummy;
+  <span class="code-keyword">let</span> fast = dummy;
+  
+  <span class="code-comment">// Move fast pointer n+1 steps ahead</span>
+  <span class="code-keyword">for</span> (<span class="code-keyword">let</span> i = <span class="code-number">0</span>; i <= n; i++) {
+    fast = fast.next;
+  }
+  
+  <span class="code-comment">// Move both until fast reaches end</span>
+  <span class="code-keyword">while</span> (fast) {
+    slow = slow.next;
+    fast = fast.next;
+  }
+  
+  <span class="code-comment">// Remove the node</span>
+  slow.next = slow.next.next;
+  <span class="code-keyword">return</span> dummy.next;
+}`,
+
+      mergeSorted: `<span class="code-keyword">function</span> <span class="code-function">mergeTwoLists</span>(l1, l2) {
+  <span class="code-keyword">let</span> dummy = <span class="code-keyword">new</span> <span class="code-function">ListNode</span>(<span class="code-number">0</span>);
+  <span class="code-keyword">let</span> current = dummy;
+  
+  <span class="code-keyword">while</span> (l1 && l2) {
+    <span class="code-keyword">if</span> (l1.val <= l2.val) {
+      current.next = l1;
+      l1 = l1.next;
+    } <span class="code-keyword">else</span> {
+      current.next = l2;
+      l2 = l2.next;
+    }
+    current = current.next;
+  }
+  
+  current.next = l1 || l2;
+  <span class="code-keyword">return</span> dummy.next;
+}`,
+
+      reverseList: `<span class="code-keyword">function</span> <span class="code-function">reverseList</span>(head) {
+  <span class="code-keyword">let</span> prev = <span class="code-keyword">null</span>;
+  <span class="code-keyword">let</span> current = head;
+  
+  <span class="code-keyword">while</span> (current) {
+    <span class="code-keyword">let</span> next = current.next;
+    current.next = prev;
+    prev = current;
+    current = next;
+  }
+  
+  <span class="code-keyword">return</span> prev;
+}`,
+
+      middleNode: `<span class="code-keyword">function</span> <span class="code-function">middleNode</span>(head) {
+  <span class="code-keyword">let</span> slow = head;
+  <span class="code-keyword">let</span> fast = head;
+  
+  <span class="code-keyword">while</span> (fast && fast.next) {
+    slow = slow.next;
+    fast = fast.next.next;
+  }
+  
+  <span class="code-keyword">return</span> slow; <span class="code-comment">// Middle node</span>
+}`,
+
+      removeDuplicates: `<span class="code-keyword">function</span> <span class="code-function">deleteDuplicates</span>(head) {
+  <span class="code-keyword">let</span> current = head;
+  
+  <span class="code-keyword">while</span> (current && current.next) {
+    <span class="code-keyword">if</span> (current.val === current.next.val) {
+      current.next = current.next.next;
+    } <span class="code-keyword">else</span> {
+      current = current.next;
+    }
+  }
+  
+  <span class="code-keyword">return</span> head;
+}`,
+
+      palindrome: `<span class="code-keyword">function</span> <span class="code-function">isPalindrome</span>(head) {
+  <span class="code-comment">// Find middle using slow/fast pointers</span>
+  <span class="code-keyword">let</span> slow = head, fast = head;
+  <span class="code-keyword">while</span> (fast && fast.next) {
+    slow = slow.next;
+    fast = fast.next.next;
+  }
+  
+  <span class="code-comment">// Reverse second half</span>
+  <span class="code-keyword">let</span> prev = <span class="code-keyword">null</span>, curr = slow;
+  <span class="code-keyword">while</span> (curr) {
+    <span class="code-keyword">let</span> next = curr.next;
+    curr.next = prev;
+    prev = curr;
+    curr = next;
+  }
+  
+  <span class="code-comment">// Compare both halves</span>
+  <span class="code-keyword">let</span> left = head, right = prev;
+  <span class="code-keyword">while</span> (right) {
+    <span class="code-keyword">if</span> (left.val !== right.val) <span class="code-keyword">return false</span>;
+    left = left.next;
+    right = right.next;
+  }
+  <span class="code-keyword">return true</span>;
+}`,
+
+      intersection: `<span class="code-keyword">function</span> <span class="code-function">getIntersectionNode</span>(headA, headB) {
+  <span class="code-keyword">if</span> (!headA || !headB) <span class="code-keyword">return null</span>;
+  
+  <span class="code-keyword">let</span> pA = headA, pB = headB;
+  
+  <span class="code-keyword">while</span> (pA !== pB) {
+    pA = pA ? pA.next : headB;
+    pB = pB ? pB.next : headA;
+  }
+  
+  <span class="code-keyword">return</span> pA;
+}`
+    };
+
+    function displayCode(operation) {
+      const codeDisplay = document.getElementById("code-display");
+      const code = CODE_TEMPLATES[operation] || "";
+      const lines = code.split('\n');
+      
+      codeDisplay.innerHTML = lines.map((line, idx) => 
+        `<div class="code-line" data-line="${idx}">${line}</div>`
+      ).join('');
+    }
+
+    // ==================== LINKED LIST NODE CLASS ====================
+    class ListNode {
+      constructor(val) {
+        this.val = val;
+        this.next = null;
+      }
+    }
+
+    function createLinkedList(arr) {
+      if (!arr || arr.length === 0) return null;
+      const head = new ListNode(arr[0]);
+      let current = head;
+      for (let i = 1; i < arr.length; i++) {
+        current.next = new ListNode(arr[i]);
+        current = current.next;
+      }
+      return head;
+    }
+
+    function createCycleAt(head, pos) {
+      if (pos < 0 || !head) return;
+      let cycleNode = null;
+      let tail = head;
+      let idx = 0;
+      
+      while (tail) {
+        if (idx === pos) cycleNode = tail;
+        if (!tail.next) {
+          tail.next = cycleNode;
+          break;
+        }
+        tail = tail.next;
+        idx++;
+      }
+    }
+
+    // ==================== ALGORITHM IMPLEMENTATIONS ====================
+    function detectCycleWithStates(arr, cyclePos) {
+      const states = [];
+      const head = createLinkedList(arr);
+      
+      if (cyclePos >= 0 && cyclePos < arr.length) {
+        createCycleAt(head, cyclePos);
+      }
+      
+      states.push({
+        list: listToArray(head, 20),
+        description: "Initialize slow and fast pointers at head",
+        pointers: { slow: 0, fast: 0 },
+        codeLine: 1,
+        hasCycle: false,
+        explanation: "Floyd's Cycle Detection: Move slow by 1, fast by 2. If they meet, there's a cycle!"
+      });
+      
+      let slow = head;
+      let fast = head;
+      let slowIdx = 0;
+      let fastIdx = 0;
+      let iterations = 0;
+      const maxIterations = arr.length * 3;
+      
+      while (fast && fast.next && iterations < maxIterations) {
+        slow = slow.next;
+        fast = fast.next.next;
+        slowIdx++;
+        fastIdx += 2;
+        iterations++;
+        
+        if (cyclePos >= 0) {
+          slowIdx = slowIdx % arr.length;
+          fastIdx = fastIdx % arr.length;
+        }
+        
+        states.push({
+          list: listToArray(head, 20),
+          description: `Move slow by 1 step, fast by 2 steps`,
+          pointers: { slow: slowIdx, fast: fastIdx },
+          codeLine: 6,
+          hasCycle: false,
+          explanation: "Slow moves 1 step, fast moves 2 steps. Check if they meet."
+        });
+        
+        if (slow === fast) {
+          states.push({
+            list: listToArray(head, 20),
+            description: "Pointers met! Cycle detected ✓",
+            pointers: { slow: slowIdx, fast: fastIdx },
+            codeLine: 9,
+            hasCycle: true,
+            result: "Cycle detected at position " + slowIdx,
+            explanation: "Both pointers met at same node - cycle exists!"
+          });
+          return { states };
+        }
+        
+        if (iterations > arr.length * 2) break;
+      }
+      
+      states.push({
+        list: listToArray(head, 20),
+        description: "Fast pointer reached end. No cycle found.",
+        pointers: {},
+        codeLine: 13,
+        hasCycle: false,
+        result: "No cycle in the linked list",
+        explanation: "Fast pointer reached null - no cycle exists."
+      });
+      
+      return { states };
+    }
+
+    function nthFromEndWithStates(arr, n) {
+      const states = [];
+      const head = createLinkedList(arr);
+      
+      states.push({
+        list: listToArray(head),
+        description: `Initialize dummy node and pointers to remove ${n}th node from end`,
+        pointers: { slow: -1, fast: -1 },
+        codeLine: 1,
+        explanation: "Use two pointers with N gap. When fast reaches end, slow is at target."
+      });
+      
+      let slowIdx = -1;
+      let fastIdx = -1;
+      
+      for (let i = 0; i <= n; i++) {
+        fastIdx++;
+        states.push({
+          list: listToArray(head),
+          description: `Move fast pointer ${i + 1} steps ahead (gap of ${n})`,
+          pointers: { slow: slowIdx, fast: fastIdx },
+          codeLine: 7,
+          explanation: `Creating gap of ${n} nodes between slow and fast pointers.`
+        });
+      }
+      
+      while (fastIdx < arr.length) {
+        slowIdx++;
+        fastIdx++;
+        states.push({
+          list: listToArray(head),
+          description: `Move both pointers forward together`,
+          pointers: { slow: slowIdx, fast: fastIdx },
+          codeLine: 12,
+          explanation: "Move both pointers in sync. Gap remains constant."
+        });
+      }
+      
+      const resultList = [...arr];
+      if (slowIdx + 1 >= 0 && slowIdx + 1 < arr.length) {
+        resultList.splice(slowIdx + 1, 1);
+      }
+      
+      states.push({
+        list: resultList,
+        description: `Remove node at position ${slowIdx + 1}`,
+        pointers: { slow: slowIdx },
+        codeLine: 17,
+        result: `Removed ${n}th node from end: ${arr[slowIdx + 1]}`,
+        explanation: "Fast reached end. Slow is now at (n+1)th from end. Delete next node."
+      });
+      
+      return { states };
+    }
+
+    function mergeSortedWithStates(arr1, arr2) {
+      const states = [];
+      
+      states.push({
+        list1: arr1,
+        list2: arr2,
+        merged: [],
+        description: "Initialize dummy node and current pointer",
+        pointers: { p1: 0, p2: 0 },
+        codeLine: 1,
+        explanation: "Compare heads of both lists. Pick smaller, advance that pointer."
+      });
+      
+      const merged = [];
+      let i = 0, j = 0;
+      
+      while (i < arr1.length && j < arr2.length) {
+        if (arr1[i] <= arr2[j]) {
+          merged.push(arr1[i]);
+          states.push({
+            list1: arr1,
+            list2: arr2,
+            merged: [...merged],
+            description: `${arr1[i]} ≤ ${arr2[j]}, add ${arr1[i]} to merged list`,
+            pointers: { p1: i, p2: j },
+            codeLine: 5,
+            explanation: `List1's value is smaller/equal. Add it to result.`
+          });
+          i++;
+        } else {
+          merged.push(arr2[j]);
+          states.push({
+            list1: arr1,
+            list2: arr2,
+            merged: [...merged],
+            description: `${arr2[j]} < ${arr1[i]}, add ${arr2[j]} to merged list`,
+            pointers: { p1: i, p2: j },
+            codeLine: 8,
+            explanation: `List2's value is smaller. Add it to result.`
+          });
+          j++;
+        }
+      }
+      
+      while (i < arr1.length) {
+        merged.push(arr1[i]);
+        states.push({
+          list1: arr1,
+          list2: arr2,
+          merged: [...merged],
+          description: `List 2 exhausted, add remaining from List 1: ${arr1[i]}`,
+          pointers: { p1: i },
+          codeLine: 14
+        });
+        i++;
+      }
+      
+      while (j < arr2.length) {
+        merged.push(arr2[j]);
+        states.push({
+          list1: arr1,
+          list2: arr2,
+          merged: [...merged],
+          description: `List 1 exhausted, add remaining from List 2: ${arr2[j]}`,
+          pointers: { p2: j },
+          codeLine: 14
+        });
+        j++;
+      }
+      
+      states.push({
+        list1: arr1,
+        list2: arr2,
+        merged: merged,
+        description: "Merge complete!",
+        pointers: {},
+        codeLine: 15,
+        result: `Merged list: [${merged.join(', ')}]`
+      });
+      
+      return { states };
+    }
+
+    function reverseListWithStates(arr) {
+      const states = [];
+      const list = [...arr];
+      
+      states.push({
+        list: list,
+        description: "Initialize prev = null, current = head",
+        pointers: { prev: -1, current: 0 },
+        arrows: arr.map(() => 'right'),
+        codeLine: 1,
+        explanation: "Start with prev pointing to null and current pointing to head"
+      });
+      
+      let prevIdx = -1;
+      let currentIdx = 0;
+      const arrows = arr.map(() => 'right');
+      
+      while (currentIdx < arr.length) {
+        const nextIdx = currentIdx + 1;
+        
+        states.push({
+          list: list,
+          description: `Save next = current.next (node ${nextIdx < arr.length ? arr[nextIdx] : 'null'})`,
+          pointers: { prev: prevIdx, current: currentIdx, next: nextIdx < arr.length ? nextIdx : -2 },
+          arrows: [...arrows],
+          codeLine: 4,
+          explanation: "Save the next pointer before we change current.next"
+        });
+        
+        // Reverse the pointer
+        arrows[currentIdx] = prevIdx >= 0 ? 'left' : 'null';
+        
+        states.push({
+          list: list,
+          description: `Reverse pointer: current.next = prev (${prevIdx >= 0 ? arr[prevIdx] : 'null'})`,
+          pointers: { prev: prevIdx, current: currentIdx, next: nextIdx < arr.length ? nextIdx : -2 },
+          arrows: [...arrows],
+          codeLine: 5,
+          highlight: currentIdx,
+          explanation: "Point current node backwards to previous node"
+        });
+        
+        prevIdx = currentIdx;
+        currentIdx++;
+        
+        states.push({
+          list: list,
+          description: `Move pointers forward: prev = current, current = next`,
+          pointers: { prev: prevIdx, current: currentIdx < arr.length ? currentIdx : -2 },
+          arrows: [...arrows],
+          codeLine: 6,
+          explanation: "Advance both pointers one step forward"
+        });
+      }
+      
+      states.push({
+        list: list,
+        description: "List reversed! Prev is now the new head",
+        pointers: { prev: prevIdx },
+        arrows: [...arrows],
+        codeLine: 9,
+        result: `Reversed list: [${arr.join(' ← ')}]`,
+        explanation: "All pointers reversed. Prev points to new head."
+      });
+      
+      return { states };
+    }
+
+    function middleNodeWithStates(arr) {
+      const states = [];
+      
+      states.push({
+        list: arr,
+        description: "Initialize slow and fast pointers at head",
+        pointers: { slow: 0, fast: 0 },
+        codeLine: 1
+      });
+      
+      let slowIdx = 0;
+      let fastIdx = 0;
+      
+      while (fastIdx < arr.length && fastIdx + 1 < arr.length) {
+        slowIdx++;
+        fastIdx += 2;
+        
+        states.push({
+          list: arr,
+          description: `Move slow by 1, fast by 2. When fast reaches end, slow is at middle`,
+          pointers: { slow: slowIdx, fast: Math.min(fastIdx, arr.length - 1) },
+          codeLine: 5
+        });
+      }
+      
+      states.push({
+        list: arr,
+        description: `Fast pointer reached end. Middle node found!`,
+        pointers: { slow: slowIdx },
+        codeLine: 9,
+        result: `Middle node value: ${arr[slowIdx]}`
+      });
+      
+      return { states };
+    }
+
+    function removeDuplicatesWithStates(arr) {
+      const states = [];
+      
+      states.push({
+        list: arr,
+        description: "Initialize current pointer at head",
+        pointers: { current: 0 },
+        codeLine: 1
+      });
+      
+      const result = [arr[0]];
+      let currentIdx = 0;
+      
+      for (let i = 1; i < arr.length; i++) {
+        states.push({
+          list: arr,
+          description: `Check if current value ${arr[currentIdx]} equals next value ${arr[i]}`,
+          pointers: { current: currentIdx },
+          codeLine: 4
+        });
+        
+        if (arr[currentIdx] !== arr[i]) {
+          result.push(arr[i]);
+          currentIdx = i;
+          states.push({
+            list: arr,
+            description: `Different value found, keep ${arr[i]}`,
+            pointers: { current: currentIdx },
+            codeLine: 7
+          });
+        } else {
+          states.push({
+            list: arr,
+            description: `Duplicate found, skip ${arr[i]}`,
+            pointers: { current: currentIdx },
+            codeLine: 5
+          });
+        }
+      }
+      
+      states.push({
+        list: result,
+        description: "All duplicates removed!",
+        pointers: {},
+        codeLine: 11,
+        result: `List without duplicates: [${result.join(', ')}]`
+      });
+      
+      return { states };
+    }
+
+    function palindromeWithStates(arr) {
+      const states = [];
+      
+      states.push({
+        list: arr,
+        description: "Step 1: Find middle using slow/fast pointers",
+        pointers: { slow: 0, fast: 0 },
+        codeLine: 2
+      });
+      
+      let slowIdx = 0;
+      let fastIdx = 0;
+      
+      while (fastIdx < arr.length && fastIdx + 1 < arr.length) {
+        slowIdx++;
+        fastIdx += 2;
+        
+        states.push({
+          list: arr,
+          description: `Finding middle...`,
+          pointers: { slow: slowIdx, fast: Math.min(fastIdx, arr.length - 1) },
+          codeLine: 3
+        });
+      }
+      
+      states.push({
+        list: arr,
+        description: "Step 2: Reverse second half of the list",
+        pointers: { slow: slowIdx },
+        codeLine: 8
+      });
+      
+      const secondHalf = arr.slice(slowIdx).reverse();
+      const firstHalf = arr.slice(0, slowIdx);
+      
+      states.push({
+        list: arr,
+        description: "Step 3: Compare first half with reversed second half",
+        pointers: {},
+        codeLine: 16
+      });
+      
+      let isPalindrome = true;
+      const compareLength = Math.min(firstHalf.length, secondHalf.length);
+      
+      for (let i = 0; i < compareLength; i++) {
+        states.push({
+          list: arr,
+          description: `Comparing ${firstHalf[i]} with ${secondHalf[i]}`,
+          pointers: { p1: i, p2: slowIdx + (secondHalf.length - 1 - i) },
+          codeLine: 19
+        });
+        
+        if (firstHalf[i] !== secondHalf[i]) {
+          isPalindrome = false;
+          states.push({
+            list: arr,
+            description: `Mismatch found! Not a palindrome.`,
+            pointers: {},
+            codeLine: 20,
+            result: "NOT a palindrome"
+          });
+          return { states };
+        }
+      }
+      
+      states.push({
+        list: arr,
+        description: "All values match! List is a palindrome ✓",
+        pointers: {},
+        codeLine: 23,
+        result: "IS a palindrome"
+      });
+      
+      return { states };
+    }
+
+    function intersectionWithStates(arr1, arr2) {
+      const states = [];
+      
+      states.push({
+        list1: arr1,
+        list2: arr2,
+        description: "Initialize two pointers, one for each list",
+        pointers: { p1: 0, p2: 0 },
+        codeLine: 3
+      });
+      
+      let i = 0, j = 0;
+      const maxSteps = arr1.length + arr2.length + 5;
+      let steps = 0;
+      
+      while (steps < maxSteps) {
+        states.push({
+          list1: arr1,
+          list2: arr2,
+          description: `p1 at ${arr1[i % arr1.length]}, p2 at ${arr2[j % arr2.length]}`,
+          pointers: { p1: i % arr1.length, p2: j % arr2.length },
+          codeLine: 6
+        });
+        
+        if (arr1[i % arr1.length] === arr2[j % arr2.length]) {
+          states.push({
+            list1: arr1,
+            list2: arr2,
+            description: `Intersection found at value ${arr1[i % arr1.length]}!`,
+            pointers: { p1: i % arr1.length, p2: j % arr2.length },
+            codeLine: 10,
+            result: `Intersection at value: ${arr1[i % arr1.length]}`
+          });
+          return { states };
+        }
+        
+        i++;
+        j++;
+        
+        if (i >= arr1.length) i = 0;
+        if (j >= arr2.length) j = 0;
+        
+        steps++;
+      }
+      
+      states.push({
+        list1: arr1,
+        list2: arr2,
+        description: "No intersection found",
+        pointers: {},
+        codeLine: 10,
+        result: "No intersection"
+      });
+      
+      return { states };
+    }
+
+    function listToArray(head, maxLen = 50) {
+      const arr = [];
+      let current = head;
+      let count = 0;
+      const visited = new Set();
+      
+      while (current && count < maxLen) {
+        if (visited.has(current)) break;
+        visited.add(current);
+        arr.push(current.val);
+        current = current.next;
+        count++;
+      }
+      
+      return arr;
+    }
+
+    // ==================== RENDERING ====================
+    function renderState(state, currentIdx, totalStates) {
+      const container = document.getElementById("list-container");
+      const description = document.getElementById("description");
+      const stepIndicator = document.getElementById("step-indicator");
+      const resultBox = document.getElementById("result-box");
+      const codeLines = document.querySelectorAll(".code-line");
+      
+      // Clear previous animations
+      gsap.killTweensOf("*");
+      
+      // Update step indicator
+      stepIndicator.textContent = `Step ${currentIdx + 1} / ${totalStates}`;
+      
+      // Update description
+      description.textContent = state.description || "";
+      GSAP_ANIMATIONS.fadeIn(description);
+      
+      // Highlight active code line
+      codeLines.forEach((line, idx) => {
+        line.classList.remove("active");
+        if (idx === state.codeLine) {
+          line.classList.add("active");
+          GSAP_ANIMATIONS.pulseCodeLine(line);
+        }
+      });
+      
+      // Show result if available
+      if (state.result) {
+        resultBox.style.display = "block";
+        resultBox.className = "result-box success";
+        resultBox.textContent = state.result;
+        GSAP_ANIMATIONS.fadeIn(resultBox);
+      } else {
+        resultBox.style.display = "none";
+      }
+      
+      // Clear and rebuild visualization
+      container.innerHTML = "";
+      
+      // Render merged list visualization
+      if (state.list1 && state.list2) {
+        renderMergeLists(container, state);
+      } else {
+        renderSingleList(container, state);
+      }
+    }
+
+    function renderSingleList(container, state) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "list-wrapper";
+      
+      if (!state.list || state.list.length === 0) {
+        wrapper.innerHTML = '<div style="padding: 40px; color: #999; font-size: 18px;">Empty List</div>';
+        container.appendChild(wrapper);
+        return;
+      }
+      
+      // Add algorithm explanation if available
+      if (state.explanation) {
+        const explanationBox = document.createElement("div");
+        explanationBox.style.cssText = `
+          padding: 12px 16px;
+          background: #fff3cd;
+          border-left: 4px solid #ffc107;
+          border-radius: 4px;
+          margin-bottom: 20px;
+          font-size: 14px;
+          line-height: 1.5;
+          color: #856404;
+          font-weight: 600;
+        `;
+        explanationBox.innerHTML = `<strong>💡 Step:</strong> ${state.explanation}`;
+        container.appendChild(explanationBox);
+        GSAP_ANIMATIONS.fadeIn(explanationBox);
+      }
+      
+      state.list.forEach((val, idx) => {
+        const nodeWrapper = document.createElement("div");
+        nodeWrapper.className = "node-wrapper";
+        
+        const node = document.createElement("div");
+        node.className = "node";
+        
+        // Apply pointer classes
+        if (state.pointers) {
+          if (state.pointers.head === idx) node.classList.add("head");
+          if (state.pointers.slow === idx) node.classList.add("slow");
+          if (state.pointers.fast === idx) node.classList.add("fast");
+          if (state.pointers.current === idx) node.classList.add("current");
+          if (state.pointers.prev === idx) node.classList.add("prev");
+          if (state.pointers.next === idx) {
+            node.style.border = "3px dashed #666";
+            node.style.opacity = "0.7";
+          }
+          if (state.pointers.p1 === idx || state.pointers.p2 === idx) node.classList.add("highlight");
+        }
+        
+        if (idx === 0) node.classList.add("head");
+        
+        // Highlight the node whose pointer is being reversed
+        if (state.highlight === idx) {
+          node.style.background = "#fff3cd";
+          node.style.borderColor = "#ffc107";
+        }
+        
+        const dataDiv = document.createElement("div");
+        dataDiv.className = "node-data";
+        dataDiv.textContent = val;
+        node.appendChild(dataDiv);
+        
+        const nextDiv = document.createElement("div");
+        nextDiv.className = "node-next";
+        
+        // Show arrow direction based on state
+        if (state.arrows && state.arrows[idx]) {
+          if (state.arrows[idx] === 'left') {
+            nextDiv.textContent = "←";
+            nextDiv.style.background = "#4CAF50";
+            nextDiv.style.color = "white";
+          } else if (state.arrows[idx] === 'null') {
+            nextDiv.textContent = "✕";
+            nextDiv.style.background = "#f44336";
+            nextDiv.style.color = "white";
+          } else {
+            nextDiv.textContent = "→";
+          }
+        } else {
+          nextDiv.textContent = "→";
+        }
+        
+        node.appendChild(nextDiv);
+        
+        // Add pointer labels
+        if (state.pointers) {
+          if (state.pointers.slow === idx) {
+            const label = document.createElement("div");
+            label.className = "pointer-label slow-label";
+            label.textContent = "SLOW";
+            nodeWrapper.appendChild(label);
+          }
+          if (state.pointers.fast === idx) {
+            const label = document.createElement("div");
+            label.className = "pointer-label fast-label";
+            label.textContent = "FAST";
+            nodeWrapper.appendChild(label);
+          }
+          if (state.pointers.current === idx) {
+            const label = document.createElement("div");
+            label.className = "pointer-label curr-label";
+            label.textContent = "CURR";
+            nodeWrapper.appendChild(label);
+          }
+          if (state.pointers.prev === idx) {
+            const label = document.createElement("div");
+            label.className = "pointer-label prev-label";
+            label.textContent = "PREV";
+            nodeWrapper.appendChild(label);
+          }
+          if (state.pointers.next === idx) {
+            const label = document.createElement("div");
+            label.className = "pointer-label";
+            label.style.background = "#666";
+            label.style.color = "white";
+            label.textContent = "NEXT";
+            nodeWrapper.appendChild(label);
+          }
+          if (state.pointers.p1 === idx) {
+            const label = document.createElement("div");
+            label.className = "pointer-label p1-label";
+            label.textContent = "P1";
+            nodeWrapper.appendChild(label);
+          }
+          if (state.pointers.p2 === idx) {
+            const label = document.createElement("div");
+            label.className = "pointer-label p2-label";
+            label.textContent = "P2";
+            nodeWrapper.appendChild(label);
+          }
+        }
+        
+        nodeWrapper.appendChild(node);
+        wrapper.appendChild(nodeWrapper);
+        
+        // Add arrow between nodes
+        if (idx < state.list.length - 1) {
+          const arrow = document.createElement("div");
+          arrow.className = "arrow";
+          
+          // Show connection arrows based on pointer direction
+          if (state.arrows && state.arrows[idx] === 'left') {
+            arrow.textContent = "←";
+            arrow.style.color = "#4CAF50";
+            arrow.style.fontWeight = "900";
+          } else if (state.arrows && state.arrows[idx] === 'null') {
+            arrow.textContent = "✕";
+            arrow.style.color = "#f44336";
+          } else {
+            arrow.textContent = "→";
+          }
+          
+          wrapper.appendChild(arrow);
+        }
+        
+        // Animate nodes
+        GSAP_ANIMATIONS.fadeIn(nodeWrapper);
+        
+        // Highlight animated nodes
+        if (state.pointers && (
+          state.pointers.slow === idx || 
+          state.pointers.fast === idx ||
+          state.pointers.current === idx
+        )) {
+          setTimeout(() => {
+            GSAP_ANIMATIONS.highlightNode(node);
+            GSAP_ANIMATIONS.glowEffect(node, 
+              state.pointers.slow === idx ? 'rgba(255, 152, 0, 0.5)' :
+              state.pointers.fast === idx ? 'rgba(233, 30, 99, 0.5)' :
+              'rgba(0, 188, 212, 0.5)'
+            );
+          }, 100);
+        }
+        
+        // Special animation for pointer reversal
+        if (state.highlight === idx) {
+          setTimeout(() => {
+            GSAP_ANIMATIONS.shake(node);
+            GSAP_ANIMATIONS.glowEffect(node, 'rgba(255, 193, 7, 0.6)');
+          }, 100);
+        }
+      });
+      
+      // Add NULL indicator
+      const nullDiv = document.createElement("div");
+      nullDiv.className = "null-indicator";
+      nullDiv.textContent = "NULL";
+      wrapper.appendChild(nullDiv);
+      
+      container.appendChild(wrapper);
+    }
+
+    function renderMergeLists(container, state) {
+      // List 1
+      if (state.list1 && state.list1.length > 0) {
+        const label1 = document.createElement("div");
+        label1.className = "list-label";
+        label1.textContent = "List 1:";
+        container.appendChild(label1);
+        
+        const wrapper1 = document.createElement("div");
+        wrapper1.className = "list-wrapper";
+        
+        state.list1.forEach((val, idx) => {
+          const nodeWrapper = document.createElement("div");
+          nodeWrapper.className = "node-wrapper";
+          
+          const node = document.createElement("div");
+          node.className = "node";
+          if (state.pointers && state.pointers.p1 === idx) {
+            node.classList.add("highlight");
+            const label = document.createElement("div");
+            label.className = "pointer-label p1-label";
+            label.textContent = "P1";
+            nodeWrapper.appendChild(label);
+          }
+          
+          const dataDiv = document.createElement("div");
+          dataDiv.className = "node-data";
+          dataDiv.textContent = val;
+          node.appendChild(dataDiv);
+          
+          const nextDiv = document.createElement("div");
+          nextDiv.className = "node-next";
+          nextDiv.textContent = "→";
+          node.appendChild(nextDiv);
+          
+          nodeWrapper.appendChild(node);
+          wrapper1.appendChild(nodeWrapper);
+          
+          if (idx < state.list1.length - 1) {
+            const arrow = document.createElement("div");
+            arrow.className = "arrow";
+            arrow.textContent = "→";
+            wrapper1.appendChild(arrow);
+          }
+          
+          GSAP_ANIMATIONS.fadeIn(nodeWrapper);
+        });
+        
+        const null1 = document.createElement("div");
+        null1.className = "null-indicator";
+        null1.textContent = "NULL";
+        wrapper1.appendChild(null1);
+        
+        container.appendChild(wrapper1);
+      }
+      
+      // List 2
+      if (state.list2 && state.list2.length > 0) {
+        const label2 = document.createElement("div");
+        label2.className = "list-label";
+        label2.textContent = "List 2:";
+        container.appendChild(label2);
+        
+        const wrapper2 = document.createElement("div");
+        wrapper2.className = "list-wrapper";
+        
+        state.list2.forEach((val, idx) => {
+          const nodeWrapper = document.createElement("div");
+          nodeWrapper.className = "node-wrapper";
+          
+          const node = document.createElement("div");
+          node.className = "node";
+          if (state.pointers && state.pointers.p2 === idx) {
+            node.classList.add("highlight");
+            const label = document.createElement("div");
+            label.className = "pointer-label p2-label";
+            label.textContent = "P2";
+            nodeWrapper.appendChild(label);
+          }
+          
+          const dataDiv = document.createElement("div");
+          dataDiv.className = "node-data";
+          dataDiv.textContent = val;
+          node.appendChild(dataDiv);
+          
+          const nextDiv = document.createElement("div");
+          nextDiv.className = "node-next";
+          nextDiv.textContent = "→";
+          node.appendChild(nextDiv);
+          
+          nodeWrapper.appendChild(node);
+          wrapper2.appendChild(nodeWrapper);
+          
+          if (idx < state.list2.length - 1) {
+            const arrow = document.createElement("div");
+            arrow.className = "arrow";
+            arrow.textContent = "→";
+            wrapper2.appendChild(arrow);
+          }
+          
+          GSAP_ANIMATIONS.fadeIn(nodeWrapper);
+        });
+        
+        const null2 = document.createElement("div");
+        null2.className = "null-indicator";
+        null2.textContent = "NULL";
+        wrapper2.appendChild(null2);
+        
+        container.appendChild(wrapper2);
+      }
+      
+      // Merged list
+      if (state.merged && state.merged.length > 0) {
+        const labelMerged = document.createElement("div");
+        labelMerged.className = "list-label";
+        labelMerged.textContent = "Merged List:";
+        labelMerged.style.marginTop = "30px";
+        labelMerged.style.color = "#4CAF50";
+        container.appendChild(labelMerged);
+        
+        const wrapperMerged = document.createElement("div");
+        wrapperMerged.className = "list-wrapper";
+        
+        state.merged.forEach((val, idx) => {
+          const nodeWrapper = document.createElement("div");
+          nodeWrapper.className = "node-wrapper";
+          
+          const node = document.createElement("div");
+          node.className = "node merged";
+          
+          const dataDiv = document.createElement("div");
+          dataDiv.className = "node-data";
+          dataDiv.textContent = val;
+          node.appendChild(dataDiv);
+          
+          const nextDiv = document.createElement("div");
+          nextDiv.className = "node-next";
+          nextDiv.textContent = "→";
+          node.appendChild(nextDiv);
+          
+          nodeWrapper.appendChild(node);
+          wrapperMerged.appendChild(nodeWrapper);
+          
+          if (idx < state.merged.length - 1) {
+            const arrow = document.createElement("div");
+            arrow.className = "arrow";
+            arrow.textContent = "→";
+            wrapperMerged.appendChild(arrow);
+          }
+          
+          GSAP_ANIMATIONS.fadeIn(nodeWrapper);
+          if (idx === state.merged.length - 1) {
+            setTimeout(() => GSAP_ANIMATIONS.bounce(node), 200);
+          }
+        });
+        
+        const nullMerged = document.createElement("div");
+        nullMerged.className = "null-indicator";
+        nullMerged.style.background = "#4CAF50";
+        nullMerged.textContent = "NULL";
+        wrapperMerged.appendChild(nullMerged);
+        
+        container.appendChild(wrapperMerged);
+      }
+    }
+
+    // ==================== PLAYER LOGIC ====================
+    let states = [];
+    let currentIndex = 0;
+    let timer = null;
+
+    function stopTimer() {
+      if (timer !== null) {
+        clearInterval(timer);
+        timer = null;
+      }
+    }
+
+    function showCurrent() {
+      if (states.length === 0) return;
+      currentIndex = Math.max(0, Math.min(currentIndex, states.length - 1));
+      renderState(states[currentIndex], currentIndex, states.length);
+    }
+
+    function play() {
+      if (states.length === 0) return;
+      if (timer !== null) return;
+
+      const speed = parseInt(document.getElementById("speed-input").value, 10) || 1000;
+
+      timer = setInterval(() => {
+        currentIndex++;
+        if (currentIndex >= states.length) {
+          currentIndex = states.length - 1;
+          stopTimer();
+        }
+        showCurrent();
+      }, speed);
+    }
+
+    function pause() {
+      stopTimer();
+    }
+
+    function next() {
+      if (states.length === 0) return;
+      currentIndex = Math.min(currentIndex + 1, states.length - 1);
+      showCurrent();
+    }
+
+    function prev() {
+      if (states.length === 0) return;
+      currentIndex = Math.max(currentIndex - 1, 0);
+      showCurrent();
+    }
+
+    function reset() {
+      currentIndex = 0;
+      showCurrent();
+    }
+
+    // ==================== UI EVENT HANDLERS ====================
+    document.getElementById("play-btn").addEventListener("click", play);
+    document.getElementById("pause-btn").addEventListener("click", pause);
+    document.getElementById("next-btn").addEventListener("click", next);
+    document.getElementById("prev-btn").addEventListener("click", prev);
+    document.getElementById("reset-btn").addEventListener("click", reset);
+    document.getElementById("generate-btn").addEventListener("click", generateSteps);
+    
+    document.getElementById("problem-select").addEventListener("change", function() {
+      const problem = this.value;
+      displayCode(problem);
+      displayProblemInfo(problem);
+      updateInputVisibility(problem);
+    });
+
+    function updateInputVisibility(problem) {
+      const list1Label = document.getElementById("list1-label");
+      const list2Label = document.getElementById("list2-label");
+      const paramLabel = document.getElementById("param-label");
+      const cycleLabel = document.getElementById("cycle-label");
+      const list1Input = document.getElementById("input-list1");
+      const list2Input = document.getElementById("input-list2");
+      const paramInput = document.getElementById("param-input");
+      
+      // Reset all
+      list1Label.style.display = "inline-block";
+      list2Label.style.display = "none";
+      paramLabel.style.display = "none";
+      cycleLabel.style.display = "none";
+      
+      list1Label.querySelector("span").textContent = "List:";
+      
+      switch(problem) {
+        case "detectCycle":
+          cycleLabel.style.display = "inline-block";
+          list1Input.value = "1,2,3,4,5";
+          break;
+        case "nthFromEnd":
+          paramLabel.style.display = "inline-block";
+          paramLabel.querySelector("span").textContent = "N:";
+          list1Input.value = "1,2,3,4,5";
+          paramInput.value = "2";
+          break;
+        case "mergeSorted":
+          list1Label.querySelector("span").textContent = "List 1:";
+          list2Label.style.display = "inline-block";
+          list1Input.value = "1,3,5";
+          list2Input.value = "2,4,6";
+          break;
+        case "reverseList":
+          list1Input.value = "1,2,3,4,5";
+          break;
+        case "middleNode":
+          list1Input.value = "1,2,3,4,5,6,7";
+          break;
+        case "removeDuplicates":
+          list1Input.value = "1,1,2,3,3,4,5,5";
+          break;
+        case "palindrome":
+          list1Input.value = "1,2,3,2,1";
+          break;
+        case "intersection":
+          list1Label.querySelector("span").textContent = "List 1:";
+          list2Label.style.display = "inline-block";
+          list1Input.value = "1,3,5,7,9";
+          list2Input.value = "2,4,5,7,9";
+          break;
+      }
+    }
+
+    function generateSteps() {
+      stopTimer();
+      const problem = document.getElementById("problem-select").value;
+      const list1Input = document.getElementById("input-list1").value;
+      const list2Input = document.getElementById("input-list2").value;
+      const paramInput = parseInt(document.getElementById("param-input").value) || 0;
+      const cycleInput = parseInt(document.getElementById("cycle-input").value) || -1;
+
+      const arr1 = list1Input.split(",").map(x => parseInt(x.trim())).filter(x => !isNaN(x));
+      const arr2 = list2Input.split(",").map(x => parseInt(x.trim())).filter(x => !isNaN(x));
+      
+      let result;
+
+      switch(problem) {
+        case "detectCycle":
+          result = detectCycleWithStates(arr1, cycleInput);
+          break;
+        case "nthFromEnd":
+          result = nthFromEndWithStates(arr1, paramInput);
+          break;
+        case "mergeSorted":
+          result = mergeSortedWithStates(arr1, arr2);
+          break;
+        case "reverseList":
+          result = reverseListWithStates(arr1);
+          break;
+        case "middleNode":
+          result = middleNodeWithStates(arr1);
+          break;
+        case "removeDuplicates":
+          result = removeDuplicatesWithStates(arr1);
+          break;
+        case "palindrome":
+          result = palindromeWithStates(arr1);
+          break;
+        case "intersection":
+          result = intersectionWithStates(arr1, arr2);
+          break;
+        default:
+          result = { states: [] };
+      }
+
+      states = result.states;
+      currentIndex = 0;
+      showCurrent();
+    }
+
+    // ==================== INITIALIZATION ====================
+    (function init() {
+      const problem = document.getElementById("problem-select").value;
+      displayCode(problem);
+      displayProblemInfo(problem);
+      updateInputVisibility(problem);
+      generateSteps();
+    })();
+  </script>
+</body>
+</html>
