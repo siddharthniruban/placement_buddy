@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Doubly Linked List Visualizer - Pointer Changes</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 20px;
+      margin: 0;
+      background: #f8f9fa;
+    }
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    .input-section {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .input-section label {
+      display: inline-block;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    .input-section input, .input-section select {
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .input-section button {
+      padding: 8px 16px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .input-section button:hover {
+      background: #45a049;
+    }
+    .main-content {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .visualization-panel {
+      flex: 1;
+      min-width: 0;
+    }
+    .code-panel {
+      width: 550px;
+      background: #1e1e1e;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      position: sticky;
+      top: 20px;
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+    }
+    .code-panel h3 {
+      color: #fff;
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 16px;
+      border-bottom: 2px solid #4CAF50;
+      padding-bottom: 8px;
+    }
+    .code-container {
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #d4d4d4;
+    }
+    .code-line {
+      padding: 2px 8px;
+      border-radius: 3px;
+      transition: all 0.3s ease;
+      white-space: pre;
+    }
+    .code-line.active {
+      background: #4CAF50;
+      color: white;
+      font-weight: 600;
+      border-left: 3px solid #fff;
+      padding-left: 5px;
+      animation: pulse 0.5s ease;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(4px); }
+    }
+    .visualizer-section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    #list-container {
+      margin-top: 30px;
+      margin-bottom: 30px;
+      min-height: 250px;
+      position: relative;
+      padding: 70px 30px 50px 30px;
+      overflow-x: auto;
+      overflow-y: visible;
+    }
+    .list-wrapper {
+      display: flex;
+      align-items: center;
+      position: relative;
+      min-width: max-content;
+      padding: 30px 0;
+    }
+    .node-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-right: 15px;
+    }
+    .arrows-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 10px;
+    }
+    .forward-arrow {
+      font-size: 28px;
+      color: #4CAF50;
+      font-weight: bold;
+    }
+    .backward-arrow {
+      font-size: 28px;
+      color: #2196F3;
+      font-weight: bold;
+    }
+    .node {
+      display: flex;
+      background: white;
+      border: 3px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .node.head {
+      border-color: #4CAF50;
+      box-shadow: 0 0 15px rgba(76, 175, 80, 0.4);
+    }
+    .node.tail {
+      border-color: #2196F3;
+      box-shadow: 0 0 15px rgba(33, 150, 243, 0.4);
+    }
+    .node.current {
+      border-color: #ff9800;
+      transform: scale(1.1);
+      box-shadow: 0 0 20px rgba(255, 152, 0, 0.5);
+    }
+    .node.highlight {
+      border-color: #9c27b0;
+      background: #f3e5f5;
+    }
+    .node.new-node {
+      border-color: #00bcd4;
+      background: #e0f7fa;
+      animation: appear 0.5s ease;
+    }
+    .node.deleted {
+      opacity: 0.3;
+      border-color: #f44336;
+      background: #ffebee;
+    }
+    @keyframes appear {
+      from {
+        transform: scale(0);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    .node-prev {
+      padding: 15px 12px;
+      background: #bbdefb;
+      border-right: 2px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 45px;
+      font-size: 20px;
+      font-weight: bold;
+      color: #1976d2;
+      transition: all 0.4s ease;
+      position: relative;
+    }
+    .node-prev.changing {
+      background: #ff9800;
+      color: white;
+      animation: pointerPulse 0.6s ease;
+      box-shadow: inset 0 0 10px rgba(255, 152, 0, 0.5);
+    }
+    .node-prev.changing::after {
+      content: "changing!";
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      background: #ff9800;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      white-space: nowrap;
+      font-weight: 700;
+    }
+    .node-data {
+      padding: 15px 20px;
+      font-weight: 700;
+      font-size: 18px;
+      color: #333;
+      min-width: 50px;
+      text-align: center;
+    }
+    .node-next {
+      padding: 15px 12px;
+      background: #c8e6c9;
+      border-left: 2px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 45px;
+      font-size: 20px;
+      font-weight: bold;
+      color: #388e3c;
+      transition: all 0.4s ease;
+      position: relative;
+    }
+    .node-next.changing {
+      background: #ff9800;
+      color: white;
+      animation: pointerPulse 0.6s ease;
+      box-shadow: inset 0 0 10px rgba(255, 152, 0, 0.5);
+    }
+    .node-next.changing::after {
+      content: "changing!";
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      background: #ff9800;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      white-space: nowrap;
+      font-weight: 700;
+    }
+    @keyframes pointerPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+    .null-indicator {
+      padding: 12px 18px;
+      background: #f44336;
+      color: white;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      margin: 0 10px;
+    }
+    .pointer-label {
+      position: absolute;
+      top: -35px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      z-index: 10;
+    }
+    .pointer-label.head-label {
+      background: #4CAF50;
+      color: white;
+    }
+    .pointer-label.tail-label {
+      background: #2196F3;
+      color: white;
+    }
+    .pointer-label.current-label {
+      background: #ff9800;
+      color: white;
+    }
+    .pointer-label.prev-label {
+      background: #9c27b0;
+      color: white;
+    }
+    .pointer-label.temp-label {
+      background: #00bcd4;
+      color: white;
+    }
+    .pointer-label.next-label {
+      background: #ff5722;
+      color: white;
+    }
+    .arrow-down {
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 18px;
+      color: #666;
+      z-index: 9;
+    }
+    #controls {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    #controls button {
+      margin-right: 8px;
+      margin-bottom: 8px;
+      padding: 8px 16px;
+      background: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    #controls button:hover {
+      background: #0b7dda;
+    }
+    #description {
+      margin-top: 15px;
+      padding: 12px;
+      background: #e3f2fd;
+      border-left: 4px solid #2196F3;
+      border-radius: 4px;
+      font-style: italic;
+      min-height: 20px;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+    #step-indicator {
+      margin-top: 8px;
+      font-size: 0.95rem;
+      color: #666;
+      font-weight: 600;
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 15px;
+      padding: 12px;
+      background: #f9f9f9;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-box {
+      width: 30px;
+      height: 25px;
+      border: 2px solid #333;
+      border-radius: 3px;
+    }
+    .legend-box.changing-demo {
+      background: #ff9800;
+      animation: pointerPulse 1.5s ease infinite;
+    }
+    .info-box {
+      margin-top: 15px;
+      padding: 15px;
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .info-box h3 {
+      margin-top: 0;
+      color: #856404;
+    }
+    @media (max-width: 1200px) {
+      .main-content {
+        flex-direction: column;
+      }
+      .code-panel {
+        width: 100%;
+        position: relative;
+        top: 0;
+        max-height: 500px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⇄ Doubly Linked List - Pointer Change Visualization</h1>
+
+    <div class="input-section">
+      <label>
+        Operation:
+        <select id="operation-select">
+          <option value="insertEnd">Insert at End</option>
+          <option value="insertBegin">Insert at Beginning</option>
+          <option value="insertAt">Insert at Position</option>
+          <option value="deleteEnd">Delete from End</option>
+          <option value="deleteBegin">Delete from Beginning</option>
+          <option value="deleteAt">Delete at Position</option>
+          <option value="search">Search Value</option>
+          <option value="reverse">Reverse List</option>
+        </select>
+      </label>
+
+      <label>
+        Initial List:
+        <input id="input-list" type="text" value="10,20,30,40" size="25" />
+      </label>
+
+      <label id="value-label">
+        Value:
+        <input id="value-input" type="number" value="50" style="width: 70px;" />
+      </label>
+
+      <label id="position-label" style="display: none;">
+        Position:
+        <input id="position-input" type="number" value="2" style="width: 70px;" />
+      </label>
+
+      <button id="generate-btn">Execute</button>
+    </div>
+
+    <div class="main-content">
+      <div class="visualization-panel">
+        <div class="visualizer-section">
+          <div id="list-container"></div>
+
+          <div id="controls">
+            <button id="prev-btn">◀ Previous</button>
+            <button id="play-btn">▶ Play</button>
+            <button id="pause-btn">⏸ Pause</button>
+            <button id="next-btn">Next ▶</button>
+            <button id="reset-btn">⟲ Reset</button>
+            <label style="margin-left: 8px;">
+              Speed (ms):
+              <input id="speed-input" type="number" value="1200" min="500" max="3000" step="100" style="width: 70px;" />
+            </label>
+          </div>
+
+          <div id="description"></div>
+          <div id="step-indicator"></div>
+
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-box" style="border-color: #4CAF50; box-shadow: 0 0 5px rgba(76, 175, 80, 0.4);"></div>
+              <span>Head Node</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box" style="border-color: #ff9800;"></div>
+              <span>Current</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box changing-demo"></div>
+              <span>Pointer Changing</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box" style="border-color: #00bcd4; background: #e0f7fa;"></div>
+              <span>New Node</span>
+            </div>
+            <div class="legend-item">
+              <span style="font-size: 20px; color: #4CAF50; font-weight: bold;">→</span>
+              <span>next</span>
+            </div>
+            <div class="legend-item">
+              <span style="font-size: 20px; color: #2196F3; font-weight: bold;">←</span>
+              <span>prev</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-box" id="algorithm-info"></div>
+      </div>
+
+      <div class="code-panel">
+        <h3 id="code-title">Algorithm Code</h3>
+        <div class="code-container" id="code-display"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Node class for doubly linked list
+    class DLLNode {
+      constructor(data) {
+        this.data = data;
+        this.next = null;
+        this.prev = null;
+      }
+    }
+
+    // Algorithm information
+    const algorithmInfo = {
+      insertEnd: {
+        name: "Insert at End",
+        description: "Adds a new node at the end. Watch how we update BOTH the curr.next pointer AND the newNode.prev pointer to maintain bidirectional links.",
+        complexity: "Time: O(n) - must traverse to end | Space: O(1)"
+      },
+      insertBegin: {
+        name: "Insert at Beginning",
+        description: "Adds a new node at the start. Notice how we update the old head's prev pointer to point back to the new node.",
+        complexity: "Time: O(1) - direct access to head | Space: O(1)"
+      },
+      insertAt: {
+        name: "Insert at Position",
+        description: "Inserts at a specific position. Watch carefully as we update FOUR pointers: newNode.next, newNode.prev, curr.next, and curr.next.prev.",
+        complexity: "Time: O(n) - may need to traverse list | Space: O(1)"
+      },
+      deleteEnd: {
+        name: "Delete from End",
+        description: "Removes the last node. The key step is setting the second-to-last node's next pointer to null.",
+        complexity: "Time: O(n) - must traverse to end | Space: O(1)"
+      },
+      deleteBegin: {
+        name: "Delete from Beginning",
+        description: "Removes the first node. Watch how the new head's prev pointer is set to null to break the backward link.",
+        complexity: "Time: O(1) - direct access to head | Space: O(1)"
+      },
+      deleteAt: {
+        name: "Delete at Position",
+        description: "Removes a node at a position. Both adjacent nodes' pointers must be updated to skip over the deleted node.",
+        complexity: "Time: O(n) - may need to traverse list | Space: O(1)"
+      },
+      search: {
+        name: "Search Value",
+        description: "Searches for a value by traversing forward using next pointers. Could also traverse backward using prev pointers!",
+        complexity: "Time: O(n) - may check all nodes | Space: O(1)"
+      },
+      reverse: {
+        name: "Reverse List",
+        description: "Reverses by SWAPPING next and prev pointers for each node. Watch how every node's pointers get exchanged!",
+        complexity: "Time: O(n) - single pass through list | Space: O(1)"
+      }
+    };
+
+    // Algorithm code templates
+    const algorithmCode = {
+      insertEnd: [
+        { code: 'function insertEnd(head, value) {', line: 0 },
+        { code: '  newNode = new Node(value);', line: 1 },
+        { code: '  if (head == null) return newNode;', line: 2 },
+        { code: '  curr = head;', line: 3 },
+        { code: '  while (curr.next != null) {', line: 4 },
+        { code: '    curr = curr.next;', line: 5 },
+        { code: '  }', line: 6 },
+        { code: '  curr.next = newNode;  // Forward link', line: 7 },
+        { code: '  newNode.prev = curr;  // Backward link', line: 8 },
+        { code: '  return head;', line: 9 },
+        { code: '}', line: 10 }
+      ],
+      insertBegin: [
+        { code: 'function insertBegin(head, value) {', line: 0 },
+        { code: '  newNode = new Node(value);', line: 1 },
+        { code: '  if (head != null) {', line: 2 },
+        { code: '    head.prev = newNode;  // Old head points back', line: 3 },
+        { code: '  }', line: 4 },
+        { code: '  newNode.next = head;  // New node points forward', line: 5 },
+        { code: '  head = newNode;', line: 6 },
+        { code: '  return head;', line: 7 },
+        { code: '}', line: 8 }
+      ],
+      insertAt: [
+        { code: 'function insertAt(head, value, pos) {', line: 0 },
+        { code: '  newNode = new Node(value);', line: 1 },
+        { code: '  if (pos == 0) { /* insert at beginning */ }', line: 2 },
+        { code: '  curr = head;', line: 3 },
+        { code: '  for (i = 0; i < pos - 1; i++) {', line: 4 },
+        { code: '    curr = curr.next;', line: 5 },
+        { code: '  }', line: 6 },
+        { code: '  newNode.next = curr.next;  // Link forward', line: 7 },
+        { code: '  newNode.prev = curr;  // Link backward', line: 8 },
+        { code: '  if (curr.next != null) {', line: 9 },
+        { code: '    curr.next.prev = newNode;  // Update next node', line: 10 },
+        { code: '  }', line: 11 },
+        { code: '  curr.next = newNode;  // Complete insertion', line: 12 },
+        { code: '  return head;', line: 13 },
+        { code: '}', line: 14 }
+      ],
+      deleteEnd: [
+        { code: 'function deleteEnd(head) {', line: 0 },
+        { code: '  if (head == null) return null;', line: 1 },
+        { code: '  if (head.next == null) return null;', line: 2 },
+        { code: '  curr = head;', line: 3 },
+        { code: '  while (curr.next != null) {', line: 4 },
+        { code: '    curr = curr.next;', line: 5 },
+        { code: '  }', line: 6 },
+        { code: '  curr.prev.next = null;  // Break forward link', line: 7 },
+        { code: '  return head;', line: 8 },
+        { code: '}', line: 9 }
+      ],
+      deleteBegin: [
+        { code: 'function deleteBegin(head) {', line: 0 },
+        { code: '  if (head == null) return null;', line: 1 },
+        { code: '  temp = head;', line: 2 },
+        { code: '  head = head.next;', line: 3 },
+        { code: '  if (head != null) {', line: 4 },
+        { code: '    head.prev = null;  // Break backward link', line: 5 },
+        { code: '  }', line: 6 },
+        { code: '  return head;', line: 7 },
+        { code: '}', line: 8 }
+      ],
+      deleteAt: [
+        { code: 'function deleteAt(head, pos) {', line: 0 },
+        { code: '  if (head == null) return null;', line: 1 },
+        { code: '  if (pos == 0) { /* delete beginning */ }', line: 2 },
+        { code: '  curr = head;', line: 3 },
+        { code: '  for (i = 0; i < pos; i++) {', line: 4 },
+        { code: '    curr = curr.next;', line: 5 },
+        { code: '  }', line: 6 },
+        { code: '  if (curr.prev != null) {', line: 7 },
+        { code: '    curr.prev.next = curr.next;  // Skip forward', line: 8 },
+        { code: '  }', line: 9 },
+        { code: '  if (curr.next != null) {', line: 10 },
+        { code: '    curr.next.prev = curr.prev;  // Skip backward', line: 11 },
+        { code: '  }', line: 12 },
+        { code: '  return head;', line: 13 },
+        { code: '}', line: 14 }
+      ],
+      search: [
+        { code: 'function search(head, value) {', line: 0 },
+        { code: '  curr = head;', line: 1 },
+        { code: '  position = 0;', line: 2 },
+        { code: '  while (curr != null) {', line: 3 },
+        { code: '    if (curr.data == value) {', line: 4 },
+        { code: '      return position;', line: 5 },
+        { code: '    }', line: 6 },
+        { code: '    curr = curr.next;', line: 7 },
+        { code: '    position++;', line: 8 },
+        { code: '  }', line: 9 },
+        { code: '  return -1;', line: 10 },
+        { code: '}', line: 11 }
+      ],
+      reverse: [
+        { code: 'function reverse(head) {', line: 0 },
+        { code: '  curr = head;', line: 1 },
+        { code: '  temp = null;', line: 2 },
+        { code: '  while (curr != null) {', line: 3 },
+        { code: '    temp = curr.prev;  // Save prev', line: 4 },
+        { code: '    curr.prev = curr.next;  // Swap: prev ← next', line: 5 },
+        { code: '    curr.next = temp;  // Swap: next ← prev', line: 6 },
+        { code: '    curr = curr.prev;  // Move to next node', line: 7 },
+        { code: '  }', line: 8 },
+        { code: '  if (temp != null) {', line: 9 },
+        { code: '    head = temp.prev;', line: 10 },
+        { code: '  }', line: 11 },
+        { code: '  return head;', line: 12 },
+        { code: '}', line: 13 }
+      ]
+    };
+
+    // Create doubly linked list from array
+    function createDLL(arr) {
+      if (arr.length === 0) return null;
+      let head = new DLLNode(arr[0]);
+      let current = head;
+      for (let i = 1; i < arr.length; i++) {
+        let newNode = new DLLNode(arr[i]);
+        current.next = newNode;
+        newNode.prev = current;
+        current = newNode;
+      }
+      return head;
+    }
+
+    // Convert doubly linked list to array
+    function dllToArray(head) {
+      const arr = [];
+      let current = head;
+      while (current) {
+        arr.push(current.data);
+        current = current.next;
+      }
+      return arr;
+    }
+
+    // ==================== INSERT AT END ====================
+    function insertEndWithStates(head, value) {
+      const states = [];
+      
+      function record(list, pointers, newNodeData, deletedIdx, changingPointers, message, codeLine) {
+        states.push({
+          list: dllToArray(list),
+          pointers: pointers || {},
+          newNodeData: newNodeData,
+          deletedIndex: deletedIdx,
+          changingPointers: changingPointers || {},
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(head, {}, null, null, {}, `Insert ${value} at end`, 0);
+      record(head, {}, value, null, {}, `Create new node with value ${value}`, 1);
+
+      if (!head) {
+        record(createDLL([value]), { head: 0 }, value, null, {}, `Empty list, new node becomes head`, 2);
+        return { states, head: createDLL([value]) };
+      }
+
+      record(head, { head: 0 }, value, null, {}, `Traverse to find the end`, 3);
+      
+      let curr = head;
+      let position = 0;
+
+      while (curr.next) {
+        record(head, { head: 0, curr: position }, value, null, {}, `curr.next exists, move forward`, 4);
+        curr = curr.next;
+        position++;
+        record(head, { head: 0, curr: position }, value, null, {}, `Now at position ${position}`, 5);
+      }
+
+      record(head, { head: 0, curr: position }, value, null, {}, `Found end of list at position ${position}`, 6);
+      
+      const newList = createDLL([...dllToArray(head), value]);
+      record(newList, { head: 0, curr: position }, null, null, { [position]: 'next' }, `Set curr.next = newNode (forward link)`, 7);
+      record(newList, { head: 0, tail: position + 1 }, null, null, { [position + 1]: 'prev' }, `Set newNode.prev = curr (backward link)`, 8);
+      record(newList, { head: 0, tail: position + 1 }, null, null, {}, `✓ Insertion complete! Both pointers updated`, 9);
+
+      return { states, head: newList };
+    }
+
+    // ==================== INSERT AT BEGINNING ====================
+    function insertBeginWithStates(head, value) {
+      const states = [];
+      
+      function record(list, pointers, newNodeData, deletedIdx, changingPointers, message, codeLine) {
+        states.push({
+          list: dllToArray(list),
+          pointers: pointers || {},
+          newNodeData: newNodeData,
+          deletedIndex: deletedIdx,
+          changingPointers: changingPointers || {},
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(head, { head: 0 }, null, null, {}, `Insert ${value} at beginning`, 0);
+      record(head, { head: 0 }, value, null, {}, `Create new node with value ${value}`, 1);
+
+      const oldListArray = dllToArray(head);
+      
+      if (head) {
+        record(head, { head: 0 }, value, null, {}, `List not empty, update old head's prev`, 2);
+        record(head, { head: 0 }, value, null, { 0: 'prev' }, `Set old head.prev = newNode (backward link)`, 3);
+      }
+      
+      const newList = createDLL([value, ...oldListArray]);
+      record(newList, { head: 0 }, null, null, { 0: 'next' }, `Set newNode.next = old head (forward link)`, 5);
+      record(newList, { head: 0 }, null, null, {}, `Update head pointer to newNode`, 6);
+      record(newList, { head: 0 }, null, null, {}, `✓ Insertion complete!`, 7);
+
+      return { states, head: newList };
+    }
+
+    // ==================== INSERT AT POSITION ====================
+    function insertAtWithStates(head, value, pos) {
+      const states = [];
+      
+      function record(list, pointers, newNodeData, deletedIdx, changingPointers, message, codeLine) {
+        states.push({
+          list: dllToArray(list),
+          pointers: pointers || {},
+          newNodeData: newNodeData,
+          deletedIndex: deletedIdx,
+          changingPointers: changingPointers || {},
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(head, { head: 0 }, null, null, {}, `Insert ${value} at position ${pos}`, 0);
+      record(head, { head: 0 }, value, null, {}, `Create new node with value ${value}`, 1);
+
+      if (pos === 0) {
+        record(head, { head: 0 }, value, null, {}, `Position is 0, insert at beginning`, 2);
+        const newList = createDLL([value, ...dllToArray(head)]);
+        record(newList, { head: 0 }, null, null, {}, `✓ Insertion complete!`, 2);
+        return { states, head: newList };
+      }
+
+      let curr = head;
+      let position = 0;
+      record(head, { head: 0, curr: position }, value, null, {}, `Find position ${pos}`, 3);
+
+      for (let i = 0; i < pos - 1 && curr.next; i++) {
+        record(head, { head: 0, curr: position }, value, null, {}, `At position ${position}, continue...`, 4);
+        curr = curr.next;
+        position++;
+        record(head, { head: 0, curr: position }, value, null, {}, `Move to position ${position}`, 5);
+      }
+
+      const listArray = dllToArray(head);
+      listArray.splice(pos, 0, value);
+      const newList = createDLL(listArray);
+      
+      record(newList, { head: 0, curr: position }, null, null, {}, `At correct position`, 6);
+      record(newList, { head: 0, curr: position }, null, null, { [pos]: 'next' }, `Set newNode.next = curr.next`, 7);
+      record(newList, { head: 0, curr: position }, null, null, { [pos]: 'prev' }, `Set newNode.prev = curr`, 8);
+      record(newList, { head: 0, curr: position }, null, null, { [pos + 1]: 'prev' }, `Set curr.next.prev = newNode`, 10);
+      record(newList, { head: 0, curr: position }, null, null, { [position]: 'next' }, `Set curr.next = newNode`, 12);
+      record(newList, { head: 0 }, null, null, {}, `✓ All 4 pointers updated!`, 13);
+
+      return { states, head: newList };
+    }
+
+    // ==================== DELETE FROM END ====================
+    function deleteEndWithStates(head) {
+      const states = [];
+      
+      function record(list, pointers, newNodeData, deletedIdx, changingPointers, message, codeLine) {
+        states.push({
+          list: dllToArray(list),
+          pointers: pointers || {},
+          newNodeData: newNodeData,
+          deletedIndex: deletedIdx,
+          changingPointers: changingPointers || {},
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(head, { head: 0 }, null, null, {}, `Delete last node`, 0);
+
+      if (!head) {
+        record(null, {}, null, null, {}, `List is empty`, 1);
+        return { states, head: null };
+      }
+
+      const listLen = dllToArray(head).length;
+
+      if (!head.next) {
+        record(head, { head: 0 }, null, 0, {}, `Only one node, delete it`, 2);
+        record(null, {}, null, null, {}, `✓ List is now empty`, 2);
+        return { states, head: null };
+      }
+
+      let curr = head;
+      let position = 0;
+      record(head, { head: 0, curr: position }, null, null, {}, `Traverse to end`, 3);
+
+      while (curr.next) {
+        record(head, { head: 0, curr: position }, null, null, {}, `curr.next exists, continue`, 4);
+        curr = curr.next;
+        position++;
+        record(head, { head: 0, curr: position }, null, null, {}, `At position ${position}`, 5);
+      }
+
+      record(head, { head: 0, curr: position }, null, listLen - 1, {}, `At last node, will delete it`, 6);
+      
+      const listArray = dllToArray(head);
+      listArray.pop();
+      const newList = createDLL(listArray);
+      
+      record(newList, { head: 0, tail: listArray.length - 1 }, null, null, { [listArray.length - 1]: 'next' }, `Set second-to-last.next = null`, 7);
+      record(newList, { head: 0, tail: listArray.length - 1 }, null, null, {}, `✓ Deletion complete!`, 8);
+
+      return { states, head: newList };
+    }
+
+    // ==================== DELETE FROM BEGINNING ====================
+    function deleteBeginWithStates(head) {
+      const states = [];
+      
+      function record(list, pointers, newNodeData, deletedIdx, changingPointers, message, codeLine) {
+        states.push({
+          list: dllToArray(list),
+          pointers: pointers || {},
+          newNodeData: newNodeData,
+          deletedIndex: deletedIdx,
+          changingPointers: changingPointers || {},
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(head, { head: 0 }, null, null, {}, `Delete first node`, 0);
+
+      if (!head) {
+        record(null, {}, null, null, {}, `List is empty`, 1);
+        return { states, head: null };
+      }
+
+      record(head, { head: 0, temp: 0 }, null, 0, {}, `Save reference to head`, 2);
+      
+      const listArray = dllToArray(head);
+      listArray.shift();
+      const newList = listArray.length > 0 ? createDLL(listArray) : null;
+      
+      record(newList, newList ? { head: 0 } : {}, null, null, {}, `Move head to next node`, 3);
+      
+      if (newList) {
+        record(newList, { head: 0 }, null, null, { 0: 'prev' }, `Set new head.prev = null (break backward link)`, 5);
+      }
+      
+      record(newList, newList ? { head: 0 } : {}, null, null, {}, `✓ Deletion complete!`, 7);
+
+      return { states, head: newList };
+    }
+
+    // ==================== DELETE AT POSITION ====================
+    function deleteAtWithStates(head, pos) {
+      const states = [];
+      
+      function record(list, pointers, newNodeData, deletedIdx, changingPointers, message, codeLine) {
+        states.push({
+          list: dllToArray(list),
+          pointers: pointers || {},
+          newNodeData: newNodeData,
+          deletedIndex: deletedIdx,
+          changingPointers: changingPointers || {},
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(head, { head: 0 }, null, null, {}, `Delete node at position ${pos}`, 0);
+
+      if (!head) {
+        record(null, {}, null, null, {}, `List is empty`, 1);
+        return { states, head: null };
+      }
+
+      if (pos === 0) {
+        record(head, { head: 0 }, null, 0, {}, `Position is 0, delete head`, 2);
+        const listArray = dllToArray(head);
+        listArray.shift();
+        const newList = listArray.length > 0 ? createDLL(listArray) : null;
+        record(newList, newList ? { head: 0 } : {}, null, null, {}, `✓ Deletion complete!`, 2);
+        return { states, head: newList };
+      }
+
+      let curr = head;
+      let position = 0;
+      record(head, { head: 0, curr: position }, null, null, {}, `Find position ${pos}`, 3);
+
+      for (let i = 0; i < pos && curr.next; i++) {
+        record(head, { head: 0, curr: position }, null, null, {}, `At position ${position}`, 4);
+        curr = curr.next;
+        position++;
+        record(head, { head: 0, curr: position }, null, null, {}, `Move to position ${position}`, 5);
+      }
+
+      record(head, { head: 0, curr: position }, null, pos, {}, `Found node to delete`, 6);
+      
+      const listArray = dllToArray(head);
+      listArray.splice(pos, 1);
+      const newList = createDLL(listArray);
+      
+      if (pos > 0) {
+        record(newList, { head: 0 }, null, null, { [pos - 1]: 'next' }, `Set prev node's next to skip deleted node`, 8);
+      }
+      if (pos < listArray.length) {
+        record(newList, { head: 0 }, null, null, { [pos]: 'prev' }, `Set next node's prev to skip deleted node`, 11);
+      }
+      record(newList, { head: 0 }, null, null, {}, `✓ Deletion complete!`, 13);
+
+      return { states, head: newList };
+    }
+
+    // ==================== SEARCH ====================
+    function searchWithStates(head, value) {
+      const states = [];
+      
+      function record(list, pointers, newNodeData, deletedIdx, changingPointers, message, codeLine, found) {
+        states.push({
+          list: dllToArray(list),
+          pointers: pointers || {},
+          newNodeData: newNodeData,
+          deletedIndex: deletedIdx,
+          changingPointers: changingPointers || {},
+          description: message,
+          codeLine: codeLine,
+          found: found
+        });
+      }
+
+      record(head, { head: 0 }, null, null, {}, `Search for value ${value}`, 0);
+
+      let curr = head;
+      let position = 0;
+      record(head, { head: 0, curr: position }, null, null, {}, `Start from head`, 1);
+
+      while (curr) {
+        record(head, { head: 0, curr: position }, null, null, {}, `Check position ${position}`, 3);
+        record(head, { head: 0, curr: position }, null, null, {}, `Compare: ${curr.data} === ${value}?`, 4);
+
+        if (curr.data === value) {
+          record(head, { head: 0, curr: position }, null, null, {}, `✓ Found at position ${position}!`, 5, position);
+          return { states, found: true, position };
+        }
+
+        record(head, { head: 0, curr: position }, null, null, {}, `Not found, continue...`, 6);
+        curr = curr.next;
+        position++;
+        
+        if (curr) {
+          record(head, { head: 0, curr: position }, null, null, {}, `Move to position ${position}`, 7);
+        }
+      }
+
+      record(head, { head: 0 }, null, null, {}, `✗ Value ${value} not found`, 10);
+      return { states, found: false, position: -1 };
+    }
+
+    // ==================== REVERSE ====================
+    function reverseWithStates(head) {
+      const states = [];
+      
+      function record(list, pointers, newNodeData, deletedIdx, changingPointers, message, codeLine) {
+        states.push({
+          list: dllToArray(list),
+          pointers: pointers || {},
+          newNodeData: newNodeData,
+          deletedIndex: deletedIdx,
+          changingPointers: changingPointers || {},
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(head, { head: 0 }, null, null, {}, `Reverse the doubly linked list`, 0);
+
+      let curr = head;
+      let position = 0;
+
+      record(head, { head: 0, curr: position }, null, null, {}, `Initialize curr = head`, 1);
+      record(head, { head: 0, curr: position }, null, null, {}, `Initialize temp = null`, 2);
+
+      const originalArray = dllToArray(head);
+      let step = 0;
+
+      while (curr && step < originalArray.length) {
+        record(head, { curr: position }, null, null, {}, `At node ${position}, swap its pointers`, 3);
+        record(head, { curr: position }, null, null, {}, `Save curr.prev in temp`, 4);
+        record(head, { curr: position }, null, null, { [position]: 'prev' }, `Swap: curr.prev = curr.next`, 5);
+        record(head, { curr: position }, null, null, { [position]: 'next' }, `Swap: curr.next = temp (old prev)`, 6);
+        
+        position++;
+        step++;
+
+        if (position < originalArray.length) {
+          record(head, { curr: position }, null, null, {}, `Move to next node (which is now curr.prev!)`, 7);
+        }
+      }
+
+      // Build reversed list
+      const reversedArray = originalArray.reverse();
+      const newList = createDLL(reversedArray);
+
+      record(newList, { head: 0 }, null, null, {}, `All pointers swapped!`, 8);
+      record(newList, { head: 0 }, null, null, {}, `Update head to last node`, 10);
+      record(newList, { head: 0, tail: reversedArray.length - 1 }, null, null, {}, `✓ Reversal complete!`, 12);
+
+      return { states, head: newList };
+    }
+
+    // ==================== CODE DISPLAY ====================
+    function displayCode(operation) {
+      const codeDisplay = document.getElementById('code-display');
+      const codeTitle = document.getElementById('code-title');
+      const code = algorithmCode[operation];
+      
+      codeTitle.textContent = `${algorithmInfo[operation].name} - Code`;
+      
+      codeDisplay.innerHTML = code.map((lineObj) => 
+        `<div class="code-line" data-line="${lineObj.line}">${lineObj.code || '&nbsp;'}</div>`
+      ).join('');
+    }
+
+    function highlightCodeLine(lineNumber) {
+      const lines = document.querySelectorAll('.code-line');
+      lines.forEach(line => {
+        line.classList.remove('active');
+        if (parseInt(line.dataset.line) === lineNumber) {
+          line.classList.add('active');
+          line.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    }
+
+    function updateAlgorithmInfo(operation) {
+      const info = algorithmInfo[operation];
+      const infoBox = document.getElementById('algorithm-info');
+      infoBox.innerHTML = `
+        <h3>${info.name}</h3>
+        <p><strong>Description:</strong> ${info.description}</p>
+        <p><strong>Complexity:</strong> ${info.complexity}</p>
+      `;
+    }
+
+    // ==================== RENDERING ====================
+    const listContainer = document.getElementById("list-container");
+    const descriptionEl = document.getElementById("description");
+    const stepIndicatorEl = document.getElementById("step-indicator");
+
+    function renderState(state, index, total) {
+      listContainer.innerHTML = "";
+      
+      if (!state.list || state.list.length === 0) {
+        listContainer.innerHTML = '<div style="text-align: center; color: #999; padding: 60px;">Empty List</div>';
+        descriptionEl.textContent = state.description || "";
+        stepIndicatorEl.textContent = `Step ${index + 1} / ${total}`;
+        if (state.codeLine !== undefined) {
+          highlightCodeLine(state.codeLine);
+        }
+        return;
+      }
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "list-wrapper";
+
+      // Add NULL at the beginning
+      const startNull = document.createElement("div");
+      startNull.className = "null-indicator";
+      startNull.textContent = "NULL";
+      wrapper.appendChild(startNull);
+
+      const startArrows = document.createElement("div");
+      startArrows.className = "arrows-container";
+      startArrows.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center;">
+          <span class="forward-arrow">→</span>
+          <span class="backward-arrow">←</span>
+        </div>
+      `;
+      wrapper.appendChild(startArrows);
+
+      state.list.forEach((value, idx) => {
+        const nodeWrapper = document.createElement("div");
+        nodeWrapper.className = "node-wrapper";
+
+        // Add pointer labels
+        const pointers = state.pointers || {};
+        if (pointers.head === idx) {
+          const label = document.createElement("div");
+          label.className = "pointer-label head-label";
+          label.textContent = "head";
+          nodeWrapper.appendChild(label);
+          const arrow = document.createElement("div");
+          arrow.className = "arrow-down";
+          arrow.textContent = "↓";
+          nodeWrapper.appendChild(arrow);
+        }
+        if (pointers.curr === idx) {
+          const label = document.createElement("div");
+          label.className = "pointer-label current-label";
+          label.textContent = "curr";
+          label.style.top = pointers.head === idx ? "-60px" : "-35px";
+          nodeWrapper.appendChild(label);
+          if (pointers.head !== idx) {
+            const arrow = document.createElement("div");
+            arrow.className = "arrow-down";
+            arrow.textContent = "↓";
+            nodeWrapper.appendChild(arrow);
+          }
+        }
+        if (pointers.tail === idx) {
+          const label = document.createElement("div");
+          label.className = "pointer-label tail-label";
+          label.textContent = "tail";
+          label.style.top = (pointers.head === idx || pointers.curr === idx) ? "-60px" : "-35px";
+          nodeWrapper.appendChild(label);
+        }
+        if (pointers.temp === idx) {
+          const label = document.createElement("div");
+          label.className = "pointer-label temp-label";
+          label.textContent = "temp";
+          label.style.top = "-35px";
+          nodeWrapper.appendChild(label);
+        }
+
+        // Create node
+        const node = document.createElement("div");
+        node.className = "node";
+
+        if (pointers.head === idx && idx === 0) {
+          node.classList.add("head");
+        }
+        if (pointers.tail === idx) {
+          node.classList.add("tail");
+        }
+        if (pointers.curr === idx) {
+          node.classList.add("current");
+        }
+        if (state.newNodeData !== null && state.newNodeData !== undefined && value === state.newNodeData) {
+          node.classList.add("new-node");
+        }
+        if (state.deletedIndex === idx) {
+          node.classList.add("deleted");
+        }
+        if (state.found === idx) {
+          node.classList.add("highlight");
+        }
+
+        // Prev pointer
+        const prevDiv = document.createElement("div");
+        prevDiv.className = "node-prev";
+        prevDiv.textContent = "←";
+        
+        // Check if this pointer is changing
+        const changingPointers = state.changingPointers || {};
+        if (changingPointers[idx] === 'prev') {
+          prevDiv.classList.add('changing');
+        }
+        
+        node.appendChild(prevDiv);
+
+        // Data
+        const dataDiv = document.createElement("div");
+        dataDiv.className = "node-data";
+        dataDiv.textContent = value;
+        node.appendChild(dataDiv);
+
+        // Next pointer
+        const nextDiv = document.createElement("div");
+        nextDiv.className = "node-next";
+        nextDiv.textContent = "→";
+        
+        // Check if this pointer is changing
+        if (changingPointers[idx] === 'next') {
+          nextDiv.classList.add('changing');
+        }
+        
+        node.appendChild(nextDiv);
+
+        nodeWrapper.appendChild(node);
+        wrapper.appendChild(nodeWrapper);
+
+        // Add bidirectional arrow between nodes
+        if (idx < state.list.length - 1) {
+          const arrows = document.createElement("div");
+          arrows.className = "arrows-container";
+          arrows.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center;">
+              <span class="forward-arrow">→</span>
+              <span class="backward-arrow">←</span>
+            </div>
+          `;
+          wrapper.appendChild(arrows);
+        }
+      });
+
+      // Add arrow to end NULL
+      const endArrows = document.createElement("div");
+      endArrows.className = "arrows-container";
+      endArrows.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center;">
+          <span class="forward-arrow">→</span>
+          <span class="backward-arrow">←</span>
+        </div>
+      `;
+      wrapper.appendChild(endArrows);
+
+      // Add null at the end
+      const nullIndicator = document.createElement("div");
+      nullIndicator.className = "null-indicator";
+      nullIndicator.textContent = "NULL";
+      wrapper.appendChild(nullIndicator);
+
+      listContainer.appendChild(wrapper);
+
+      descriptionEl.textContent = state.description || "";
+      stepIndicatorEl.textContent = `Step ${index + 1} / ${total}`;
+      
+      if (state.codeLine !== undefined) {
+        highlightCodeLine(state.codeLine);
+      }
+    }
+
+    // ==================== PLAYER LOGIC ====================
+    let states = [];
+    let currentIndex = 0;
+    let timer = null;
+
+    function stopTimer() {
+      if (timer !== null) {
+        clearInterval(timer);
+        timer = null;
+      }
+    }
+
+    function showCurrent() {
+      if (states.length === 0) return;
+      currentIndex = Math.max(0, Math.min(currentIndex, states.length - 1));
+      renderState(states[currentIndex], currentIndex, states.length);
+    }
+
+    function play() {
+      if (states.length === 0) return;
+      if (timer !== null) return;
+
+      const speed = parseInt(document.getElementById("speed-input").value, 10) || 1200;
+
+      timer = setInterval(() => {
+        currentIndex++;
+        if (currentIndex >= states.length) {
+          currentIndex = states.length - 1;
+          stopTimer();
+        }
+        showCurrent();
+      }, speed);
+    }
+
+    function pause() {
+      stopTimer();
+    }
+
+    function next() {
+      if (states.length === 0) return;
+      currentIndex = Math.min(currentIndex + 1, states.length - 1);
+      showCurrent();
+    }
+
+    function prev() {
+      if (states.length === 0) return;
+      currentIndex = Math.max(currentIndex - 1, 0);
+      showCurrent();
+    }
+
+    function reset() {
+      currentIndex = 0;
+      showCurrent();
+    }
+
+    // ==================== UI EVENT HANDLERS ====================
+    document.getElementById("play-btn").addEventListener("click", play);
+    document.getElementById("pause-btn").addEventListener("click", pause);
+    document.getElementById("next-btn").addEventListener("click", next);
+    document.getElementById("prev-btn").addEventListener("click", prev);
+    document.getElementById("reset-btn").addEventListener("click", reset);
+
+    document.getElementById("generate-btn").addEventListener("click", generateSteps);
+    
+    document.getElementById("operation-select").addEventListener("change", function() {
+      const operation = this.value;
+      displayCode(operation);
+      updateAlgorithmInfo(operation);
+      
+      // Show/hide inputs based on operation
+      const valueLabel = document.getElementById("value-label");
+      const positionLabel = document.getElementById("position-label");
+      
+      if (operation.includes('insert') || operation === 'search') {
+        valueLabel.style.display = 'inline-block';
+      } else {
+        valueLabel.style.display = 'none';
+      }
+      
+      if (operation === 'insertAt' || operation === 'deleteAt') {
+        positionLabel.style.display = 'inline-block';
+      } else {
+        positionLabel.style.display = 'none';
+      }
+    });
+
+    function generateSteps() {
+      stopTimer();
+      const input = document.getElementById("input-list").value;
+      const arr = input
+        .split(",")
+        .map(x => x.trim())
+        .filter(x => x !== "")
+        .map(Number);
+
+      if (arr.some(Number.isNaN)) {
+        alert("Please enter valid numbers separated by commas.");
+        return;
+      }
+
+      const operation = document.getElementById("operation-select").value;
+      const value = parseInt(document.getElementById("value-input").value, 10);
+      const position = parseInt(document.getElementById("position-input").value, 10);
+
+      let head = arr.length > 0 ? createDLL(arr) : null;
+      let result;
+
+      switch(operation) {
+        case "insertEnd":
+          result = insertEndWithStates(head, value);
+          break;
+        case "insertBegin":
+          result = insertBeginWithStates(head, value);
+          break;
+        case "insertAt":
+          if (isNaN(position) || position < 0) {
+            alert("Please enter a valid position (>= 0)");
+            return;
+          }
+          result = insertAtWithStates(head, value, position);
+          break;
+        case "deleteEnd":
+          result = deleteEndWithStates(head);
+          break;
+        case "deleteBegin":
+          result = deleteBeginWithStates(head);
+          break;
+        case "deleteAt":
+          if (isNaN(position) || position < 0) {
+            alert("Please enter a valid position (>= 0)");
+            return;
+          }
+          result = deleteAtWithStates(head, position);
+          break;
+        case "search":
+          result = searchWithStates(head, value);
+          break;
+        case "reverse":
+          result = reverseWithStates(head);
+          break;
+      }
+
+      states = result.states;
+      currentIndex = 0;
+      showCurrent();
+    }
+
+    // ==================== INITIALIZATION ====================
+    (function init() {
+      const operation = document.getElementById("operation-select").value;
+      displayCode(operation);
+      updateAlgorithmInfo(operation);
+      generateSteps();
+    })();
+  </script>
+</body>
+</html>

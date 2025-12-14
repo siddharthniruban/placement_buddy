@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sorting Algorithm Visualizer with Code</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 20px;
+      margin: 0;
+      background: #f8f9fa;
+    }
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    .input-section {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .input-section label {
+      display: inline-block;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    .input-section input, .input-section select {
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .input-section button {
+      padding: 8px 16px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .input-section button:hover {
+      background: #45a049;
+    }
+    .main-content {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .visualization-panel {
+      flex: 1;
+      min-width: 0;
+    }
+    .code-panel {
+      width: 500px;
+      background: #1e1e1e;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      position: sticky;
+      top: 20px;
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+    }
+    .code-panel h3 {
+      color: #fff;
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 16px;
+      border-bottom: 2px solid #4CAF50;
+      padding-bottom: 8px;
+    }
+    .code-container {
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #d4d4d4;
+    }
+    .code-line {
+      padding: 2px 8px;
+      border-radius: 3px;
+      transition: all 0.3s ease;
+      white-space: pre;
+    }
+    .code-line.highlight {
+      background: #264f78;
+      border-left: 3px solid #4CAF50;
+      padding-left: 5px;
+      box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+    }
+    .code-line.active {
+      background: #4CAF50;
+      color: white;
+      font-weight: 600;
+      border-left: 3px solid #fff;
+      padding-left: 5px;
+      animation: pulse 0.5s ease;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(4px); }
+    }
+    .keyword {
+      color: #569cd6;
+    }
+    .function {
+      color: #dcdcaa;
+    }
+    .number {
+      color: #b5cea8;
+    }
+    .comment {
+      color: #6a9955;
+      font-style: italic;
+    }
+    .string {
+      color: #ce9178;
+    }
+    .visualizer-section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    #array-container {
+      margin-top: 20px;
+      margin-bottom: 20px;
+      min-height: 120px;
+      position: relative;
+      padding-top: 50px;
+    }
+    .array-wrapper {
+      display: flex;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      position: relative;
+    }
+    .array-item-wrapper {
+      position: relative;
+      margin-right: 4px;
+      margin-bottom: 4px;
+    }
+    .pointer-container {
+      position: absolute;
+      top: -45px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .pointer {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 3px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .pointer.i-pointer { background: #ff6b6b; color: white; }
+    .pointer.j-pointer { background: #4ecdc4; color: white; }
+    .pointer.k-pointer { background: #95e1d3; color: #333; }
+    .pointer.min-pointer { background: #f38181; color: white; }
+    .pointer.key-pointer { background: #aa96da; color: white; }
+    .pointer.pivot-pointer { background: #17a2b8; color: white; }
+    .pointer.left-pointer { background: #feca57; color: #333; }
+    .pointer.right-pointer { background: #ff9ff3; color: #333; }
+    .pointer.mid-pointer { background: #48dbfb; color: #333; }
+    .arrow {
+      color: #666;
+      font-size: 16px;
+      line-height: 1;
+    }
+    .array-item {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 50px;
+      height: 50px;
+      padding: 0 10px;
+      border: 2px solid #333;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 16px;
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+      background: white;
+    }
+    .array-item.comparing {
+      background-color: #fff3cd;
+      border-color: #ff9800;
+    }
+    .array-item.swapped {
+      background-color: #f8d7da;
+      border-color: #dc3545;
+    }
+    .array-item.sorted {
+      background-color: #d4edda;
+      border-color: #28a745;
+    }
+    .array-item.pivot {
+      background-color: #d1ecf1;
+      border-color: #17a2b8;
+    }
+    .array-item.current {
+      background-color: #e7d4f5;
+      border-color: #9c27b0;
+    }
+    .index-label {
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: #999;
+      font-weight: 500;
+    }
+    #controls {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    #controls button {
+      margin-right: 8px;
+      margin-bottom: 8px;
+      padding: 8px 16px;
+      background: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    #controls button:hover {
+      background: #0b7dda;
+    }
+    #description {
+      margin-top: 15px;
+      padding: 12px;
+      background: #e3f2fd;
+      border-left: 4px solid #2196F3;
+      border-radius: 4px;
+      font-style: italic;
+      min-height: 20px;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+    #step-indicator {
+      margin-top: 8px;
+      font-size: 0.95rem;
+      color: #666;
+      font-weight: 600;
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 15px;
+      padding: 12px;
+      background: #f9f9f9;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-box {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #333;
+      border-radius: 3px;
+    }
+    @media (max-width: 1200px) {
+      .main-content {
+        flex-direction: column;
+      }
+      .code-panel {
+        width: 100%;
+        position: relative;
+        top: 0;
+        max-height: 500px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔄 Sorting Algorithm Visualizer with Code Execution</h1>
+
+    <div class="input-section">
+      <label>
+        Algorithm:
+        <select id="algorithm-select">
+          <option value="bubble">Bubble Sort</option>
+          <option value="selection">Selection Sort</option>
+          <option value="insertion">Insertion Sort</option>
+          <option value="quick">Quick Sort</option>
+          <option value="merge">Merge Sort</option>
+        </select>
+      </label>
+
+      <label>
+        Input array:
+        <input id="input-array" type="text" value="5,3,8,1,4,9,2,7" size="30" />
+      </label>
+
+      <button id="generate-btn">Generate Steps</button>
+    </div>
+
+    <div class="main-content">
+      <div class="visualization-panel">
+        <div class="visualizer-section">
+          <div id="array-container"></div>
+
+          <div id="controls">
+            <button id="prev-btn">◀ Previous</button>
+            <button id="play-btn">▶ Play</button>
+            <button id="pause-btn">⏸ Pause</button>
+            <button id="next-btn">Next ▶</button>
+            <button id="reset-btn">⟲ Reset</button>
+            <label style="margin-left: 8px;">
+              Speed (ms):
+              <input id="speed-input" type="number" value="1000" min="200" max="3000" step="100" style="width: 70px;" />
+            </label>
+          </div>
+
+          <div id="description"></div>
+          <div id="step-indicator"></div>
+
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-box comparing"></div>
+              <span>Comparing</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box swapped"></div>
+              <span>Swapped</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box sorted"></div>
+              <span>Sorted</span>
+            </div>
+            <div class="legend-item">
+              <span class="pointer i-pointer">i</span>
+              <span class="pointer j-pointer">j</span>
+              <span class="pointer k-pointer">k</span>
+              <span class="pointer min-pointer">min</span>
+              <span class="pointer key-pointer">key</span>
+              <span class="pointer pivot-pointer">pivot</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="code-panel">
+        <h3 id="code-title">Algorithm Code</h3>
+        <div class="code-container" id="code-display"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Algorithm code templates
+    const algorithmCode = {
+      bubble: [
+        { code: 'function bubbleSort(arr) {', line: 0 },
+        { code: '  for (i = 0; i < n; i++) {', line: 1 },
+        { code: '    for (j = 0; j < n - i - 1; j++) {', line: 2 },
+        { code: '      if (arr[j] > arr[j + 1]) {', line: 3 },
+        { code: '        swap(arr[j], arr[j + 1]);', line: 4 },
+        { code: '      }', line: 5 },
+        { code: '    }', line: 6 },
+        { code: '  }', line: 7 },
+        { code: '}', line: 8 }
+      ],
+      selection: [
+        { code: 'function selectionSort(arr) {', line: 0 },
+        { code: '  for (i = 0; i < n - 1; i++) {', line: 1 },
+        { code: '    min = i;', line: 2 },
+        { code: '    for (j = i + 1; j < n; j++) {', line: 3 },
+        { code: '      if (arr[j] < arr[min]) {', line: 4 },
+        { code: '        min = j;', line: 5 },
+        { code: '      }', line: 6 },
+        { code: '    }', line: 7 },
+        { code: '    swap(arr[i], arr[min]);', line: 8 },
+        { code: '  }', line: 9 },
+        { code: '}', line: 10 }
+      ],
+      insertion: [
+        { code: 'function insertionSort(arr) {', line: 0 },
+        { code: '  for (i = 1; i < n; i++) {', line: 1 },
+        { code: '    key = arr[i];', line: 2 },
+        { code: '    j = i - 1;', line: 3 },
+        { code: '    while (j >= 0 && arr[j] > key) {', line: 4 },
+        { code: '      arr[j + 1] = arr[j];', line: 5 },
+        { code: '      j--;', line: 6 },
+        { code: '    }', line: 7 },
+        { code: '    arr[j + 1] = key;', line: 8 },
+        { code: '  }', line: 9 },
+        { code: '}', line: 10 }
+      ],
+      quick: [
+        { code: 'function quickSort(arr, low, high) {', line: 0 },
+        { code: '  if (low < high) {', line: 1 },
+        { code: '    pivot = arr[high];', line: 2 },
+        { code: '    i = low - 1;', line: 3 },
+        { code: '    for (j = low; j < high; j++) {', line: 4 },
+        { code: '      if (arr[j] < pivot) {', line: 5 },
+        { code: '        i++;', line: 6 },
+        { code: '        swap(arr[i], arr[j]);', line: 7 },
+        { code: '      }', line: 8 },
+        { code: '    }', line: 9 },
+        { code: '    swap(arr[i + 1], arr[high]);', line: 10 },
+        { code: '    quickSort(arr, low, i);', line: 11 },
+        { code: '    quickSort(arr, i + 2, high);', line: 12 },
+        { code: '  }', line: 13 },
+        { code: '}', line: 14 }
+      ],
+      merge: [
+        { code: 'function mergeSort(arr, left, right) {', line: 0 },
+        { code: '  if (left < right) {', line: 1 },
+        { code: '    mid = (left + right) / 2;', line: 2 },
+        { code: '    mergeSort(arr, left, mid);', line: 3 },
+        { code: '    mergeSort(arr, mid + 1, right);', line: 4 },
+        { code: '    merge(arr, left, mid, right);', line: 5 },
+        { code: '  }', line: 6 },
+        { code: '}', line: 7 },
+        { code: '', line: 8 },
+        { code: 'function merge(arr, left, mid, right) {', line: 9 },
+        { code: '  i = 0, j = 0, k = left;', line: 10 },
+        { code: '  while (i < leftSize && j < rightSize) {', line: 11 },
+        { code: '    if (leftArr[i] <= rightArr[j]) {', line: 12 },
+        { code: '      arr[k++] = leftArr[i++];', line: 13 },
+        { code: '    } else {', line: 14 },
+        { code: '      arr[k++] = rightArr[j++];', line: 15 },
+        { code: '    }', line: 16 },
+        { code: '  }', line: 17 },
+        { code: '}', line: 18 }
+      ]
+    };
+
+    // ==================== BUBBLE SORT ====================
+    function bubbleSortWithStates(arr) {
+      const a = arr.slice();
+      const states = [];
+
+      function record(pointers, swapped, sorted, message, codeLine) {
+        states.push({
+          array: a.slice(),
+          pointers: pointers || {},
+          activeIndices: pointers ? Object.values(pointers).filter(v => v !== null && v !== undefined) : [],
+          swappedIndices: swapped || [],
+          sortedIndices: sorted || [],
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      const n = a.length;
+      record({}, [], [], "Initial array", 0);
+
+      for (let i = 0; i < n; i++) {
+        record({i: 0}, [], [], `Outer loop: i = ${i}`, 1);
+        for (let j = 0; j < n - i - 1; j++) {
+          record({i: j, j: j + 1}, [], [], `Inner loop: j = ${j}`, 2);
+          record({i: j, j: j + 1}, [], [], `Comparing a[${j}]=${a[j]} and a[${j + 1}]=${a[j + 1]}`, 3);
+          
+          if (a[j] > a[j + 1]) {
+            [a[j], a[j + 1]] = [a[j + 1], a[j]];
+            record({i: j, j: j + 1}, [j, j + 1], [], `Swapping: ${a[j]} ↔ ${a[j + 1]}`, 4);
+          }
+        }
+        const sorted = Array.from({length: i + 1}, (_, k) => n - 1 - k);
+        record({}, [], sorted, `Pass ${i + 1} complete`, 7);
+      }
+
+      record({}, [], Array.from({length: n}, (_, i) => i), "✓ Array is sorted!", 8);
+      return states;
+    }
+
+    // ==================== SELECTION SORT ====================
+    function selectionSortWithStates(arr) {
+      const a = arr.slice();
+      const states = [];
+      const n = a.length;
+
+      function record(pointers, swapped, sorted, message, codeLine) {
+        states.push({
+          array: a.slice(),
+          pointers: pointers || {},
+          activeIndices: pointers ? Object.values(pointers).filter(v => v !== null && v !== undefined) : [],
+          swappedIndices: swapped || [],
+          sortedIndices: sorted || [],
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record({}, [], [], "Initial array", 0);
+
+      for (let i = 0; i < n - 1; i++) {
+        record({i: i}, [], Array.from({length: i}, (_, k) => k), `Outer loop: i = ${i}`, 1);
+        let minIdx = i;
+        record({i: i, min: minIdx}, [], Array.from({length: i}, (_, k) => k), `Set min = ${i}`, 2);
+
+        for (let j = i + 1; j < n; j++) {
+          const sorted = Array.from({length: i}, (_, k) => k);
+          record({i: i, j: j, min: minIdx}, [], sorted, `Inner loop: j = ${j}`, 3);
+          record({i: i, j: j, min: minIdx}, [], sorted, `Compare a[${j}]=${a[j]} < a[${minIdx}]=${a[minIdx]}?`, 4);
+          
+          if (a[j] < a[minIdx]) {
+            minIdx = j;
+            record({i: i, j: j, min: minIdx}, [], sorted, `New minimum at index ${minIdx}`, 5);
+          }
+        }
+
+        if (minIdx !== i) {
+          record({i: i, min: minIdx}, [i, minIdx], Array.from({length: i}, (_, k) => k), `Swap a[${i}] ↔ a[${minIdx}]`, 8);
+          [a[i], a[minIdx]] = [a[minIdx], a[i]];
+        }
+        record({}, [], Array.from({length: i + 1}, (_, k) => k), `Element ${a[i]} sorted`, 9);
+      }
+
+      record({}, [], Array.from({length: n}, (_, i) => i), "✓ Array is sorted!", 10);
+      return states;
+    }
+
+    // ==================== INSERTION SORT ====================
+    function insertionSortWithStates(arr) {
+      const a = arr.slice();
+      const states = [];
+      const n = a.length;
+
+      function record(pointers, swapped, sorted, message, codeLine) {
+        states.push({
+          array: a.slice(),
+          pointers: pointers || {},
+          activeIndices: pointers ? Object.values(pointers).filter(v => v !== null && v !== undefined) : [],
+          swappedIndices: swapped || [],
+          sortedIndices: sorted || [],
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record({}, [], [0], "First element sorted", 0);
+
+      for (let i = 1; i < n; i++) {
+        record({i: i}, [], Array.from({length: i}, (_, k) => k), `Outer loop: i = ${i}`, 1);
+        const key = a[i];
+        record({i: i, key: i}, [], Array.from({length: i}, (_, k) => k), `key = ${key}`, 2);
+        let j = i - 1;
+        record({j: j, key: i}, [], Array.from({length: i}, (_, k) => k), `j = ${i - 1}`, 3);
+
+        while (j >= 0 && a[j] > key) {
+          record({j: j, key: i}, [], Array.from({length: i}, (_, k) => k), `a[${j}]=${a[j]} > key=${key}`, 4);
+          a[j + 1] = a[j];
+          record({j: j, key: j + 1}, [j + 1], Array.from({length: i}, (_, k) => k), `Shift a[${j}] right`, 5);
+          j--;
+          record({j: Math.max(0, j), key: j + 1}, [], Array.from({length: i}, (_, k) => k), `j--`, 6);
+        }
+
+        a[j + 1] = key;
+        record({key: j + 1}, [j + 1], Array.from({length: i + 1}, (_, k) => k), `Insert key at position ${j + 1}`, 8);
+      }
+
+      record({}, [], Array.from({length: n}, (_, i) => i), "✓ Array is sorted!", 10);
+      return states;
+    }
+
+    // ==================== QUICK SORT ====================
+    function quickSortWithStates(arr) {
+      const a = arr.slice();
+      const states = [];
+      const sortedSet = new Set();
+
+      function record(pointers, swapped, sorted, message, codeLine) {
+        states.push({
+          array: a.slice(),
+          pointers: pointers || {},
+          activeIndices: pointers ? Object.values(pointers).filter(v => v !== null && v !== undefined) : [],
+          swappedIndices: swapped || [],
+          sortedIndices: sorted || [],
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record({}, [], [], "Initial array", 0);
+
+      function partition(low, high) {
+        record({left: low, right: high}, [], Array.from(sortedSet), `Partition [${low}, ${high}]`, 1);
+        const pivot = a[high];
+        record({pivot: high, left: low, right: high}, [], Array.from(sortedSet), `pivot = a[${high}] = ${pivot}`, 2);
+
+        let i = low - 1;
+        record({i: Math.max(0, low), pivot: high}, [], Array.from(sortedSet), `i = ${low - 1}`, 3);
+
+        for (let j = low; j < high; j++) {
+          record({i: Math.max(0, i), j: j, pivot: high}, [], Array.from(sortedSet), `Loop: j = ${j}`, 4);
+          record({i: Math.max(0, i), j: j, pivot: high}, [], Array.from(sortedSet), `Compare a[${j}]=${a[j]} < ${pivot}?`, 5);
+
+          if (a[j] < pivot) {
+            i++;
+            record({i: i, j: j, pivot: high}, [], Array.from(sortedSet), `i++`, 6);
+            if (i !== j) {
+              record({i: i, j: j, pivot: high}, [i, j], Array.from(sortedSet), `Swap a[${i}] ↔ a[${j}]`, 7);
+              [a[i], a[j]] = [a[j], a[i]];
+            }
+          }
+        }
+
+        [a[i + 1], a[high]] = [a[high], a[i + 1]];
+        record({pivot: i + 1}, [i + 1, high], Array.from(sortedSet), `Place pivot at ${i + 1}`, 10);
+        
+        sortedSet.add(i + 1);
+        return i + 1;
+      }
+
+      function quickSort(low, high) {
+        if (low < high) {
+          const pi = partition(low, high);
+          record({}, [], Array.from(sortedSet), `Pivot sorted at ${pi}`, 11);
+          quickSort(low, pi - 1);
+          quickSort(pi + 1, high);
+        } else if (low === high) {
+          sortedSet.add(low);
+        }
+      }
+
+      quickSort(0, a.length - 1);
+      record({}, [], Array.from({length: a.length}, (_, i) => i), "✓ Array is sorted!", 14);
+      return states;
+    }
+
+    // ==================== MERGE SORT ====================
+    function mergeSortWithStates(arr) {
+      const a = arr.slice();
+      const states = [];
+
+      function record(pointers, swapped, sorted, message, codeLine) {
+        states.push({
+          array: a.slice(),
+          pointers: pointers || {},
+          activeIndices: pointers ? Object.values(pointers).filter(v => v !== null && v !== undefined) : [],
+          swappedIndices: swapped || [],
+          sortedIndices: sorted || [],
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record({}, [], [], "Initial array", 0);
+
+      function merge(left, mid, right) {
+        const leftArr = a.slice(left, mid + 1);
+        const rightArr = a.slice(mid + 1, right + 1);
+
+        record({left: left, mid: mid, right: right}, [], [], `Merge [${left}..${mid}] & [${mid + 1}..${right}]`, 9);
+
+        let i = 0, j = 0, k = left;
+        record({i: left + i, j: mid + 1 + j, k: k}, [], [], `i=0, j=0, k=${left}`, 10);
+
+        while (i < leftArr.length && j < rightArr.length) {
+          record({i: left + i, j: mid + 1 + j, k: k}, [], [], `Compare ${leftArr[i]} vs ${rightArr[j]}`, 11);
+
+          if (leftArr[i] <= rightArr[j]) {
+            a[k] = leftArr[i];
+            record({k: k}, [k], [], `arr[${k}] = ${leftArr[i]}`, 13);
+            i++;
+          } else {
+            a[k] = rightArr[j];
+            record({k: k}, [k], [], `arr[${k}] = ${rightArr[j]}`, 15);
+            j++;
+          }
+          k++;
+        }
+
+        while (i < leftArr.length) {
+          a[k] = leftArr[i];
+          record({k: k}, [k], [], `Copy ${leftArr[i]} to ${k}`, 13);
+          i++;
+          k++;
+        }
+
+        while (j < rightArr.length) {
+          a[k] = rightArr[j];
+          record({k: k}, [k], [], `Copy ${rightArr[j]} to ${k}`, 15);
+          j++;
+          k++;
+        }
+      }
+
+      function mergeSort(left, right) {
+        if (left < right) {
+          record({left: left, right: right}, [], [], `MergeSort [${left}, ${right}]`, 1);
+          const mid = Math.floor((left + right) / 2);
+          record({left: left, mid: mid, right: right}, [], [], `mid = ${mid}`, 2);
+          
+          mergeSort(left, mid);
+          record({}, [], [], `Recurse left: [${left}, ${mid}]`, 3);
+          mergeSort(mid + 1, right);
+          record({}, [], [], `Recurse right: [${mid + 1}, ${right}]`, 4);
+          merge(left, mid, right);
+          record({}, [], [], `Merged [${left}..${right}]`, 5);
+        }
+      }
+
+      mergeSort(0, a.length - 1);
+      record({}, [], Array.from({length: a.length}, (_, i) => i), "✓ Array is sorted!", 18);
+      return states;
+    }
+
+    // ==================== CODE DISPLAY ====================
+    function displayCode(algorithm) {
+      const codeDisplay = document.getElementById('code-display');
+      const codeTitle = document.getElementById('code-title');
+      const code = algorithmCode[algorithm];
+      
+      const algorithmNames = {
+        bubble: 'Bubble Sort',
+        selection: 'Selection Sort',
+        insertion: 'Insertion Sort',
+        quick: 'Quick Sort',
+        merge: 'Merge Sort'
+      };
+      
+      codeTitle.textContent = `${algorithmNames[algorithm]} - Code`;
+      
+      codeDisplay.innerHTML = code.map((lineObj, idx) => 
+        `<div class="code-line" data-line="${lineObj.line}">${lineObj.code || '&nbsp;'}</div>`
+      ).join('');
+    }
+
+    function highlightCodeLine(lineNumber) {
+      const lines = document.querySelectorAll('.code-line');
+      lines.forEach(line => {
+        line.classList.remove('active', 'highlight');
+        if (parseInt(line.dataset.line) === lineNumber) {
+          line.classList.add('active');
+          line.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    }
+
+    // ==================== RENDERING ====================
+    const arrayContainer = document.getElementById("array-container");
+    const descriptionEl = document.getElementById("description");
+    const stepIndicatorEl = document.getElementById("step-indicator");
+
+    function renderState(state, index, total) {
+      arrayContainer.innerHTML = "";
+      
+      const wrapper = document.createElement("div");
+      wrapper.className = "array-wrapper";
+
+      state.array.forEach((value, idx) => {
+        const itemWrapper = document.createElement("div");
+        itemWrapper.className = "array-item-wrapper";
+
+        const pointerContainer = document.createElement("div");
+        pointerContainer.className = "pointer-container";
+
+        const pointers = state.pointers || {};
+        const pointerLabels = [];
+        
+        if (pointers.i === idx) pointerLabels.push({label: 'i', class: 'i-pointer'});
+        if (pointers.j === idx) pointerLabels.push({label: 'j', class: 'j-pointer'});
+        if (pointers.k === idx) pointerLabels.push({label: 'k', class: 'k-pointer'});
+        if (pointers.min === idx) pointerLabels.push({label: 'min', class: 'min-pointer'});
+        if (pointers.key === idx) pointerLabels.push({label: 'key', class: 'key-pointer'});
+        if (pointers.pivot === idx) pointerLabels.push({label: 'pivot', class: 'pivot-pointer'});
+        if (pointers.left === idx) pointerLabels.push({label: 'L', class: 'left-pointer'});
+        if (pointers.right === idx) pointerLabels.push({label: 'R', class: 'right-pointer'});
+        if (pointers.mid === idx) pointerLabels.push({label: 'M', class: 'mid-pointer'});
+
+        if (pointerLabels.length > 0) {
+          pointerLabels.forEach(p => {
+            const pointerDiv = document.createElement("div");
+            pointerDiv.className = `pointer ${p.class}`;
+            pointerDiv.textContent = p.label;
+            pointerContainer.appendChild(pointerDiv);
+          });
+          
+          const arrow = document.createElement("div");
+          arrow.className = "arrow";
+          arrow.textContent = "↓";
+          pointerContainer.appendChild(arrow);
+        }
+
+        itemWrapper.appendChild(pointerContainer);
+
+        const div = document.createElement("div");
+        div.className = "array-item";
+        div.textContent = value;
+
+        if (state.activeIndices && state.activeIndices.includes(idx)) {
+          div.classList.add("comparing");
+        }
+
+        if (state.swappedIndices && state.swappedIndices.includes(idx)) {
+          div.classList.add("swapped");
+        }
+
+        if (state.sortedIndices && state.sortedIndices.includes(idx)) {
+          div.classList.add("sorted");
+        }
+
+        if (pointers.pivot === idx) {
+          div.classList.add("pivot");
+        }
+
+        if (pointers.key === idx) {
+          div.classList.add("current");
+        }
+
+        itemWrapper.appendChild(div);
+
+        const indexLabel = document.createElement("div");
+        indexLabel.className = "index-label";
+        indexLabel.textContent = idx;
+        itemWrapper.appendChild(indexLabel);
+
+        wrapper.appendChild(itemWrapper);
+      });
+
+      arrayContainer.appendChild(wrapper);
+
+      descriptionEl.textContent = state.description || "";
+      stepIndicatorEl.textContent = `Step ${index + 1} / ${total}`;
+      
+      // Highlight code line
+      if (state.codeLine !== undefined) {
+        highlightCodeLine(state.codeLine);
+      }
+    }
+
+    // ==================== PLAYER LOGIC ====================
+    let states = [];
+    let currentIndex = 0;
+    let timer = null;
+
+    function stopTimer() {
+      if (timer !== null) {
+        clearInterval(timer);
+        timer = null;
+      }
+    }
+
+    function showCurrent() {
+      if (states.length === 0) return;
+      currentIndex = Math.max(0, Math.min(currentIndex, states.length - 1));
+      renderState(states[currentIndex], currentIndex, states.length);
+    }
+
+    function play() {
+      if (states.length === 0) return;
+      if (timer !== null) return;
+
+      const speed = parseInt(document.getElementById("speed-input").value, 10) || 1000;
+
+      timer = setInterval(() => {
+        currentIndex++;
+        if (currentIndex >= states.length) {
+          currentIndex = states.length - 1;
+          stopTimer();
+        }
+        showCurrent();
+      }, speed);
+    }
+
+    function pause() {
+      stopTimer();
+    }
+
+    function next() {
+      if (states.length === 0) return;
+      currentIndex = Math.min(currentIndex + 1, states.length - 1);
+      showCurrent();
+    }
+
+    function prev() {
+      if (states.length === 0) return;
+      currentIndex = Math.max(currentIndex - 1, 0);
+      showCurrent();
+    }
+
+    function reset() {
+      currentIndex = 0;
+      showCurrent();
+    }
+
+    // ==================== UI EVENT HANDLERS ====================
+    document.getElementById("play-btn").addEventListener("click", play);
+    document.getElementById("pause-btn").addEventListener("click", pause);
+    document.getElementById("next-btn").addEventListener("click", next);
+    document.getElementById("prev-btn").addEventListener("click", prev);
+    document.getElementById("reset-btn").addEventListener("click", reset);
+
+    document.getElementById("generate-btn").addEventListener("click", generateSteps);
+    document.getElementById("algorithm-select").addEventListener("change", function() {
+      displayCode(this.value);
+      generateSteps();
+    });
+
+    function generateSteps() {
+      stopTimer();
+      const input = document.getElementById("input-array").value;
+      const arr = input
+        .split(",")
+        .map(x => x.trim())
+        .filter(x => x !== "")
+        .map(Number);
+
+      if (arr.length === 0 || arr.some(Number.isNaN)) {
+        alert("Please enter valid numbers separated by commas.");
+        return;
+      }
+
+      const algorithm = document.getElementById("algorithm-select").value;
+
+      switch(algorithm) {
+        case "bubble":
+          states = bubbleSortWithStates(arr);
+          break;
+        case "selection":
+          states = selectionSortWithStates(arr);
+          break;
+        case "insertion":
+          states = insertionSortWithStates(arr);
+          break;
+        case "quick":
+          states = quickSortWithStates(arr);
+          break;
+        case "merge":
+          states = mergeSortWithStates(arr);
+          break;
+      }
+
+      currentIndex = 0;
+      showCurrent();
+    }
+
+    // ==================== INITIALIZATION ====================
+    (function init() {
+      const algorithm = document.getElementById("algorithm-select").value;
+      displayCode(algorithm);
+      generateSteps();
+    })();
+  </script>
+</body>
+</html>

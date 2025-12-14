@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Stack Visualizer</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 20px;
+      margin: 0;
+      background: #f8f9fa;
+    }
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    .input-section {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .input-section label {
+      display: inline-block;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    .input-section input, .input-section select {
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .input-section button {
+      padding: 8px 16px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .input-section button:hover {
+      background: #45a049;
+    }
+    .main-content {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .visualization-panel {
+      flex: 1;
+      min-width: 0;
+    }
+    .code-panel {
+      width: 600px;
+      background: #1e1e1e;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      position: sticky;
+      top: 20px;
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+    }
+    .code-panel h3 {
+      color: #fff;
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 16px;
+      border-bottom: 2px solid #4CAF50;
+      padding-bottom: 8px;
+    }
+    .code-container {
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #d4d4d4;
+    }
+    .code-line {
+      padding: 2px 8px;
+      border-radius: 3px;
+      transition: all 0.3s ease;
+      white-space: pre;
+    }
+    .code-line.active {
+      background: #4CAF50;
+      color: white;
+      font-weight: 600;
+      border-left: 3px solid #fff;
+      padding-left: 5px;
+      animation: pulse 0.5s ease;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(4px); }
+    }
+    .visualizer-section {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    #stack-container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      min-height: 400px;
+      padding: 20px;
+      position: relative;
+    }
+    .stack-wrapper {
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: center;
+      gap: 2px;
+      position: relative;
+    }
+    .stack-item {
+      width: 200px;
+      padding: 15px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: 3px solid #5a67d8;
+      border-radius: 8px;
+      color: white;
+      font-weight: 700;
+      font-size: 20px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: all 0.4s ease;
+      position: relative;
+    }
+    .stack-item.pushing {
+      animation: pushAnimation 0.5s ease;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    .stack-item.popping {
+      animation: popAnimation 0.5s ease;
+      opacity: 0.5;
+    }
+    .stack-item.top {
+      border-color: #f59e0b;
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
+      transform: scale(1.05);
+    }
+    .stack-item.highlight {
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    }
+    @keyframes pushAnimation {
+      0% {
+        transform: translateY(-100px);
+        opacity: 0;
+      }
+      100% {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    @keyframes popAnimation {
+      0% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-100px) scale(0.8);
+        opacity: 0;
+      }
+    }
+    .stack-label {
+      position: absolute;
+      left: -100px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #666;
+      background: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 2px solid #ddd;
+      white-space: nowrap;
+    }
+    .top-label {
+      background: #fef3c7;
+      border-color: #f59e0b;
+      color: #92400e;
+    }
+    .stack-base {
+      width: 220px;
+      height: 8px;
+      background: #374151;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .empty-stack {
+      color: #9ca3af;
+      font-size: 18px;
+      font-weight: 600;
+      padding: 40px;
+      text-align: center;
+    }
+    .auxiliary-display {
+      margin-top: 30px;
+      padding: 15px;
+      background: #f3f4f6;
+      border-radius: 8px;
+      border-left: 4px solid #3b82f6;
+    }
+    #controls {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    #controls button {
+      margin-right: 8px;
+      margin-bottom: 8px;
+      padding: 8px 16px;
+      background: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    #controls button:hover {
+      background: #0b7dda;
+    }
+    #description {
+      margin-top: 15px;
+      padding: 12px;
+      background: #e3f2fd;
+      border-left: 4px solid #2196F3;
+      border-radius: 4px;
+      font-style: italic;
+      min-height: 20px;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+    #step-indicator {
+      margin-top: 8px;
+      font-size: 0.95rem;
+      color: #666;
+      font-weight: 600;
+    }
+    .result-box {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+    }
+    .result-box.success {
+      background: #d4edda;
+      border: 2px solid #28a745;
+      color: #155724;
+    }
+    .result-box.error {
+      background: #f8d7da;
+      border: 2px solid #dc3545;
+      color: #721c24;
+    }
+    .result-box.info {
+      background: #d1ecf1;
+      border: 2px solid #17a2b8;
+      color: #0c5460;
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 15px;
+      padding: 12px;
+      background: #f9f9f9;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-box {
+      width: 30px;
+      height: 25px;
+      border: 2px solid #333;
+      border-radius: 3px;
+    }
+    .info-box {
+      margin-top: 15px;
+      padding: 15px;
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .info-box h3 {
+      margin-top: 0;
+      color: #856404;
+    }
+    @media (max-width: 1400px) {
+      .main-content {
+        flex-direction: column;
+      }
+      .code-panel {
+        width: 100%;
+        position: relative;
+        top: 0;
+        max-height: 500px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📚 Stack Visualizer</h1>
+
+    <div class="input-section">
+      <label>
+        Operation/Problem:
+        <select id="operation-select">
+          <optgroup label="Basic Operations">
+            <option value="push">Push Element</option>
+            <option value="pop">Pop Element</option>
+            <option value="peek">Peek/Top</option>
+          </optgroup>
+          <optgroup label="Stack Problems">
+            <option value="balancedParens">Balanced Parentheses</option>
+            <option value="nextGreater">Next Greater Element</option>
+            <option value="minStack">Min Stack</option>
+            <option value="evaluatePostfix">Evaluate Postfix</option>
+            <option value="reverseString">Reverse String</option>
+            <option value="sortStack">Sort Stack</option>
+            <option value="stockSpan">Stock Span Problem</option>
+          </optgroup>
+        </select>
+      </label>
+
+      <label id="initial-label">
+        Initial Stack:
+        <input id="input-stack" type="text" value="5,3,8,1" size="20" placeholder="comma separated" />
+      </label>
+
+      <label id="value-label">
+        Value:
+        <input id="value-input" type="text" value="9" style="width: 100px;" />
+      </label>
+
+      <label id="expression-label" style="display: none;">
+        Expression:
+        <input id="expression-input" type="text" value="({[]})" style="width: 150px;" />
+      </label>
+
+      <button id="generate-btn">Execute</button>
+    </div>
+
+    <div class="main-content">
+      <div class="visualization-panel">
+        <div class="visualizer-section">
+          <div id="stack-container"></div>
+          <div id="auxiliary-display" class="auxiliary-display" style="display: none;"></div>
+
+          <div id="controls">
+            <button id="prev-btn">◀ Previous</button>
+            <button id="play-btn">▶ Play</button>
+            <button id="pause-btn">⏸ Pause</button>
+            <button id="next-btn">Next ▶</button>
+            <button id="reset-btn">⟲ Reset</button>
+            <label style="margin-left: 8px;">
+              Speed (ms):
+              <input id="speed-input" type="number" value="800" min="300" max="3000" step="100" style="width: 70px;" />
+            </label>
+          </div>
+
+          <div id="description"></div>
+          <div id="step-indicator"></div>
+          <div id="result-box" class="result-box" style="display: none;"></div>
+
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+              <span>Stack Element</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border-color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);"></div>
+              <span>Top Element</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+              <span>Pushing</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-box" id="algorithm-info"></div>
+      </div>
+
+      <div class="code-panel">
+        <h3 id="code-title">Algorithm Code</h3>
+        <div class="code-container" id="code-display"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Problem information
+    const problemInfo = {
+      push: {
+        name: "Push Operation",
+        description: "Add an element to the top of the stack. Stack follows LIFO (Last In, First Out) principle.",
+        complexity: "Time: O(1) | Space: O(1)",
+        technique: "Basic Stack Operation"
+      },
+      pop: {
+        name: "Pop Operation",
+        description: "Remove and return the top element from the stack. Returns error if stack is empty.",
+        complexity: "Time: O(1) | Space: O(1)",
+        technique: "Basic Stack Operation"
+      },
+      peek: {
+        name: "Peek/Top Operation",
+        description: "Return the top element without removing it. Returns error if stack is empty.",
+        complexity: "Time: O(1) | Space: O(1)",
+        technique: "Basic Stack Operation"
+      },
+      balancedParens: {
+        name: "Balanced Parentheses",
+        description: "Check if brackets/parentheses are balanced. Push opening brackets, pop when closing bracket matches.",
+        complexity: "Time: O(n) | Space: O(n)",
+        technique: "Stack for Matching"
+      },
+      nextGreater: {
+        name: "Next Greater Element",
+        description: "For each element, find the next greater element to its right. Use stack to track elements waiting for their next greater.",
+        complexity: "Time: O(n) | Space: O(n)",
+        technique: "Monotonic Stack"
+      },
+      minStack: {
+        name: "Min Stack",
+        description: "Design a stack that supports push, pop, and retrieving the minimum element in constant time.",
+        complexity: "Time: O(1) all operations | Space: O(n)",
+        technique: "Auxiliary Stack"
+      },
+      evaluatePostfix: {
+        name: "Evaluate Postfix Expression",
+        description: "Evaluate postfix (RPN) notation. Push operands, pop two operands when operator is encountered.",
+        complexity: "Time: O(n) | Space: O(n)",
+        technique: "Stack for Expression"
+      },
+      reverseString: {
+        name: "Reverse String",
+        description: "Reverse a string using stack. Push all characters, then pop them in reverse order.",
+        complexity: "Time: O(n) | Space: O(n)",
+        technique: "Stack for Reversal"
+      },
+      sortStack: {
+        name: "Sort Stack",
+        description: "Sort a stack using recursion or an auxiliary stack. Elements are sorted in ascending order.",
+        complexity: "Time: O(n²) | Space: O(n)",
+        technique: "Recursive/Auxiliary Stack"
+      },
+      stockSpan: {
+        name: "Stock Span Problem",
+        description: "Calculate span of stock prices. Span is max consecutive days with price <= current day. Use stack to track indices.",
+        complexity: "Time: O(n) | Space: O(n)",
+        technique: "Monotonic Stack"
+      }
+    };
+
+    // Code templates
+    const problemCode = {
+      push: [
+        { code: 'function push(stack, value) {', line: 0 },
+        { code: '  stack.push(value);', line: 1 },
+        { code: '  return stack;', line: 2 },
+        { code: '}', line: 3 }
+      ],
+      pop: [
+        { code: 'function pop(stack) {', line: 0 },
+        { code: '  if (stack.isEmpty()) {', line: 1 },
+        { code: '    return "Error: Stack Underflow";', line: 2 },
+        { code: '  }', line: 3 },
+        { code: '  return stack.pop();', line: 4 },
+        { code: '}', line: 5 }
+      ],
+      peek: [
+        { code: 'function peek(stack) {', line: 0 },
+        { code: '  if (stack.isEmpty()) {', line: 1 },
+        { code: '    return "Error: Stack is Empty";', line: 2 },
+        { code: '  }', line: 3 },
+        { code: '  return stack[stack.length - 1];', line: 4 },
+        { code: '}', line: 5 }
+      ],
+      balancedParens: [
+        { code: 'function isBalanced(expr) {', line: 0 },
+        { code: '  stack = [];', line: 1 },
+        { code: '  for (char of expr) {', line: 2 },
+        { code: '    if (char is opening bracket) {', line: 3 },
+        { code: '      stack.push(char);', line: 4 },
+        { code: '    } else if (char is closing bracket) {', line: 5 },
+        { code: '      if (stack.isEmpty()) return false;', line: 6 },
+        { code: '      if (!matches(stack.pop(), char))', line: 7 },
+        { code: '        return false;', line: 8 },
+        { code: '    }', line: 9 },
+        { code: '  }', line: 10 },
+        { code: '  return stack.isEmpty();', line: 11 },
+        { code: '}', line: 12 }
+      ],
+      nextGreater: [
+        { code: 'function nextGreaterElement(arr) {', line: 0 },
+        { code: '  stack = [];', line: 1 },
+        { code: '  result = [];', line: 2 },
+        { code: '  for (i = arr.length - 1; i >= 0; i--) {', line: 3 },
+        { code: '    while (!stack.isEmpty() &&', line: 4 },
+        { code: '           stack.peek() <= arr[i]) {', line: 5 },
+        { code: '      stack.pop();', line: 6 },
+        { code: '    }', line: 7 },
+        { code: '    result[i] = stack.isEmpty() ? -1 : stack.peek();', line: 8 },
+        { code: '    stack.push(arr[i]);', line: 9 },
+        { code: '  }', line: 10 },
+        { code: '  return result;', line: 11 },
+        { code: '}', line: 12 }
+      ],
+      minStack: [
+        { code: 'class MinStack {', line: 0 },
+        { code: '  constructor() {', line: 1 },
+        { code: '    this.stack = [];', line: 2 },
+        { code: '    this.minStack = [];', line: 3 },
+        { code: '  }', line: 4 },
+        { code: '  push(val) {', line: 5 },
+        { code: '    this.stack.push(val);', line: 6 },
+        { code: '    if (minStack.isEmpty() ||', line: 7 },
+        { code: '        val <= this.minStack.peek())', line: 8 },
+        { code: '      this.minStack.push(val);', line: 9 },
+        { code: '  }', line: 10 },
+        { code: '  pop() {', line: 11 },
+        { code: '    if (stack.pop() === minStack.peek())', line: 12 },
+        { code: '      minStack.pop();', line: 13 },
+        { code: '  }', line: 14 },
+        { code: '  getMin() {', line: 15 },
+        { code: '    return minStack.peek();', line: 16 },
+        { code: '  }', line: 17 },
+        { code: '}', line: 18 }
+      ],
+      evaluatePostfix: [
+        { code: 'function evalPostfix(expr) {', line: 0 },
+        { code: '  stack = [];', line: 1 },
+        { code: '  for (token of expr) {', line: 2 },
+        { code: '    if (isNumber(token)) {', line: 3 },
+        { code: '      stack.push(parseInt(token));', line: 4 },
+        { code: '    } else {', line: 5 },
+        { code: '      b = stack.pop();', line: 6 },
+        { code: '      a = stack.pop();', line: 7 },
+        { code: '      result = operate(a, b, token);', line: 8 },
+        { code: '      stack.push(result);', line: 9 },
+        { code: '    }', line: 10 },
+        { code: '  }', line: 11 },
+        { code: '  return stack.pop();', line: 12 },
+        { code: '}', line: 13 }
+      ],
+      reverseString: [
+        { code: 'function reverseString(str) {', line: 0 },
+        { code: '  stack = [];', line: 1 },
+        { code: '  for (char of str) {', line: 2 },
+        { code: '    stack.push(char);', line: 3 },
+        { code: '  }', line: 4 },
+        { code: '  reversed = "";', line: 5 },
+        { code: '  while (!stack.isEmpty()) {', line: 6 },
+        { code: '    reversed += stack.pop();', line: 7 },
+        { code: '  }', line: 8 },
+        { code: '  return reversed;', line: 9 },
+        { code: '}', line: 10 }
+      ],
+      sortStack: [
+        { code: 'function sortStack(stack) {', line: 0 },
+        { code: '  auxStack = [];', line: 1 },
+        { code: '  while (!stack.isEmpty()) {', line: 2 },
+        { code: '    temp = stack.pop();', line: 3 },
+        { code: '    while (!auxStack.isEmpty() &&', line: 4 },
+        { code: '           auxStack.peek() > temp) {', line: 5 },
+        { code: '      stack.push(auxStack.pop());', line: 6 },
+        { code: '    }', line: 7 },
+        { code: '    auxStack.push(temp);', line: 8 },
+        { code: '  }', line: 9 },
+        { code: '  return auxStack;', line: 10 },
+        { code: '}', line: 11 }
+      ],
+      stockSpan: [
+        { code: 'function calculateSpan(prices) {', line: 0 },
+        { code: '  stack = [];', line: 1 },
+        { code: '  span = [];', line: 2 },
+        { code: '  for (i = 0; i < prices.length; i++) {', line: 3 },
+        { code: '    while (!stack.isEmpty() &&', line: 4 },
+        { code: '           prices[stack.peek()] <= prices[i]) {', line: 5 },
+        { code: '      stack.pop();', line: 6 },
+        { code: '    }', line: 7 },
+        { code: '    span[i] = stack.isEmpty() ? i + 1 :', line: 8 },
+        { code: '              i - stack.peek();', line: 9 },
+        { code: '    stack.push(i);', line: 10 },
+        { code: '  }', line: 11 },
+        { code: '  return span;', line: 12 },
+        { code: '}', line: 13 }
+      ]
+    };
+
+    // ==================== PUSH ====================
+    function pushWithStates(stack, value) {
+      const states = [];
+      
+      function record(stk, aux, highlight, message, codeLine) {
+        states.push({
+          stack: [...stk],
+          auxiliary: aux,
+          highlightTop: highlight,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(stack, null, false, `Push ${value} onto stack`, 0);
+      record(stack, null, false, `Add ${value} to top of stack`, 1);
+      
+      stack.push(value);
+      record(stack, null, true, `✓ ${value} pushed successfully! New top: ${value}`, 2);
+
+      return { states, result: stack };
+    }
+
+    // ==================== POP ====================
+    function popWithStates(stack) {
+      const states = [];
+      
+      function record(stk, aux, highlight, message, codeLine) {
+        states.push({
+          stack: [...stk],
+          auxiliary: aux,
+          highlightTop: highlight,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(stack, null, false, `Pop element from stack`, 0);
+
+      if (stack.length === 0) {
+        record(stack, null, false, `✗ Error: Stack is empty (underflow)`, 2);
+        return { states, result: null, error: true };
+      }
+
+      record(stack, null, true, `Check if stack is empty`, 1);
+      const popped = stack[stack.length - 1];
+      record(stack, null, true, `Remove top element: ${popped}`, 4);
+      
+      stack.pop();
+      record(stack, null, stack.length > 0, `✓ Popped ${popped}. ${stack.length > 0 ? `New top: ${stack[stack.length - 1]}` : 'Stack is now empty'}`, 4);
+
+      return { states, result: popped };
+    }
+
+    // ==================== PEEK ====================
+    function peekWithStates(stack) {
+      const states = [];
+      
+      function record(stk, aux, highlight, message, codeLine) {
+        states.push({
+          stack: [...stk],
+          auxiliary: aux,
+          highlightTop: highlight,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(stack, null, false, `Peek at top element`, 0);
+
+      if (stack.length === 0) {
+        record(stack, null, false, `✗ Error: Stack is empty`, 2);
+        return { states, result: null, error: true };
+      }
+
+      record(stack, null, true, `Top element is: ${stack[stack.length - 1]}`, 4);
+
+      return { states, result: stack[stack.length - 1] };
+    }
+
+    // ==================== BALANCED PARENTHESES ====================
+    function balancedParensWithStates(expr) {
+      const states = [];
+      const stack = [];
+      
+      function record(stk, aux, highlight, message, codeLine) {
+        states.push({
+          stack: [...stk],
+          auxiliary: aux,
+          highlightTop: highlight,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      const matches = { '(': ')', '[': ']', '{': '}' };
+      const opening = '([{';
+      const closing = ')]}';
+
+      record(stack, `Expression: ${expr}`, false, `Check if brackets are balanced`, 0);
+      record(stack, `Expression: ${expr}`, false, `Initialize empty stack`, 1);
+
+      for (let i = 0; i < expr.length; i++) {
+        const char = expr[i];
+        
+        record(stack, `Char: '${char}' at position ${i}`, false, `Process character '${char}'`, 2);
+
+        if (opening.includes(char)) {
+          record(stack, `Char: '${char}' is opening`, false, `'${char}' is opening bracket, push to stack`, 3);
+          stack.push(char);
+          record(stack, null, true, `Pushed '${char}'`, 4);
+        } else if (closing.includes(char)) {
+          record(stack, `Char: '${char}' is closing`, true, `'${char}' is closing bracket`, 5);
+          
+          if (stack.length === 0) {
+            record(stack, null, false, `✗ No matching opening bracket for '${char}'`, 6);
+            return { states, result: false };
+          }
+
+          const top = stack[stack.length - 1];
+          record(stack, `Compare '${top}' with '${char}'`, true, `Check if '${top}' matches '${char}'`, 7);
+          
+          if (matches[top] !== char) {
+            record(stack, null, true, `✗ Mismatch: '${top}' doesn't match '${char}'`, 8);
+            return { states, result: false };
+          }
+
+          stack.pop();
+          record(stack, null, stack.length > 0, `✓ Match! Popped '${top}'`, 7);
+        }
+      }
+
+      const balanced = stack.length === 0;
+      record(stack, null, false, balanced ? `✓ Balanced! Stack is empty` : `✗ Unbalanced! Unclosed brackets remain`, 11);
+
+      return { states, result: balanced };
+    }
+
+    // ==================== NEXT GREATER ELEMENT ====================
+    function nextGreaterWithStates(arr) {
+      const states = [];
+      const stack = [];
+      const result = new Array(arr.length).fill(null);
+      
+      function record(stk, resArray, currIdx, message, codeLine) {
+        states.push({
+          stack: [...stk],
+          inputArray: [...arr],
+          resultArray: [...resArray],
+          currentIndex: currIdx,
+          highlightTop: stk.length > 0,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(stack, result, null, `Find next greater element for each`, 0);
+      record(stack, result, null, `Initialize empty stack and result array`, 1);
+      record(stack, result, null, `Traverse array from RIGHT to LEFT`, 3);
+
+      for (let i = arr.length - 1; i >= 0; i--) {
+        record(stack, result, i, `Process arr[${i}] = ${arr[i]}`, 3);
+
+        while (stack.length > 0 && stack[stack.length - 1] <= arr[i]) {
+          const popped = stack[stack.length - 1];
+          record(stack, result, i, `Stack top ${popped} ≤ ${arr[i]}, pop it`, 5);
+          stack.pop();
+          record(stack, result, i, `Popped ${popped}`, 6);
+        }
+
+        result[i] = stack.length === 0 ? -1 : stack[stack.length - 1];
+        record(stack, result, i, stack.length === 0 ? `Stack empty, no greater element: -1` : `Next greater for ${arr[i]} is ${result[i]}`, 8);
+
+        stack.push(arr[i]);
+        record(stack, result, i, `Push ${arr[i]} to stack`, 9);
+      }
+
+      record([], result, null, `✓ Next greater elements: [${result.join(', ')}]`, 11);
+
+      return { states, result };
+    }
+
+    // ==================== MIN STACK ====================
+    function minStackWithStates(operations, values) {
+      const states = [];
+      const stack = [];
+      const minStack = [];
+      
+      function record(stk, minStk, message, codeLine) {
+        states.push({
+          stack: [...stk],
+          minStack: [...minStk],
+          auxiliary: `Min: ${minStk.length > 0 ? minStk[minStk.length - 1] : 'N/A'}`,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(stack, minStack, `Initialize MinStack`, 0);
+
+      for (let i = 0; i < operations.length; i++) {
+        const op = operations[i];
+        const val = values[i];
+
+        if (op === 'push') {
+          record(stack, minStack, `Push ${val}`, 5);
+          stack.push(val);
+          record(stack, minStack, `Added ${val} to main stack`, 6);
+
+          if (minStack.length === 0 || val <= minStack[minStack.length - 1]) {
+            minStack.push(val);
+            record(stack, minStack, `${val} is new minimum, push to minStack`, 9);
+          } else {
+            record(stack, minStack, `${val} > current min, don't update minStack`, 9);
+          }
+        } else if (op === 'pop') {
+          const popped = stack.pop();
+          record(stack, minStack, `Pop ${popped}`, 11);
+          
+          if (popped === minStack[minStack.length - 1]) {
+            minStack.pop();
+            record(stack, minStack, `${popped} was min, remove from minStack`, 13);
+          }
+        } else if (op === 'getMin') {
+          const min = minStack[minStack.length - 1];
+          record(stack, minStack, `Current minimum: ${min}`, 16);
+        }
+      }
+
+      record(stack, minStack, `✓ MinStack operations complete!`, 17);
+      return { states, result: stack };
+    }
+
+    // ==================== EVALUATE POSTFIX ====================
+    function evaluatePostfixWithStates(expr) {
+      const states = [];
+      const stack = [];
+      const tokens = expr.split(' ');
+      
+      function record(stk, aux, highlight, message, codeLine) {
+        states.push({
+          stack: [...stk],
+          auxiliary: aux,
+          highlightTop: highlight,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(stack, `Expression: ${expr}`, false, `Evaluate postfix expression`, 0);
+
+      for (let i = 0; i < tokens.length; i++) {
+        const token = tokens[i];
+        record(stack, `Token: '${token}'`, false, `Process token: ${token}`, 2);
+
+        if (!isNaN(token)) {
+          stack.push(parseInt(token));
+          record(stack, `Operand`, true, `Push operand ${token}`, 4);
+        } else {
+          record(stack, `Operator '${token}'`, true, `Operator detected`, 5);
+          
+          const b = stack.pop();
+          record(stack, `Popped b = ${b}`, false, `Pop second operand: ${b}`, 6);
+          
+          const a = stack.pop();
+          record(stack, `Popped a = ${a}`, false, `Pop first operand: ${a}`, 7);
+
+          let result;
+          if (token === '+') result = a + b;
+          else if (token === '-') result = a - b;
+          else if (token === '*') result = a * b;
+          else if (token === '/') result = Math.floor(a / b);
+
+          record(stack, `${a} ${token} ${b} = ${result}`, false, `Calculate: ${a} ${token} ${b} = ${result}`, 8);
+          
+          stack.push(result);
+          record(stack, `Result: ${result}`, true, `Push result ${result}`, 9);
+        }
+      }
+
+      const finalResult = stack[0];
+      record(stack, `Final answer: ${finalResult}`, true, `✓ Expression evaluated: ${finalResult}`, 12);
+
+      return { states, result: finalResult };
+    }
+
+    // ==================== REVERSE STRING ====================
+    function reverseStringWithStates(str) {
+      const states = [];
+      const stack = [];
+      
+      function record(stk, aux, highlight, message, codeLine) {
+        states.push({
+          stack: [...stk],
+          auxiliary: aux,
+          highlightTop: highlight,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(stack, `String: "${str}"`, false, `Reverse string using stack`, 0);
+
+      for (let i = 0; i < str.length; i++) {
+        stack.push(str[i]);
+        record(stack, `Pushed '${str[i]}'`, true, `Push character '${str[i]}'`, 3);
+      }
+
+      record(stack, `All characters pushed`, false, `All characters in stack`, 4);
+
+      let reversed = '';
+      const originalStack = [...stack];
+      
+      record(stack, `Start popping`, false, `Pop characters to reverse`, 6);
+
+      while (stack.length > 0) {
+        const char = stack.pop();
+        reversed += char;
+        record(stack, `Reversed so far: "${reversed}"`, false, `Popped '${char}'`, 7);
+      }
+
+      record([], `Result: "${reversed}"`, false, `✓ String reversed: "${reversed}"`, 9);
+
+      return { states, result: reversed };
+    }
+
+    // ==================== SORT STACK ====================
+    function sortStackWithStates(stack) {
+      const states = [];
+      const auxStack = [];
+      const original = [...stack];
+      
+      function record(mainStk, auxStk, message, codeLine) {
+        states.push({
+          stack: [...mainStk],
+          auxStack: [...auxStk],
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(stack, auxStack, `Sort stack in ascending order (top = largest)`, 0);
+      record(stack, auxStack, `Create auxiliary stack to help with sorting`, 1);
+
+      while (stack.length > 0) {
+        record(stack, auxStack, `Main stack not empty, continue sorting`, 2);
+        
+        const temp = stack.pop();
+        record(stack, auxStack, `Pop ${temp} from main stack (temp = ${temp})`, 3);
+
+        let moved = 0;
+        while (auxStack.length > 0 && auxStack[auxStack.length - 1] > temp) {
+          const val = auxStack[auxStack.length - 1];
+          record(stack, auxStack, `Aux top ${val} > ${temp}, move it back`, 5);
+          
+          auxStack.pop();
+          stack.push(val);
+          moved++;
+          record(stack, auxStack, `Moved ${val} back to main stack`, 6);
+        }
+
+        auxStack.push(temp);
+        record(stack, auxStack, `Place ${temp} in correct position in aux stack`, 8);
+      }
+
+      record([], auxStack, `✓ Sorting complete! Sorted stack: [${auxStack.join(', ')}]`, 10);
+      record([], auxStack, `Bottom to Top: ${auxStack[0]} (smallest) → ${auxStack[auxStack.length - 1]} (largest)`, 10);
+
+      return { states, result: auxStack };
+    }
+
+    // ==================== STOCK SPAN ====================
+    function stockSpanWithStates(prices) {
+      const states = [];
+      const stack = [];
+      const span = [];
+      
+      function record(stk, aux, highlight, message, codeLine) {
+        states.push({
+          stack: [...stk],
+          auxiliary: aux,
+          highlightTop: highlight,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(stack, `Prices: [${prices.join(', ')}]`, false, `Calculate stock span`, 0);
+
+      for (let i = 0; i < prices.length; i++) {
+        record(stack, `Day ${i}: price = ${prices[i]}`, false, `Process day ${i}`, 3);
+
+        while (stack.length > 0 && prices[stack[stack.length - 1]] <= prices[i]) {
+          const idx = stack.pop();
+          record(stack, `Pop day ${idx} (price ${prices[idx]} ≤ ${prices[i]})`, false, `Remove day ${idx}`, 6);
+        }
+
+        span[i] = stack.length === 0 ? i + 1 : i - stack[stack.length - 1];
+        record(stack, `Span[${i}] = ${span[i]}`, false, `Span for day ${i}: ${span[i]} days`, 8);
+
+        stack.push(i);
+        record(stack, `Stack: [${stack.join(', ')}]`, true, `Push day ${i}`, 10);
+      }
+
+      record([], `Result: [${span.join(', ')}]`, false, `✓ Stock spans calculated!`, 12);
+
+      return { states, result: span };
+    }
+
+    // ==================== CODE DISPLAY ====================
+    function displayCode(operation) {
+      const codeDisplay = document.getElementById('code-display');
+      const codeTitle = document.getElementById('code-title');
+      const code = problemCode[operation];
+      
+      codeTitle.textContent = `${problemInfo[operation].name} - Code`;
+      
+      codeDisplay.innerHTML = code.map((lineObj) => 
+        `<div class="code-line" data-line="${lineObj.line}">${lineObj.code || '&nbsp;'}</div>`
+      ).join('');
+    }
+
+    function highlightCodeLine(lineNumber) {
+      const lines = document.querySelectorAll('.code-line');
+      lines.forEach(line => {
+        line.classList.remove('active');
+        if (lineNumber !== undefined && parseInt(line.dataset.line) === lineNumber) {
+          line.classList.add('active');
+          line.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    }
+
+    function updateProblemInfo(operation) {
+      const info = problemInfo[operation];
+      const infoBox = document.getElementById('algorithm-info');
+      infoBox.innerHTML = `
+        <h3>${info.name}</h3>
+        <p><strong>Description:</strong> ${info.description}</p>
+        <p><strong>Complexity:</strong> ${info.complexity}</p>
+        <p><strong>Technique:</strong> ${info.technique}</p>
+      `;
+    }
+
+    // ==================== RENDERING ====================
+    const stackContainer = document.getElementById("stack-container");
+    const descriptionEl = document.getElementById("description");
+    const stepIndicatorEl = document.getElementById("step-indicator");
+    const resultBoxEl = document.getElementById("result-box");
+    const auxiliaryDisplayEl = document.getElementById("auxiliary-display");
+
+    function renderState(state, index, total) {
+      stackContainer.innerHTML = "";
+
+      // Check if we need to show multiple stacks or result array
+      if (state.auxStack !== undefined) {
+        renderSortStackView(state);
+      } else if (state.resultArray !== undefined) {
+        renderNextGreaterView(state);
+      } else {
+        renderSingleStack(state);
+      }
+
+      descriptionEl.textContent = state.description || "";
+      stepIndicatorEl.textContent = `Step ${index + 1} / ${total}`;
+      
+      if (state.codeLine !== undefined) {
+        highlightCodeLine(state.codeLine);
+      }
+
+      // Handle auxiliary display
+      if (state.minStack !== undefined) {
+        auxiliaryDisplayEl.style.display = 'block';
+        auxiliaryDisplayEl.innerHTML = `<strong>Min Stack:</strong> [${state.minStack.join(', ') || 'empty'}]<br><strong>Current Minimum:</strong> ${state.minStack.length > 0 ? state.minStack[state.minStack.length - 1] : 'N/A'}`;
+      } else if (state.auxiliary && !state.auxStack && !state.resultArray) {
+        auxiliaryDisplayEl.style.display = 'block';
+        auxiliaryDisplayEl.innerHTML = `<strong>${state.auxiliary}</strong>`;
+      } else if (!state.auxStack && !state.resultArray) {
+        auxiliaryDisplayEl.style.display = 'none';
+      }
+
+      // Show result on last step
+      if (index === total - 1) {
+        if (state.description.includes('✓')) {
+          resultBoxEl.className = 'result-box success';
+          resultBoxEl.textContent = state.description;
+          resultBoxEl.style.display = 'block';
+        } else if (state.description.includes('✗')) {
+          resultBoxEl.className = 'result-box error';
+          resultBoxEl.textContent = state.description;
+          resultBoxEl.style.display = 'block';
+        }
+      } else {
+        resultBoxEl.style.display = 'none';
+      }
+    }
+
+    function renderSingleStack(state) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "stack-wrapper";
+
+      if (!state.stack || state.stack.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "empty-stack";
+        empty.textContent = "Empty Stack";
+        wrapper.appendChild(empty);
+      } else {
+        state.stack.forEach((value, idx) => {
+          const item = document.createElement("div");
+          item.className = "stack-item";
+          item.textContent = value;
+
+          if (idx === state.stack.length - 1) {
+            item.classList.add("top");
+            if (state.highlightTop) {
+              item.classList.add("highlight");
+            }
+
+            const label = document.createElement("div");
+            label.className = "stack-label top-label";
+            label.textContent = "← TOP";
+            item.appendChild(label);
+          }
+
+          wrapper.appendChild(item);
+        });
+      }
+
+      const base = document.createElement("div");
+      base.className = "stack-base";
+      wrapper.appendChild(base);
+
+      stackContainer.appendChild(wrapper);
+    }
+
+    function renderSortStackView(state) {
+      const container = document.createElement("div");
+      container.style.cssText = "display: flex; gap: 60px; justify-content: center; align-items: flex-end; min-height: 400px;";
+
+      // Main Stack
+      const mainSection = document.createElement("div");
+      mainSection.style.cssText = "display: flex; flex-direction: column; align-items: center;";
+      
+      const mainLabel = document.createElement("div");
+      mainLabel.style.cssText = "font-weight: 700; font-size: 16px; color: #3b82f6; margin-bottom: 10px;";
+      mainLabel.textContent = "Main Stack";
+      mainSection.appendChild(mainLabel);
+
+      const mainWrapper = document.createElement("div");
+      mainWrapper.className = "stack-wrapper";
+
+      if (!state.stack || state.stack.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "empty-stack";
+        empty.textContent = "Empty";
+        empty.style.padding = "20px";
+        mainWrapper.appendChild(empty);
+      } else {
+        state.stack.forEach((value, idx) => {
+          const item = document.createElement("div");
+          item.className = "stack-item";
+          item.textContent = value;
+
+          if (idx === state.stack.length - 1) {
+            item.classList.add("top");
+            const label = document.createElement("div");
+            label.className = "stack-label top-label";
+            label.textContent = "← TOP";
+            item.appendChild(label);
+          }
+
+          mainWrapper.appendChild(item);
+        });
+      }
+
+      const base1 = document.createElement("div");
+      base1.className = "stack-base";
+      mainWrapper.appendChild(base1);
+      mainSection.appendChild(mainWrapper);
+      container.appendChild(mainSection);
+
+      // Auxiliary Stack
+      const auxSection = document.createElement("div");
+      auxSection.style.cssText = "display: flex; flex-direction: column; align-items: center;";
+      
+      const auxLabel = document.createElement("div");
+      auxLabel.style.cssText = "font-weight: 700; font-size: 16px; color: #10b981; margin-bottom: 10px;";
+      auxLabel.textContent = "Auxiliary Stack (Sorted)";
+      auxSection.appendChild(auxLabel);
+
+      const auxWrapper = document.createElement("div");
+      auxWrapper.className = "stack-wrapper";
+
+      if (!state.auxStack || state.auxStack.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "empty-stack";
+        empty.textContent = "Empty";
+        empty.style.padding = "20px";
+        auxWrapper.appendChild(empty);
+      } else {
+        state.auxStack.forEach((value, idx) => {
+          const item = document.createElement("div");
+          item.className = "stack-item";
+          item.style.background = "linear-gradient(135deg, #10b981 0%, #059669 100%)";
+          item.style.borderColor = "#059669";
+          item.textContent = value;
+
+          if (idx === state.auxStack.length - 1) {
+            item.classList.add("top");
+            const label = document.createElement("div");
+            label.className = "stack-label top-label";
+            label.textContent = "← TOP";
+            item.appendChild(label);
+          }
+
+          auxWrapper.appendChild(item);
+        });
+      }
+
+      const base2 = document.createElement("div");
+      base2.className = "stack-base";
+      auxWrapper.appendChild(base2);
+      auxSection.appendChild(auxWrapper);
+      container.appendChild(auxSection);
+
+      stackContainer.appendChild(container);
+    }
+
+    function renderNextGreaterView(state) {
+      const container = document.createElement("div");
+      container.style.cssText = "display: flex; flex-direction: column; gap: 40px; align-items: center;";
+
+      // Stack Section
+      const stackSection = document.createElement("div");
+      stackSection.style.cssText = "display: flex; flex-direction: column; align-items: center; width: 100%;";
+      
+      const stackLabel = document.createElement("div");
+      stackLabel.style.cssText = "font-weight: 700; font-size: 16px; color: #3b82f6; margin-bottom: 10px;";
+      stackLabel.textContent = "Processing Stack";
+      stackSection.appendChild(stackLabel);
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "stack-wrapper";
+
+      if (!state.stack || state.stack.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "empty-stack";
+        empty.textContent = "Empty Stack";
+        empty.style.padding = "20px";
+        wrapper.appendChild(empty);
+      } else {
+        state.stack.forEach((value, idx) => {
+          const item = document.createElement("div");
+          item.className = "stack-item";
+          item.textContent = value;
+
+          if (idx === state.stack.length - 1) {
+            item.classList.add("top");
+            const label = document.createElement("div");
+            label.className = "stack-label top-label";
+            label.textContent = "← TOP";
+            item.appendChild(label);
+          }
+
+          wrapper.appendChild(item);
+        });
+      }
+
+      const base = document.createElement("div");
+      base.className = "stack-base";
+      wrapper.appendChild(base);
+      stackSection.appendChild(wrapper);
+      container.appendChild(stackSection);
+
+      // Result Array Section
+      if (state.inputArray && state.resultArray) {
+        const resultSection = document.createElement("div");
+        resultSection.style.cssText = "width: 100%;";
+        
+        const resultLabel = document.createElement("div");
+        resultLabel.style.cssText = "font-weight: 700; font-size: 16px; color: #10b981; margin-bottom: 15px; text-align: center;";
+        resultLabel.textContent = "Input Array → Next Greater Element";
+        resultSection.appendChild(resultLabel);
+
+        const arrayDisplay = document.createElement("div");
+        arrayDisplay.style.cssText = "display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;";
+
+        state.inputArray.forEach((val, idx) => {
+          const pairDiv = document.createElement("div");
+          pairDiv.style.cssText = "display: flex; flex-direction: column; align-items: center; gap: 8px;";
+
+          // Input value
+          const inputBox = document.createElement("div");
+          inputBox.style.cssText = `
+            width: 60px;
+            padding: 12px;
+            background: #dbeafe;
+            border: 2px solid #3b82f6;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 18px;
+            text-align: center;
+          `;
+          inputBox.textContent = val;
+          pairDiv.appendChild(inputBox);
+
+          // Arrow
+          const arrow = document.createElement("div");
+          arrow.style.cssText = "font-size: 20px; color: #666;";
+          arrow.textContent = "↓";
+          pairDiv.appendChild(arrow);
+
+          // Result value
+          const resultBox = document.createElement("div");
+          const resultVal = state.resultArray[idx];
+          resultBox.style.cssText = `
+            width: 60px;
+            padding: 12px;
+            background: ${resultVal === -1 ? '#fef3c7' : '#d1fae5'};
+            border: 2px solid ${resultVal === -1 ? '#f59e0b' : '#10b981'};
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 18px;
+            text-align: center;
+            ${state.currentIndex === idx ? 'box-shadow: 0 0 15px rgba(16, 185, 129, 0.6); transform: scale(1.1);' : ''}
+          `;
+          resultBox.textContent = resultVal === -1 ? '—' : resultVal;
+          pairDiv.appendChild(resultBox);
+
+          // Index label
+          const indexLabel = document.createElement("div");
+          indexLabel.style.cssText = "font-size: 11px; color: #999; font-weight: 600;";
+          indexLabel.textContent = `index ${idx}`;
+          pairDiv.appendChild(indexLabel);
+
+          arrayDisplay.appendChild(pairDiv);
+        });
+
+        resultSection.appendChild(arrayDisplay);
+        container.appendChild(resultSection);
+      }
+
+      stackContainer.appendChild(container);
+    }
+
+    // ==================== PLAYER LOGIC ====================
+    let states = [];
+    let currentIndex = 0;
+    let timer = null;
+
+    function stopTimer() {
+      if (timer !== null) {
+        clearInterval(timer);
+        timer = null;
+      }
+    }
+
+    function showCurrent() {
+      if (states.length === 0) return;
+      currentIndex = Math.max(0, Math.min(currentIndex, states.length - 1));
+      renderState(states[currentIndex], currentIndex, states.length);
+    }
+
+    function play() {
+      if (states.length === 0) return;
+      if (timer !== null) return;
+
+      const speed = parseInt(document.getElementById("speed-input").value, 10) || 800;
+
+      timer = setInterval(() => {
+        currentIndex++;
+        if (currentIndex >= states.length) {
+          currentIndex = states.length - 1;
+          stopTimer();
+        }
+        showCurrent();
+      }, speed);
+    }
+
+    function pause() {
+      stopTimer();
+    }
+
+    function next() {
+      if (states.length === 0) return;
+      currentIndex = Math.min(currentIndex + 1, states.length - 1);
+      showCurrent();
+    }
+
+    function prev() {
+      if (states.length === 0) return;
+      currentIndex = Math.max(currentIndex - 1, 0);
+      showCurrent();
+    }
+
+    function reset() {
+      currentIndex = 0;
+      showCurrent();
+    }
+
+    // ==================== UI EVENT HANDLERS ====================
+    document.getElementById("play-btn").addEventListener("click", play);
+    document.getElementById("pause-btn").addEventListener("click", pause);
+    document.getElementById("next-btn").addEventListener("click", next);
+    document.getElementById("prev-btn").addEventListener("click", prev);
+    document.getElementById("reset-btn").addEventListener("click", reset);
+    document.getElementById("generate-btn").addEventListener("click", generateSteps);
+    
+    document.getElementById("operation-select").addEventListener("change", function() {
+      const operation = this.value;
+      displayCode(operation);
+      updateProblemInfo(operation);
+      
+      // Show/hide inputs based on operation
+      const initialLabel = document.getElementById("initial-label");
+      const valueLabel = document.getElementById("value-label");
+      const expressionLabel = document.getElementById("expression-label");
+      
+      initialLabel.style.display = 'inline-block';
+      valueLabel.style.display = 'none';
+      expressionLabel.style.display = 'none';
+      
+      if (operation === 'push') {
+        valueLabel.style.display = 'inline-block';
+        valueLabel.firstChild.textContent = 'Value: ';
+      } else if (operation === 'balancedParens') {
+        initialLabel.style.display = 'none';
+        expressionLabel.style.display = 'inline-block';
+      } else if (operation === 'evaluatePostfix') {
+        initialLabel.style.display = 'none';
+        expressionLabel.style.display = 'inline-block';
+        document.getElementById('expression-input').value = '5 3 + 2 *';
+        document.getElementById('expression-input').placeholder = 'e.g., 5 3 + 2 *';
+      } else if (operation === 'reverseString') {
+        initialLabel.style.display = 'none';
+        expressionLabel.style.display = 'inline-block';
+        expressionLabel.firstChild.textContent = 'String: ';
+        document.getElementById('expression-input').value = 'HELLO';
+      } else if (operation === 'minStack') {
+        initialLabel.style.display = 'none';
+        valueLabel.style.display = 'inline-block';
+        valueLabel.firstChild.textContent = 'Operations: ';
+        document.getElementById('value-input').value = 'push:5,push:3,push:7,getMin,pop';
+        document.getElementById('value-input').style.width = '250px';
+      }
+    });
+
+    function generateSteps() {
+      stopTimer();
+      const operation = document.getElementById("operation-select").value;
+      const stackInput = document.getElementById("input-stack").value;
+      const valueInput = document.getElementById("value-input").value;
+      const expressionInput = document.getElementById("expression-input").value;
+
+      let stack = stackInput.split(",").map(x => x.trim()).filter(x => x).map(Number);
+      let result;
+
+      switch(operation) {
+        case "push":
+          const value = parseInt(valueInput) || 0;
+          result = pushWithStates(stack, value);
+          break;
+        case "pop":
+          result = popWithStates(stack);
+          break;
+        case "peek":
+          result = peekWithStates(stack);
+          break;
+        case "balancedParens":
+          result = balancedParensWithStates(expressionInput || '({[]})');
+          break;
+        case "nextGreater":
+          result = nextGreaterWithStates(stack.length > 0 ? stack : [4, 5, 2, 10, 8]);
+          break;
+        case "minStack":
+          const ops = valueInput.split(',').map(op => {
+            const parts = op.trim().split(':');
+            return { op: parts[0], val: parts[1] ? parseInt(parts[1]) : null };
+          });
+          const operations = ops.map(o => o.op);
+          const values = ops.map(o => o.val);
+          result = minStackWithStates(operations, values);
+          break;
+        case "evaluatePostfix":
+          result = evaluatePostfixWithStates(expressionInput || '5 3 + 2 *');
+          break;
+        case "reverseString":
+          result = reverseStringWithStates(expressionInput || 'HELLO');
+          break;
+        case "sortStack":
+          result = sortStackWithStates(stack.length > 0 ? stack : [5, 1, 4, 2, 3]);
+          break;
+        case "stockSpan":
+          result = stockSpanWithStates(stack.length > 0 ? stack : [100, 80, 60, 70, 60, 75, 85]);
+          break;
+      }
+
+      states = result.states;
+      currentIndex = 0;
+      showCurrent();
+    }
+
+    // ==================== INITIALIZATION ====================
+    (function init() {
+      const operation = document.getElementById("operation-select").value;
+      displayCode(operation);
+      updateProblemInfo(operation);
+      generateSteps();
+    })();
+  </script>
+</body>
+</html>

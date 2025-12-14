@@ -1,0 +1,2221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Linked List Problems Visualizer</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 20px;
+      margin: 0;
+      background: #f8f9fa;
+    }
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .container {
+      max-width: 1800px;
+      margin: 0 auto;
+    }
+    .input-section {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .input-section label {
+      display: inline-block;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    .input-section input, .input-section select {
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .input-section button {
+      padding: 8px 16px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .input-section button:hover {
+      background: #45a049;
+    }
+    .main-content {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .visualization-panel {
+      flex: 1;
+      min-width: 0;
+    }
+    .code-panel {
+      width: 600px;
+      background: #1e1e1e;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      position: sticky;
+      top: 20px;
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+    }
+    .code-panel h3 {
+      color: #fff;
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 16px;
+      border-bottom: 2px solid #4CAF50;
+      padding-bottom: 8px;
+    }
+    .code-container {
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #d4d4d4;
+    }
+    .code-line {
+      padding: 2px 8px;
+      border-radius: 3px;
+      transition: all 0.3s ease;
+      white-space: pre;
+    }
+    .code-line.active {
+      background: #4CAF50;
+      color: white;
+      font-weight: 600;
+      border-left: 3px solid #fff;
+      padding-left: 5px;
+      animation: pulse 0.5s ease;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(4px); }
+    }
+    .visualizer-section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    #list-container {
+      margin-top: 30px;
+      margin-bottom: 30px;
+      min-height: 200px;
+      position: relative;
+      padding: 70px 30px 50px 30px;
+      overflow-x: auto;
+      overflow-y: visible;
+    }
+    .list-wrapper {
+      display: flex;
+      align-items: center;
+      position: relative;
+      min-width: max-content;
+      padding: 30px 0;
+    }
+    .list-label {
+      font-weight: 700;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 10px;
+      margin-top: 20px;
+    }
+    .node-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-right: 15px;
+    }
+    .node {
+      display: flex;
+      background: white;
+      border: 3px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .node.head {
+      border-color: #4CAF50;
+      box-shadow: 0 0 15px rgba(76, 175, 80, 0.4);
+    }
+    .node.tail {
+      border-color: #2196F3;
+      box-shadow: 0 0 15px rgba(33, 150, 243, 0.4);
+    }
+    .node.slow {
+      border-color: #ff9800;
+      transform: scale(1.1);
+      box-shadow: 0 0 20px rgba(255, 152, 0, 0.5);
+    }
+    .node.fast {
+      border-color: #e91e63;
+      transform: scale(1.1);
+      box-shadow: 0 0 20px rgba(233, 30, 99, 0.5);
+    }
+    .node.prev {
+      border-color: #9c27b0;
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(156, 39, 176, 0.4);
+    }
+    .node.current {
+      border-color: #00bcd4;
+      transform: scale(1.1);
+      box-shadow: 0 0 20px rgba(0, 188, 212, 0.5);
+    }
+    .node.highlight {
+      background: #fff3cd;
+      border-color: #ffc107;
+    }
+    .node.cycle {
+      background: #ffcdd2;
+      border-color: #f44336;
+    }
+    .node.deleted {
+      opacity: 0.3;
+      border-color: #999;
+      background: #f5f5f5;
+    }
+    .node.merged {
+      background: #c8e6c9;
+    }
+    .node-data {
+      padding: 15px 20px;
+      font-weight: 700;
+      font-size: 18px;
+      color: #333;
+      min-width: 50px;
+      text-align: center;
+    }
+    .node-next {
+      padding: 15px 12px;
+      background: #e0e0e0;
+      border-left: 2px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 45px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .arrow {
+      margin: 0 8px;
+      font-size: 28px;
+      color: #333;
+      font-weight: bold;
+    }
+    .arrow.cycle-arrow {
+      color: #f44336;
+      animation: cycleGlow 1s ease infinite;
+    }
+    @keyframes cycleGlow {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .null-indicator {
+      padding: 12px 18px;
+      background: #f44336;
+      color: white;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      margin: 0 10px;
+    }
+    .pointer-label {
+      position: absolute;
+      top: -35px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      z-index: 10;
+    }
+    .pointer-label.head-label { background: #4CAF50; color: white; }
+    .pointer-label.tail-label { background: #2196F3; color: white; }
+    .pointer-label.slow-label { background: #ff9800; color: white; }
+    .pointer-label.fast-label { background: #e91e63; color: white; }
+    .pointer-label.prev-label { background: #9c27b0; color: white; }
+    .pointer-label.curr-label { background: #00bcd4; color: white; }
+    .pointer-label.p1-label { background: #673ab7; color: white; }
+    .pointer-label.p2-label { background: #3f51b5; color: white; }
+    .pointer-label.dummy-label { background: #795548; color: white; }
+    .arrow-down {
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 18px;
+      color: #666;
+      z-index: 9;
+    }
+    #controls {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    #controls button {
+      margin-right: 8px;
+      margin-bottom: 8px;
+      padding: 8px 16px;
+      background: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    #controls button:hover {
+      background: #0b7dda;
+    }
+    #description {
+      margin-top: 15px;
+      padding: 12px;
+      background: #e3f2fd;
+      border-left: 4px solid #2196F3;
+      border-radius: 4px;
+      font-style: italic;
+      min-height: 20px;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+    #step-indicator {
+      margin-top: 8px;
+      font-size: 0.95rem;
+      color: #666;
+      font-weight: 600;
+    }
+    .result-box {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+    }
+    .result-box.success {
+      background: #d4edda;
+      border: 2px solid #28a745;
+      color: #155724;
+    }
+    .result-box.info {
+      background: #d1ecf1;
+      border: 2px solid #17a2b8;
+      color: #0c5460;
+    }
+    .result-box.warning {
+      background: #fff3cd;
+      border: 2px solid #ffc107;
+      color: #856404;
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 15px;
+      padding: 12px;
+      background: #f9f9f9;
+      border-radius: 6px;
+      font-size: 0.8rem;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-box {
+      width: 25px;
+      height: 20px;
+      border: 2px solid #333;
+      border-radius: 3px;
+    }
+    .info-box {
+      margin-top: 15px;
+      padding: 15px;
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .info-box h3 {
+      margin-top: 0;
+      color: #856404;
+    }
+    @media (max-width: 1400px) {
+      .main-content {
+        flex-direction: column;
+      }
+      .code-panel {
+        width: 100%;
+        position: relative;
+        top: 0;
+        max-height: 500px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔗 Linked List Problems - Visual Solver</h1>
+
+    <div class="input-section">
+      <label>
+        Problem:
+        <select id="problem-select">
+          <option value="detectCycle">Detect Cycle</option>
+          <option value="nthFromEnd">Remove N-th from End</option>
+          <option value="mergeSorted">Merge Two Sorted Lists</option>
+          <option value="deleteNode">Delete Node (Given Node Only)</option>
+          <option value="intersection">Intersection of Two Lists</option>
+          <option value="removeDuplicates">Remove Duplicates (Sorted)</option>
+          <option value="rotateList">Rotate List by K</option>
+          <option value="reverseKGroup">Reverse Nodes in K-Group</option>
+          <option value="cloneRandom">Clone List with Random Pointer</option>
+          <option value="flattenMulti">Flatten Multi-Level List</option>
+        </select>
+      </label>
+
+      <label id="list1-label">
+        List 1:
+        <input id="input-list1" type="text" value="1,2,3,4,5" size="25" />
+      </label>
+
+      <label id="list2-label" style="display: none;">
+        List 2:
+        <input id="input-list2" type="text" value="1,3,5,7" size="25" />
+      </label>
+
+      <label id="param-label">
+        N:
+        <input id="param-input" type="number" value="2" style="width: 70px;" />
+      </label>
+
+      <label id="cycle-label" style="display: none;">
+        Cycle at:
+        <input id="cycle-input" type="number" value="2" style="width: 70px;" placeholder="-1 for no cycle" />
+      </label>
+
+      <button id="generate-btn">Solve</button>
+    </div>
+
+    <div class="main-content">
+      <div class="visualization-panel">
+        <div class="visualizer-section">
+          <div id="list-container"></div>
+
+          <div id="controls">
+            <button id="prev-btn">◀ Previous</button>
+            <button id="play-btn">▶ Play</button>
+            <button id="pause-btn">⏸ Pause</button>
+            <button id="next-btn">Next ▶</button>
+            <button id="reset-btn">⟲ Reset</button>
+            <label style="margin-left: 8px;">
+              Speed (ms):
+              <input id="speed-input" type="number" value="1000" min="300" max="3000" step="100" style="width: 70px;" />
+            </label>
+          </div>
+
+          <div id="description"></div>
+          <div id="step-indicator"></div>
+          <div id="result-box" class="result-box" style="display: none;"></div>
+
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-box" style="border-color: #4CAF50; box-shadow: 0 0 5px rgba(76, 175, 80, 0.4);"></div>
+              <span>Head</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box" style="border-color: #ff9800;"></div>
+              <span>Slow Pointer</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box" style="border-color: #e91e63;"></div>
+              <span>Fast Pointer</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box" style="border-color: #00bcd4;"></div>
+              <span>Current</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box" style="border-color: #9c27b0;"></div>
+              <span>Previous</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box" style="background: #ffcdd2; border-color: #f44336;"></div>
+              <span>Cycle</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-box" id="algorithm-info"></div>
+      </div>
+
+      <div class="code-panel">
+        <h3 id="code-title">Algorithm Code</h3>
+        <div class="code-container" id="code-display"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    class ListNode {
+      constructor(val) {
+        this.val = val;
+        this.next = null;
+      }
+    }
+
+    // Problem information
+    const problemInfo = {
+      detectCycle: {
+        name: "Detect Cycle in Linked List",
+        description: "Floyd's Cycle Detection (Tortoise and Hare): Use two pointers - slow moves one step, fast moves two steps. If they meet, there's a cycle!",
+        complexity: "Time: O(n) | Space: O(1)",
+        technique: "Two Pointers (Fast & Slow)"
+      },
+      nthFromEnd: {
+        name: "Remove N-th Node From End",
+        description: "Use two pointers with N gap between them. When fast reaches end, slow is at N-th from end.",
+        complexity: "Time: O(n) | Space: O(1)",
+        technique: "Two Pointers with Gap"
+      },
+      mergeSorted: {
+        name: "Merge Two Sorted Lists",
+        description: "Use a dummy node and compare elements from both lists, attaching the smaller one each time.",
+        complexity: "Time: O(n + m) | Space: O(1)",
+        technique: "Two Pointers + Dummy Node"
+      },
+      deleteNode: {
+        name: "Delete Node (Given Node Only)",
+        description: "Trick: Copy next node's value to current, then skip next node. Works except for tail node.",
+        complexity: "Time: O(1) | Space: O(1)",
+        technique: "Value Copy"
+      },
+      intersection: {
+        name: "Intersection of Two Lists",
+        description: "Calculate lengths, align pointers, then move together until they meet at intersection.",
+        complexity: "Time: O(n + m) | Space: O(1)",
+        technique: "Two Pointers with Alignment"
+      },
+      removeDuplicates: {
+        name: "Remove Duplicates from Sorted List",
+        description: "Compare current with next. If equal, skip next. Continue until different value found.",
+        complexity: "Time: O(n) | Space: O(1)",
+        technique: "Single Pointer"
+      },
+      rotateList: {
+        name: "Rotate List by K Places",
+        description: "Find length, make circular, break at (length - k % length) position.",
+        complexity: "Time: O(n) | Space: O(1)",
+        technique: "Circular Linked List"
+      },
+      reverseKGroup: {
+        name: "Reverse Nodes in K-Group",
+        description: "Reverse K nodes at a time. If less than K nodes remain, leave them unchanged.",
+        complexity: "Time: O(n) | Space: O(1)",
+        technique: "Group Reversal"
+      },
+      cloneRandom: {
+        name: "Clone List with Random Pointer",
+        description: "Interweave original and copied nodes, set random pointers, then separate lists.",
+        complexity: "Time: O(n) | Space: O(1) or O(n) with map",
+        technique: "Interweaving or HashMap"
+      },
+      flattenMulti: {
+        name: "Flatten Multi-Level List",
+        description: "Use DFS or iteration to flatten child lists into main list maintaining order.",
+        complexity: "Time: O(n) | Space: O(1)",
+        technique: "DFS/Recursion"
+      }
+    };
+
+    // Code templates (simplified for visualization)
+    const problemCode = {
+      detectCycle: [
+        { code: 'function detectCycle(head) {', line: 0 },
+        { code: '  if (!head) return false;', line: 1 },
+        { code: '  slow = head;', line: 2 },
+        { code: '  fast = head;', line: 3 },
+        { code: '  while (fast && fast.next) {', line: 4 },
+        { code: '    slow = slow.next;', line: 5 },
+        { code: '    fast = fast.next.next;', line: 6 },
+        { code: '    if (slow === fast) {', line: 7 },
+        { code: '      return true;  // Cycle detected!', line: 8 },
+        { code: '    }', line: 9 },
+        { code: '  }', line: 10 },
+        { code: '  return false;  // No cycle', line: 11 },
+        { code: '}', line: 12 }
+      ],
+      nthFromEnd: [
+        { code: 'function removeNthFromEnd(head, n) {', line: 0 },
+        { code: '  dummy = new Node(0);', line: 1 },
+        { code: '  dummy.next = head;', line: 2 },
+        { code: '  fast = dummy;', line: 3 },
+        { code: '  slow = dummy;', line: 4 },
+        { code: '  // Move fast n+1 steps ahead', line: 5 },
+        { code: '  for (i = 0; i <= n; i++) {', line: 6 },
+        { code: '    fast = fast.next;', line: 7 },
+        { code: '  }', line: 8 },
+        { code: '  // Move both until fast reaches end', line: 9 },
+        { code: '  while (fast != null) {', line: 10 },
+        { code: '    slow = slow.next;', line: 11 },
+        { code: '    fast = fast.next;', line: 12 },
+        { code: '  }', line: 13 },
+        { code: '  // Remove the node', line: 14 },
+        { code: '  slow.next = slow.next.next;', line: 15 },
+        { code: '  return dummy.next;', line: 16 },
+        { code: '}', line: 17 }
+      ],
+      mergeSorted: [
+        { code: 'function mergeTwoLists(l1, l2) {', line: 0 },
+        { code: '  dummy = new Node(0);', line: 1 },
+        { code: '  current = dummy;', line: 2 },
+        { code: '  while (l1 && l2) {', line: 3 },
+        { code: '    if (l1.val < l2.val) {', line: 4 },
+        { code: '      current.next = l1;', line: 5 },
+        { code: '      l1 = l1.next;', line: 6 },
+        { code: '    } else {', line: 7 },
+        { code: '      current.next = l2;', line: 8 },
+        { code: '      l2 = l2.next;', line: 9 },
+        { code: '    }', line: 10 },
+        { code: '    current = current.next;', line: 11 },
+        { code: '  }', line: 12 },
+        { code: '  current.next = l1 || l2;', line: 13 },
+        { code: '  return dummy.next;', line: 14 },
+        { code: '}', line: 15 }
+      ],
+      deleteNode: [
+        { code: 'function deleteNode(node) {', line: 0 },
+        { code: '  // Copy next node value', line: 1 },
+        { code: '  node.val = node.next.val;', line: 2 },
+        { code: '  // Skip next node', line: 3 },
+        { code: '  node.next = node.next.next;', line: 4 },
+        { code: '}', line: 5 }
+      ],
+      intersection: [
+        { code: 'function getIntersection(headA, headB) {', line: 0 },
+        { code: '  lenA = getLength(headA);', line: 1 },
+        { code: '  lenB = getLength(headB);', line: 2 },
+        { code: '  // Align pointers', line: 3 },
+        { code: '  while (lenA > lenB) {', line: 4 },
+        { code: '    headA = headA.next;', line: 5 },
+        { code: '    lenA--;', line: 6 },
+        { code: '  }', line: 7 },
+        { code: '  while (lenB > lenA) {', line: 8 },
+        { code: '    headB = headB.next;', line: 9 },
+        { code: '    lenB--;', line: 10 },
+        { code: '  }', line: 11 },
+        { code: '  // Move together', line: 12 },
+        { code: '  while (headA !== headB) {', line: 13 },
+        { code: '    headA = headA.next;', line: 14 },
+        { code: '    headB = headB.next;', line: 15 },
+        { code: '  }', line: 16 },
+        { code: '  return headA;', line: 17 },
+        { code: '}', line: 18 }
+      ],
+      removeDuplicates: [
+        { code: 'function deleteDuplicates(head) {', line: 0 },
+        { code: '  current = head;', line: 1 },
+        { code: '  while (current && current.next) {', line: 2 },
+        { code: '    if (current.val === current.next.val) {', line: 3 },
+        { code: '      current.next = current.next.next;', line: 4 },
+        { code: '    } else {', line: 5 },
+        { code: '      current = current.next;', line: 6 },
+        { code: '    }', line: 7 },
+        { code: '  }', line: 8 },
+        { code: '  return head;', line: 9 },
+        { code: '}', line: 10 }
+      ],
+      rotateList: [
+        { code: 'function rotateRight(head, k) {', line: 0 },
+        { code: '  if (!head || k === 0) return head;', line: 1 },
+        { code: '  // Find length and tail', line: 2 },
+        { code: '  len = 1, tail = head;', line: 3 },
+        { code: '  while (tail.next) {', line: 4 },
+        { code: '    tail = tail.next;', line: 5 },
+        { code: '    len++;', line: 6 },
+        { code: '  }', line: 7 },
+        { code: '  k = k % len;', line: 8 },
+        { code: '  if (k === 0) return head;', line: 9 },
+        { code: '  // Find new tail', line: 10 },
+        { code: '  newTail = head;', line: 11 },
+        { code: '  for (i = 0; i < len - k - 1; i++) {', line: 12 },
+        { code: '    newTail = newTail.next;', line: 13 },
+        { code: '  }', line: 14 },
+        { code: '  newHead = newTail.next;', line: 15 },
+        { code: '  newTail.next = null;', line: 16 },
+        { code: '  tail.next = head;', line: 17 },
+        { code: '  return newHead;', line: 18 },
+        { code: '}', line: 19 }
+      ],
+      reverseKGroup: [
+        { code: 'function reverseKGroup(head, k) {', line: 0 },
+        { code: '  // Check if k nodes exist', line: 1 },
+        { code: '  curr = head;', line: 2 },
+        { code: '  for (i = 0; i < k; i++) {', line: 3 },
+        { code: '    if (!curr) return head;', line: 4 },
+        { code: '    curr = curr.next;', line: 5 },
+        { code: '  }', line: 6 },
+        { code: '  // Reverse k nodes', line: 7 },
+        { code: '  prev = null, curr = head;', line: 8 },
+        { code: '  for (i = 0; i < k; i++) {', line: 9 },
+        { code: '    next = curr.next;', line: 10 },
+        { code: '    curr.next = prev;', line: 11 },
+        { code: '    prev = curr;', line: 12 },
+        { code: '    curr = next;', line: 13 },
+        { code: '  }', line: 14 },
+        { code: '  // Recurse for rest', line: 15 },
+        { code: '  head.next = reverseKGroup(curr, k);', line: 16 },
+        { code: '  return prev;', line: 17 },
+        { code: '}', line: 18 }
+      ],
+      cloneRandom: [
+        { code: 'function copyRandomList(head) {', line: 0 },
+        { code: '  if (!head) return null;', line: 1 },
+        { code: '  // Step 1: Interweave nodes', line: 2 },
+        { code: '  curr = head;', line: 3 },
+        { code: '  while (curr) {', line: 4 },
+        { code: '    copy = new Node(curr.val);', line: 5 },
+        { code: '    copy.next = curr.next;', line: 6 },
+        { code: '    curr.next = copy;', line: 7 },
+        { code: '    curr = copy.next;', line: 8 },
+        { code: '  }', line: 9 },
+        { code: '  // Step 2: Set random pointers', line: 10 },
+        { code: '  curr = head;', line: 11 },
+        { code: '  while (curr) {', line: 12 },
+        { code: '    if (curr.random)', line: 13 },
+        { code: '      curr.next.random = curr.random.next;', line: 14 },
+        { code: '    curr = curr.next.next;', line: 15 },
+        { code: '  }', line: 16 },
+        { code: '  // Step 3: Separate lists', line: 17 },
+        { code: '  return separateLists(head);', line: 18 },
+        { code: '}', line: 19 }
+      ],
+      flattenMulti: [
+        { code: 'function flatten(head) {', line: 0 },
+        { code: '  if (!head) return null;', line: 1 },
+        { code: '  curr = head;', line: 2 },
+        { code: '  while (curr) {', line: 3 },
+        { code: '    if (curr.child) {', line: 4 },
+        { code: '      next = curr.next;', line: 5 },
+        { code: '      // Flatten child', line: 6 },
+        { code: '      curr.next = curr.child;', line: 7 },
+        { code: '      curr.child.prev = curr;', line: 8 },
+        { code: '      curr.child = null;', line: 9 },
+        { code: '      // Find tail of child', line: 10 },
+        { code: '      tail = curr.next;', line: 11 },
+        { code: '      while (tail.next) tail = tail.next;', line: 12 },
+        { code: '      // Connect to next', line: 13 },
+        { code: '      tail.next = next;', line: 14 },
+        { code: '      if (next) next.prev = tail;', line: 15 },
+        { code: '    }', line: 16 },
+        { code: '    curr = curr.next;', line: 17 },
+        { code: '  }', line: 18 },
+        { code: '  return head;', line: 19 },
+        { code: '}', line: 20 }
+      ]
+    };
+
+    function createList(arr) {
+      if (!arr || arr.length === 0) return null;
+      let head = new ListNode(arr[0]);
+      let current = head;
+      for (let i = 1; i < arr.length; i++) {
+        current.next = new ListNode(arr[i]);
+        current = current.next;
+      }
+      return head;
+    }
+
+    function listToArray(head) {
+      const arr = [];
+      let curr = head;
+      const visited = new Set();
+      while (curr && !visited.has(curr)) {
+        arr.push(curr.val);
+        visited.add(curr);
+        curr = curr.next;
+      }
+      return arr;
+    }
+
+    function createCycle(head, pos) {
+      if (pos < 0 || !head) return;
+      let cycleNode = null;
+      let tail = head;
+      let curr = head;
+      let idx = 0;
+      
+      while (curr) {
+        if (idx === pos) cycleNode = curr;
+        if (!curr.next) tail = curr;
+        curr = curr.next;
+        idx++;
+      }
+      
+      if (cycleNode && tail) {
+        tail.next = cycleNode;
+      }
+    }
+
+    // ==================== DETECT CYCLE ====================
+    function detectCycleWithStates(head, cyclePos) {
+      const states = [];
+      
+      function record(list, pointers, cycleStart, result, message, codeLine) {
+        states.push({
+          list: listToArray(list),
+          pointers: pointers || {},
+          cycleStart: cycleStart,
+          cycleDetected: result,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(head, { head: 0 }, cyclePos >= 0 ? cyclePos : undefined, null, 
+             `Detect cycle using Floyd's algorithm (Tortoise & Hare)`, 0);
+
+      if (!head) {
+        record(null, {}, undefined, false, `Empty list - no cycle`, 1);
+        return { states, hasCycle: false };
+      }
+
+      let slow = head, fast = head;
+      let slowIdx = 0, fastIdx = 0;
+      
+      record(head, { head: 0, slow: slowIdx, fast: fastIdx }, cyclePos >= 0 ? cyclePos : undefined, null, 
+             `Initialize slow and fast pointers at head`, 2);
+
+      const arr = listToArray(head);
+      let steps = 0;
+      const maxSteps = arr.length * 2 + 5;
+
+      while (fast && fast.next && steps < maxSteps) {
+        slow = slow.next;
+        fast = fast.next.next;
+        slowIdx = (slowIdx + 1) % arr.length;
+        fastIdx = (fastIdx + 2) % arr.length;
+        steps++;
+
+        record(head, { head: 0, slow: slowIdx, fast: fastIdx }, cyclePos >= 0 ? cyclePos : undefined, null, 
+               `Slow moves 1 step (pos ${slowIdx}), Fast moves 2 steps (pos ${fastIdx})`, 5);
+
+        if (slow === fast) {
+          record(head, { head: 0, slow: slowIdx, fast: fastIdx }, cyclePos >= 0 ? cyclePos : undefined, true,
+                 `✓ Pointers met at position ${slowIdx}! Cycle detected!`, 8);
+          return { states, hasCycle: true };
+        }
+      }
+
+      record(head, { head: 0 }, undefined, false, `✗ Fast reached end - No cycle detected`, 11);
+      return { states, hasCycle: false };
+    }
+
+    // ==================== NTH FROM END ====================
+    function nthFromEndWithStates(head, n) {
+      const states = [];
+      
+      function record(list, pointers, deleted, message, codeLine) {
+        states.push({
+          list: listToArray(list),
+          pointers: pointers || {},
+          deletedIndex: deleted,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      const arr = listToArray(head);
+      record(head, { head: 0 }, null, `Remove ${n}-th node from end`, 0);
+      record(head, { dummy: 0 }, null, `Create dummy node pointing to head`, 1);
+
+      let fast = 0, slow = 0;
+      
+      for (let i = 0; i <= n; i++) {
+        record(head, { dummy: 0, fast: fast, slow: slow }, null, 
+               `Move fast ${i+1} steps ahead`, 6);
+        fast++;
+      }
+
+      record(head, { dummy: 0, fast: fast, slow: slow }, null, 
+             `Fast is now ${n+1} steps ahead of slow`, 8);
+
+      while (fast < arr.length) {
+        record(head, { fast: fast, slow: slow }, null, 
+               `Move both pointers together`, 10);
+        fast++;
+        slow++;
+      }
+
+      const targetIdx = slow;
+      record(head, { slow: slow }, targetIdx, 
+             `Slow is before target node. Remove node at position ${targetIdx}`, 15);
+
+      const newArr = [...arr];
+      newArr.splice(targetIdx, 1);
+      const newList = createList(newArr);
+      
+      record(newList, { head: 0 }, null, `✓ Removed ${arr[targetIdx]} from list`, 16);
+      return { states, result: newList };
+    }
+
+    // ==================== MERGE SORTED ====================
+    function mergeSortedWithStates(head1, head2) {
+      const states = [];
+      
+      function record(list1, list2, merged, pointers, message, codeLine) {
+        states.push({
+          list1: listToArray(list1),
+          list2: listToArray(list2),
+          merged: merged,
+          pointers: pointers || {},
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      const arr1 = listToArray(head1);
+      const arr2 = listToArray(head2);
+      
+      record(head1, head2, [], { p1: 0, p2: 0 }, `Merge two sorted lists`, 0);
+      record(head1, head2, [], { dummy: 0 }, `Create dummy node`, 1);
+
+      const merged = [];
+      let p1 = 0, p2 = 0;
+
+      while (p1 < arr1.length && p2 < arr2.length) {
+        record(head1, head2, merged, { p1: p1, p2: p2 }, 
+               `Compare ${arr1[p1]} vs ${arr2[p2]}`, 3);
+
+        if (arr1[p1] < arr2[p2]) {
+          merged.push(arr1[p1]);
+          record(head1, head2, merged, { p1: p1 }, 
+                 `${arr1[p1]} < ${arr2[p2]}, take from list 1`, 5);
+          p1++;
+        } else {
+          merged.push(arr2[p2]);
+          record(head1, head2, merged, { p2: p2 }, 
+                 `${arr2[p2]} ≤ ${arr1[p1]}, take from list 2`, 8);
+          p2++;
+        }
+      }
+
+      while (p1 < arr1.length) {
+        merged.push(arr1[p1]);
+        record(head1, head2, merged, { p1: p1 }, `Append remaining from list 1`, 13);
+        p1++;
+      }
+
+      while (p2 < arr2.length) {
+        merged.push(arr2[p2]);
+        record(head1, head2, merged, { p2: p2 }, `Append remaining from list 2`, 13);
+        p2++;
+      }
+
+      record(null, null, merged, {}, `✓ Merge complete!`, 14);
+      return { states, result: createList(merged) };
+    }
+
+    // ==================== DELETE NODE ====================
+    function deleteNodeWithStates(head, nodeIdx) {
+      const states = [];
+      const arr = listToArray(head);
+      
+      function record(list, pointers, deleted, message, codeLine) {
+        states.push({
+          list: listToArray(list),
+          pointers: pointers || {},
+          deletedIndex: deleted,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(head, { head: 0 }, null, `Delete node at position ${nodeIdx} (given only node reference)`, 0);
+      record(head, { curr: nodeIdx }, null, `This is the node to delete`, 0);
+      
+      record(head, { curr: nodeIdx }, null, `Copy next node's value to current`, 2);
+      
+      const newArr = [...arr];
+      newArr[nodeIdx] = arr[nodeIdx + 1];
+      let tempList = createList(newArr);
+      
+      record(tempList, { curr: nodeIdx }, nodeIdx + 1, `Skip next node (delete it)`, 4);
+      
+      newArr.splice(nodeIdx + 1, 1);
+      const newList = createList(newArr);
+      
+      record(newList, { head: 0 }, null, `✓ Node deleted! Value ${arr[nodeIdx + 1]} now at position ${nodeIdx}`, 5);
+      return { states, result: newList };
+    }
+
+    // ==================== INTERSECTION ====================
+    function intersectionWithStates(head1, head2, intersectIdx) {
+      const states = [];
+      const arr1 = listToArray(head1);
+      const arr2 = listToArray(head2);
+      
+      function record(list1, list2, pointers, found, message, codeLine) {
+        states.push({
+          list1: arr1,
+          list2: arr2,
+          pointers: pointers || {},
+          intersection: found,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(head1, head2, { p1: 0, p2: 0 }, null, `Find intersection of two lists`, 0);
+      
+      const len1 = arr1.length;
+      const len2 = arr2.length;
+      
+      record(head1, head2, { p1: 0, p2: 0 }, null, `Length of list1: ${len1}, list2: ${len2}`, 1);
+
+      let p1 = 0, p2 = 0;
+      const diff = Math.abs(len1 - len2);
+
+      if (len1 > len2) {
+        record(head1, head2, { p1: p1, p2: p2 }, null, `List1 longer, advance p1 by ${diff}`, 4);
+        p1 = diff;
+        record(head1, head2, { p1: p1, p2: p2 }, null, `Pointers now aligned`, 5);
+      } else if (len2 > len1) {
+        record(head1, head2, { p1: p1, p2: p2 }, null, `List2 longer, advance p2 by ${diff}`, 8);
+        p2 = diff;
+        record(head1, head2, { p1: p1, p2: p2 }, null, `Pointers now aligned`, 9);
+      }
+
+      while (p1 < len1 && p2 < len2) {
+        record(head1, head2, { p1: p1, p2: p2 }, null, `Compare positions: ${p1} and ${p2}`, 13);
+        
+        if (intersectIdx >= 0 && p1 === intersectIdx && p2 === intersectIdx) {
+          record(head1, head2, { p1: p1, p2: p2 }, p1, `✓ Intersection found at position ${p1}!`, 17);
+          return { states, intersection: intersectIdx };
+        }
+        
+        p1++;
+        p2++;
+      }
+
+      record(head1, head2, { p1: p1, p2: p2 }, null, `✗ No intersection found`, 17);
+      return { states, intersection: -1 };
+    }
+
+    // ==================== REMOVE DUPLICATES ====================
+    function removeDuplicatesWithStates(head) {
+      const states = [];
+      const arr = listToArray(head);
+      
+      function record(list, pointers, deleted, message, codeLine) {
+        states.push({
+          list: listToArray(list),
+          pointers: pointers || {},
+          deletedIndex: deleted,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(head, { head: 0 }, null, `Remove duplicates from sorted list`, 0);
+
+      let curr = 0;
+      const newArr = [...arr];
+      const deletedIndices = [];
+
+      record(head, { curr: curr }, null, `Start at head`, 1);
+
+      let i = 0;
+      while (i < newArr.length - 1) {
+        record(createList(newArr), { curr: i }, null, 
+               `Check if ${newArr[i]} === ${newArr[i + 1]}`, 2);
+
+        if (newArr[i] === newArr[i + 1]) {
+          record(createList(newArr), { curr: i }, i + 1, 
+                 `Duplicate found! Remove ${newArr[i + 1]}`, 3);
+          newArr.splice(i + 1, 1);
+          record(createList(newArr), { curr: i }, null, `Removed duplicate`, 4);
+        } else {
+          i++;
+          if (i < newArr.length - 1) {
+            record(createList(newArr), { curr: i }, null, `No duplicate, move to next`, 6);
+          }
+        }
+      }
+
+      record(createList(newArr), { head: 0 }, null, `✓ All duplicates removed!`, 9);
+      return { states, result: createList(newArr) };
+    }
+
+    // ==================== ROTATE LIST ====================
+    function rotateListWithStates(head, k) {
+      const states = [];
+      const arr = listToArray(head);
+      const n = arr.length;
+      
+      function record(list, pointers, message, codeLine) {
+        states.push({
+          list: listToArray(list),
+          pointers: pointers || {},
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(head, { head: 0 }, `Rotate list by ${k} places`, 0);
+
+      if (n === 0 || k === 0) {
+        record(head, { head: 0 }, `No rotation needed`, 1);
+        return { states, result: head };
+      }
+
+      k = k % n;
+      record(head, { head: 0 }, `Effective rotation: k % ${n} = ${k}`, 8);
+
+      if (k === 0) {
+        record(head, { head: 0 }, `k = 0, no rotation needed`, 9);
+        return { states, result: head };
+      }
+
+      const newTailIdx = n - k - 1;
+      const newHeadIdx = n - k;
+
+      record(head, { tail: n - 1 }, `Find tail at position ${n - 1}`, 3);
+      record(head, { tail: newTailIdx }, `New tail will be at position ${newTailIdx}`, 11);
+      record(head, { head: newHeadIdx }, `New head will be at position ${newHeadIdx}`, 15);
+
+      const rotated = [...arr.slice(newHeadIdx), ...arr.slice(0, newHeadIdx)];
+      const newList = createList(rotated);
+
+      record(newList, { head: 0 }, `Make circular and break at new position`, 16);
+      record(newList, { head: 0 }, `✓ Rotation complete!`, 18);
+
+      return { states, result: newList };
+    }
+
+    // ==================== REVERSE K GROUP ====================
+    function reverseKGroupWithStates(head, k) {
+      const states = [];
+      const arr = listToArray(head);
+      
+      function record(list, pointers, message, codeLine) {
+        states.push({
+          list: listToArray(list),
+          pointers: pointers || {},
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(head, { head: 0 }, `Reverse nodes in groups of ${k}`, 0);
+
+      const result = [];
+      let i = 0;
+
+      while (i < arr.length) {
+        if (i + k <= arr.length) {
+          record(createList([...result, ...arr.slice(i)]), 
+                 { curr: result.length }, 
+                 `Check if ${k} nodes available from position ${i}`, 2);
+          
+          const group = arr.slice(i, i + k);
+          record(createList([...result, ...arr.slice(i)]), 
+                 { curr: result.length }, 
+                 `Reverse group: [${group.join(',')}]`, 7);
+          
+          result.push(...group.reverse());
+          record(createList(result), 
+                 { curr: result.length - 1 }, 
+                 `Group reversed and added`, 14);
+          i += k;
+        } else {
+          record(createList([...result, ...arr.slice(i)]), 
+                 { curr: result.length }, 
+                 `Less than ${k} nodes remaining, leave unchanged`, 4);
+          result.push(...arr.slice(i));
+          break;
+        }
+      }
+
+      record(createList(result), { head: 0 }, `✓ All groups reversed!`, 17);
+      return { states, result: createList(result) };
+    }
+
+    // Simplified implementations for remaining problems
+    // ==================== CLONE WITH RANDOM POINTER ====================
+    function cloneRandomWithStates(head) {
+      const states = [];
+      const arr = listToArray(head);
+      
+      // Generate random pointers for demonstration
+      const randomPointers = arr.map((_, idx) => {
+        return Math.random() > 0.5 ? Math.floor(Math.random() * arr.length) : null;
+      });
+
+      function record(list, cloned, pointers, step, message, codeLine) {
+        states.push({
+          list: list,
+          clonedList: cloned,
+          randomPointers: randomPointers,
+          pointers: pointers || {},
+          cloneStep: step,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(arr, [], { head: 0 }, 0, `Clone list with random pointers`, 0);
+      
+      // Show original list with random pointers
+      record(arr, [], { head: 0 }, 0, `Original list has random pointers to other nodes`, 1);
+      
+      // Step 1: Create copies interweaved
+      record(arr, [], { curr: 0 }, 1, `Step 1: Create copy nodes and interweave with originals`, 3);
+      
+      for (let i = 0; i < arr.length; i++) {
+        record(arr, [], { curr: i }, 1, 
+               `Create copy of node ${i} (value: ${arr[i]})`, 5);
+      }
+      
+      record(arr, [], {}, 1, `All nodes copied and interweaved`, 9);
+      
+      // Step 2: Set random pointers
+      record(arr, [], { curr: 0 }, 2, `Step 2: Set random pointers for copied nodes`, 10);
+      
+      for (let i = 0; i < arr.length; i++) {
+        if (randomPointers[i] !== null) {
+          record(arr, [], { curr: i }, 2, 
+                 `Node ${i}'s copy: set random to node ${randomPointers[i]}'s copy`, 13);
+        }
+      }
+      
+      record(arr, [], {}, 2, `All random pointers set for copies`, 16);
+      
+      // Step 3: Separate lists
+      record(arr, arr, { head: 0 }, 3, `Step 3: Separate original and cloned lists`, 17);
+      
+      record(arr, arr, { head: 0 }, 3, `✓ Cloning complete! Original and clone are now separate`, 18);
+
+      return { states, result: createList(arr) };
+    }
+
+    // ==================== FLATTEN MULTI-LEVEL ====================
+    function flattenMultiWithStates(head) {
+      const states = [];
+      const arr = listToArray(head);
+      
+      // Create a multi-level structure for demonstration
+      // Format: main list with some nodes having child lists
+      const levels = {
+        main: arr,
+        children: {}
+      };
+      
+      // Add child lists at certain positions
+      if (arr.length >= 3) {
+        levels.children[1] = [arr[1] + 10, arr[1] + 20]; // Child at position 1
+      }
+      if (arr.length >= 4) {
+        levels.children[2] = [arr[2] + 10]; // Child at position 2
+      }
+
+      function record(mainList, childLists, flattenedSoFar, pointers, message, codeLine) {
+        states.push({
+          multiLevel: true,
+          mainList: mainList,
+          childLists: childLists,
+          flattenedList: flattenedSoFar,
+          pointers: pointers || {},
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(levels.main, levels.children, [], { head: 0 }, 
+             `Flatten multi-level doubly linked list`, 0);
+      
+      record(levels.main, levels.children, [], { head: 0 }, 
+             `Main list with child pointers shown`, 1);
+
+      let flattened = [];
+      let curr = 0;
+
+      while (curr < arr.length) {
+        record(levels.main, levels.children, flattened, { curr: curr }, 
+               `At node ${curr} (value: ${arr[curr]})`, 3);
+
+        flattened.push(arr[curr]);
+
+        if (levels.children[curr]) {
+          record(levels.main, levels.children, flattened, { curr: curr }, 
+                 `Node ${curr} has child list!`, 4);
+          
+          record(levels.main, levels.children, flattened, { curr: curr }, 
+                 `Flatten child list and insert into main list`, 7);
+
+          // Add child elements
+          for (let child of levels.children[curr]) {
+            flattened.push(child);
+            record(levels.main, levels.children, flattened, { curr: curr }, 
+                   `Added child node: ${child}`, 11);
+          }
+
+          record(levels.main, levels.children, flattened, { curr: curr }, 
+                 `Child list flattened, continue with main list`, 14);
+        }
+
+        curr++;
+      }
+
+      record(levels.main, {}, flattened, { head: 0 }, 
+             `✓ Multi-level list completely flattened!`, 19);
+
+      return { states, result: createList(flattened) };
+    }
+
+    // ==================== CODE DISPLAY ====================
+    function displayCode(problem) {
+      const codeDisplay = document.getElementById('code-display');
+      const codeTitle = document.getElementById('code-title');
+      const code = problemCode[problem];
+      
+      codeTitle.textContent = `${problemInfo[problem].name} - Code`;
+      
+      codeDisplay.innerHTML = code.map((lineObj) => 
+        `<div class="code-line" data-line="${lineObj.line}">${lineObj.code || '&nbsp;'}</div>`
+      ).join('');
+    }
+
+    function highlightCodeLine(lineNumber) {
+      const lines = document.querySelectorAll('.code-line');
+      lines.forEach(line => {
+        line.classList.remove('active');
+        if (lineNumber !== undefined && parseInt(line.dataset.line) === lineNumber) {
+          line.classList.add('active');
+          line.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    }
+
+    function updateProblemInfo(problem) {
+      const info = problemInfo[problem];
+      const infoBox = document.getElementById('algorithm-info');
+      infoBox.innerHTML = `
+        <h3>${info.name}</h3>
+        <p><strong>Description:</strong> ${info.description}</p>
+        <p><strong>Complexity:</strong> ${info.complexity}</p>
+        <p><strong>Technique:</strong> ${info.technique}</p>
+      `;
+    }
+
+    // ==================== RENDERING ====================
+    const listContainer = document.getElementById("list-container");
+    const descriptionEl = document.getElementById("description");
+    const stepIndicatorEl = document.getElementById("step-indicator");
+    const resultBoxEl = document.getElementById("result-box");
+
+    function renderState(state, index, total) {
+      listContainer.innerHTML = "";
+
+      // Handle multi-level list
+      if (state.multiLevel) {
+        renderMultiLevelList(state);
+      }
+      // Handle clone with random pointers
+      else if (state.clonedList !== undefined) {
+        renderCloneRandomList(state);
+      }
+      // Handle merge problem (two lists)
+      else if (state.list1 !== undefined && state.list2 !== undefined) {
+        renderMergeLists(state);
+      } else {
+        renderSingleList(state);
+      }
+
+      descriptionEl.textContent = state.description || "";
+      stepIndicatorEl.textContent = `Step ${index + 1} / ${total}`;
+      
+      if (state.codeLine !== undefined) {
+        highlightCodeLine(state.codeLine);
+      }
+
+      // Show result on last step
+      if (index === total - 1) {
+        if (state.cycleDetected !== undefined) {
+          resultBoxEl.className = state.cycleDetected ? 'result-box warning' : 'result-box success';
+          resultBoxEl.textContent = state.cycleDetected ? 
+            '⚠️ Cycle Detected in List!' : '✓ No Cycle - List is Clean';
+          resultBoxEl.style.display = 'block';
+        } else if (state.intersection !== undefined) {
+          resultBoxEl.className = state.intersection >= 0 ? 'result-box success' : 'result-box info';
+          resultBoxEl.textContent = state.intersection >= 0 ?
+            `✓ Intersection found at position ${state.intersection}` : 'ℹ️ No Intersection Found';
+          resultBoxEl.style.display = 'block';
+        }
+      } else {
+        resultBoxEl.style.display = 'none';
+      }
+    }
+
+    function renderSingleList(state) {
+      if (!state.list || state.list.length === 0) {
+        listContainer.innerHTML = '<div style="text-align: center; color: #999; padding: 60px;">Empty List</div>';
+        return;
+      }
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "list-wrapper";
+
+      state.list.forEach((value, idx) => {
+        const nodeWrapper = document.createElement("div");
+        nodeWrapper.className = "node-wrapper";
+
+        // Add pointer labels
+        const pointers = state.pointers || {};
+        const labels = [];
+        
+        if (pointers.head === idx) labels.push({ text: 'head', class: 'head-label' });
+        if (pointers.slow === idx) labels.push({ text: 'slow', class: 'slow-label' });
+        if (pointers.fast === idx) labels.push({ text: 'fast', class: 'fast-label' });
+        if (pointers.curr === idx) labels.push({ text: 'curr', class: 'curr-label' });
+        if (pointers.prev === idx) labels.push({ text: 'prev', class: 'prev-label' });
+        if (pointers.tail === idx) labels.push({ text: 'tail', class: 'tail-label' });
+        if (pointers.dummy === idx) labels.push({ text: 'dummy', class: 'dummy-label' });
+
+        labels.forEach((label, i) => {
+          const labelDiv = document.createElement("div");
+          labelDiv.className = `pointer-label ${label.class}`;
+          labelDiv.textContent = label.text;
+          labelDiv.style.top = i === 0 ? '-35px' : `-${35 + i * 25}px`;
+          nodeWrapper.appendChild(labelDiv);
+          
+          if (i === 0) {
+            const arrow = document.createElement("div");
+            arrow.className = "arrow-down";
+            arrow.textContent = "↓";
+            nodeWrapper.appendChild(arrow);
+          }
+        });
+
+        // Create node
+        const node = document.createElement("div");
+        node.className = "node";
+
+        if (pointers.head === idx) node.classList.add("head");
+        if (pointers.tail === idx) node.classList.add("tail");
+        if (pointers.slow === idx) node.classList.add("slow");
+        if (pointers.fast === idx) node.classList.add("fast");
+        if (pointers.curr === idx) node.classList.add("current");
+        if (pointers.prev === idx) node.classList.add("prev");
+        if (state.cycleStart !== undefined && idx >= state.cycleStart) node.classList.add("cycle");
+        if (state.deletedIndex === idx) node.classList.add("deleted");
+        if (state.merged && state.merged.includes(value)) node.classList.add("merged");
+
+        const dataDiv = document.createElement("div");
+        dataDiv.className = "node-data";
+        dataDiv.textContent = value;
+        node.appendChild(dataDiv);
+
+        const nextDiv = document.createElement("div");
+        nextDiv.className = "node-next";
+        nextDiv.textContent = "→";
+        node.appendChild(nextDiv);
+
+        nodeWrapper.appendChild(node);
+        wrapper.appendChild(nodeWrapper);
+
+        if (idx < state.list.length - 1) {
+          const arrow = document.createElement("div");
+          arrow.className = "arrow";
+          arrow.textContent = "→";
+          wrapper.appendChild(arrow);
+        }
+      });
+
+      // Add cycle arrow or NULL
+      if (state.cycleStart !== undefined && state.cycleStart >= 0) {
+        const cycleArrow = document.createElement("div");
+        cycleArrow.style.cssText = `
+          margin: 0 10px;
+          padding: 10px 15px;
+          background: #ffebee;
+          border: 2px dashed #f44336;
+          border-radius: 8px;
+          color: #f44336;
+          font-weight: 700;
+          font-size: 14px;
+        `;
+        cycleArrow.textContent = `↻ cycles back to node ${state.cycleStart}`;
+        wrapper.appendChild(cycleArrow);
+      } else {
+        const nullDiv = document.createElement("div");
+        nullDiv.className = "null-indicator";
+        nullDiv.textContent = "NULL";
+        wrapper.appendChild(nullDiv);
+      }
+
+      listContainer.appendChild(wrapper);
+    }
+
+    function renderCloneRandomList(state) {
+      // Render original list
+      const label1 = document.createElement("div");
+      label1.className = "list-label";
+      label1.textContent = "Original List:";
+      listContainer.appendChild(label1);
+
+      const wrapper1 = document.createElement("div");
+      wrapper1.className = "list-wrapper";
+      wrapper1.style.marginBottom = "40px";
+
+      state.list.forEach((value, idx) => {
+        const nodeWrapper = document.createElement("div");
+        nodeWrapper.className = "node-wrapper";
+        nodeWrapper.style.position = "relative";
+
+        if (state.pointers && state.pointers.curr === idx) {
+          const label = document.createElement("div");
+          label.className = "pointer-label curr-label";
+          label.textContent = "curr";
+          nodeWrapper.appendChild(label);
+          const arrow = document.createElement("div");
+          arrow.className = "arrow-down";
+          arrow.textContent = "↓";
+          nodeWrapper.appendChild(arrow);
+        }
+
+        const node = document.createElement("div");
+        node.className = "node";
+        if (state.pointers && state.pointers.curr === idx) node.classList.add("current");
+
+        const dataDiv = document.createElement("div");
+        dataDiv.className = "node-data";
+        dataDiv.textContent = value;
+        node.appendChild(dataDiv);
+
+        const nextDiv = document.createElement("div");
+        nextDiv.className = "node-next";
+        nextDiv.textContent = "→";
+        node.appendChild(nextDiv);
+
+        nodeWrapper.appendChild(node);
+
+        // Add random pointer indicator below the node
+        if (state.randomPointers && state.randomPointers[idx] !== undefined) {
+          const randomIndicator = document.createElement("div");
+          randomIndicator.style.cssText = `
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            white-space: nowrap;
+          `;
+          
+          const randomArrow = document.createElement("div");
+          randomArrow.style.cssText = `
+            font-size: 20px;
+            color: #9c27b0;
+            font-weight: bold;
+          `;
+          randomArrow.textContent = "⤹";
+          randomIndicator.appendChild(randomArrow);
+          
+          const randomLabel = document.createElement("div");
+          randomLabel.style.cssText = `
+            font-size: 10px;
+            background: #9c27b0;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-top: 2px;
+          `;
+          randomLabel.textContent = state.randomPointers[idx] !== null 
+            ? `rand→${state.randomPointers[idx]}` 
+            : `rand→∅`;
+          randomIndicator.appendChild(randomLabel);
+          
+          nodeWrapper.appendChild(randomIndicator);
+        }
+
+        wrapper1.appendChild(nodeWrapper);
+
+        if (idx < state.list.length - 1) {
+          const arrow = document.createElement("div");
+          arrow.className = "arrow";
+          arrow.textContent = "→";
+          wrapper1.appendChild(arrow);
+        }
+      });
+
+      const null1 = document.createElement("div");
+      null1.className = "null-indicator";
+      null1.textContent = "NULL";
+      wrapper1.appendChild(null1);
+      listContainer.appendChild(wrapper1);
+
+      // Show random pointers mapping
+      if (state.randomPointers && state.cloneStep >= 1) {
+        const randomInfo = document.createElement("div");
+        randomInfo.style.cssText = `
+          margin: 20px 0;
+          padding: 12px;
+          background: #f3e5f5;
+          border-left: 4px solid #9c27b0;
+          border-radius: 4px;
+          font-size: 13px;
+          font-weight: 600;
+          color: #4a148c;
+        `;
+        const mappings = state.randomPointers.map((ptr, idx) => {
+          const target = ptr !== null ? `Node ${ptr} (value: ${state.list[ptr]})` : 'NULL';
+          return `<div style="margin: 3px 0;">📍 Node ${idx} (value: ${state.list[idx]}) ➜ random ➜ ${target}</div>`;
+        }).join('');
+        randomInfo.innerHTML = `<strong style="display: block; margin-bottom: 5px;">🔗 Random Pointer Mappings:</strong>${mappings}`;
+        listContainer.appendChild(randomInfo);
+      }
+
+      // Render cloned list if ready
+      if (state.clonedList && state.clonedList.length > 0 && state.cloneStep >= 3) {
+        const label2 = document.createElement("div");
+        label2.className = "list-label";
+        label2.textContent = "✓ Cloned List (with random pointers copied):";
+        label2.style.marginTop = "40px";
+        label2.style.color = "#28a745";
+        label2.style.fontWeight = "bold";
+        listContainer.appendChild(label2);
+
+        const wrapper2 = document.createElement("div");
+        wrapper2.className = "list-wrapper";
+        wrapper2.style.marginBottom = "40px";
+
+        state.clonedList.forEach((value, idx) => {
+          const nodeWrapper = document.createElement("div");
+          nodeWrapper.className = "node-wrapper";
+          nodeWrapper.style.position = "relative";
+
+          const node = document.createElement("div");
+          node.className = "node merged";
+
+          const dataDiv = document.createElement("div");
+          dataDiv.className = "node-data";
+          dataDiv.textContent = value;
+          node.appendChild(dataDiv);
+
+          const nextDiv = document.createElement("div");
+          nextDiv.className = "node-next";
+          nextDiv.textContent = "→";
+          node.appendChild(nextDiv);
+
+          nodeWrapper.appendChild(node);
+
+          // Add random pointer indicator below the cloned node
+          if (state.randomPointers && state.randomPointers[idx] !== undefined) {
+            const randomIndicator = document.createElement("div");
+            randomIndicator.style.cssText = `
+              position: absolute;
+              bottom: -35px;
+              left: 50%;
+              transform: translateX(-50%);
+              text-align: center;
+              white-space: nowrap;
+            `;
+            
+            const randomArrow = document.createElement("div");
+            randomArrow.style.cssText = `
+              font-size: 20px;
+              color: #28a745;
+              font-weight: bold;
+            `;
+            randomArrow.textContent = "⤹";
+            randomIndicator.appendChild(randomArrow);
+            
+            const randomLabel = document.createElement("div");
+            randomLabel.style.cssText = `
+              font-size: 10px;
+              background: #28a745;
+              color: white;
+              padding: 2px 6px;
+              border-radius: 3px;
+              font-weight: bold;
+              margin-top: 2px;
+            `;
+            randomLabel.textContent = state.randomPointers[idx] !== null 
+              ? `rand→${state.randomPointers[idx]}` 
+              : `rand→∅`;
+            randomIndicator.appendChild(randomLabel);
+            
+            nodeWrapper.appendChild(randomIndicator);
+          }
+
+          wrapper2.appendChild(nodeWrapper);
+
+          if (idx < state.clonedList.length - 1) {
+            const arrow = document.createElement("div");
+            arrow.className = "arrow";
+            arrow.textContent = "→";
+            wrapper2.appendChild(arrow);
+          }
+        });
+
+        const null2 = document.createElement("div");
+        null2.className = "null-indicator";
+        null2.textContent = "NULL";
+        null2.style.background = "#28a745";
+        wrapper2.appendChild(null2);
+        listContainer.appendChild(wrapper2);
+
+        // Show cloned random pointers mapping
+        const clonedInfo = document.createElement("div");
+        clonedInfo.style.cssText = `
+          margin: 20px 0;
+          padding: 12px;
+          background: #d4edda;
+          border-left: 4px solid #28a745;
+          border-radius: 4px;
+          font-size: 13px;
+          font-weight: 600;
+          color: #155724;
+        `;
+        const clonedMappings = state.randomPointers.map((ptr, idx) => {
+          const target = ptr !== null ? `Node ${ptr} (value: ${state.clonedList[ptr]})` : 'NULL';
+          return `<div style="margin: 3px 0;">✓ Node ${idx} (value: ${state.clonedList[idx]}) ➜ random ➜ ${target}</div>`;
+        }).join('');
+        clonedInfo.innerHTML = `<strong style="display: block; margin-bottom: 5px;">🔗 Cloned Random Pointers (Same Structure):</strong>${clonedMappings}`;
+        listContainer.appendChild(clonedInfo);
+      }
+    }
+
+    function renderMultiLevelList(state) {
+      // Render main list
+      const label1 = document.createElement("div");
+      label1.className = "list-label";
+      label1.textContent = "Main List (Level 0):";
+      listContainer.appendChild(label1);
+
+      const wrapper1 = document.createElement("div");
+      wrapper1.className = "list-wrapper";
+
+      state.mainList.forEach((value, idx) => {
+        const nodeWrapper = document.createElement("div");
+        nodeWrapper.className = "node-wrapper";
+
+        if (state.pointers && state.pointers.curr === idx) {
+          const label = document.createElement("div");
+          label.className = "pointer-label curr-label";
+          label.textContent = "curr";
+          nodeWrapper.appendChild(label);
+          const arrow = document.createElement("div");
+          arrow.className = "arrow-down";
+          arrow.textContent = "↓";
+          nodeWrapper.appendChild(arrow);
+        }
+
+        const node = document.createElement("div");
+        node.className = "node";
+        if (state.pointers && state.pointers.curr === idx) node.classList.add("current");
+        if (state.childLists && state.childLists[idx]) {
+          node.style.background = "#fff3cd";
+        }
+
+        const dataDiv = document.createElement("div");
+        dataDiv.className = "node-data";
+        dataDiv.textContent = value;
+        node.appendChild(dataDiv);
+
+        const nextDiv = document.createElement("div");
+        nextDiv.className = "node-next";
+        nextDiv.textContent = "→";
+        node.appendChild(nextDiv);
+
+        nodeWrapper.appendChild(node);
+        wrapper1.appendChild(nodeWrapper);
+
+        if (idx < state.mainList.length - 1) {
+          const arrow = document.createElement("div");
+          arrow.className = "arrow";
+          arrow.textContent = "→";
+          wrapper1.appendChild(arrow);
+        }
+      });
+
+      const null1 = document.createElement("div");
+      null1.className = "null-indicator";
+      null1.textContent = "NULL";
+      wrapper1.appendChild(null1);
+      listContainer.appendChild(wrapper1);
+
+      // Render child lists
+      if (state.childLists) {
+        for (let pos in state.childLists) {
+          const children = state.childLists[pos];
+          
+          const labelChild = document.createElement("div");
+          labelChild.className = "list-label";
+          labelChild.textContent = `↓ Child of Node ${pos} (Level 1):`;
+          labelChild.style.color = "#ff9800";
+          labelChild.style.marginLeft = "20px";
+          listContainer.appendChild(labelChild);
+
+          const wrapperChild = document.createElement("div");
+          wrapperChild.className = "list-wrapper";
+          wrapperChild.style.marginLeft = "20px";
+
+          children.forEach((value, idx) => {
+            const nodeWrapper = document.createElement("div");
+            nodeWrapper.className = "node-wrapper";
+
+            const node = document.createElement("div");
+            node.className = "node";
+            node.style.borderColor = "#ff9800";
+            node.style.background = "#fff3e0";
+
+            const dataDiv = document.createElement("div");
+            dataDiv.className = "node-data";
+            dataDiv.textContent = value;
+            node.appendChild(dataDiv);
+
+            const nextDiv = document.createElement("div");
+            nextDiv.className = "node-next";
+            nextDiv.textContent = "→";
+            node.appendChild(nextDiv);
+
+            nodeWrapper.appendChild(node);
+            wrapperChild.appendChild(nodeWrapper);
+
+            if (idx < children.length - 1) {
+              const arrow = document.createElement("div");
+              arrow.className = "arrow";
+              arrow.textContent = "→";
+              wrapperChild.appendChild(arrow);
+            }
+          });
+
+          const nullChild = document.createElement("div");
+          nullChild.className = "null-indicator";
+          nullChild.textContent = "NULL";
+          nullChild.style.background = "#ff9800";
+          wrapperChild.appendChild(nullChild);
+          listContainer.appendChild(wrapperChild);
+        }
+      }
+
+      // Render flattened result
+      if (state.flattenedList && state.flattenedList.length > 0) {
+        const label3 = document.createElement("div");
+        label3.className = "list-label";
+        label3.textContent = "Flattened Result:";
+        label3.style.marginTop = "30px";
+        label3.style.color = "#28a745";
+        label3.style.fontWeight = "700";
+        listContainer.appendChild(label3);
+
+        const wrapper3 = document.createElement("div");
+        wrapper3.className = "list-wrapper";
+
+        state.flattenedList.forEach((value, idx) => {
+          const nodeWrapper = document.createElement("div");
+          nodeWrapper.className = "node-wrapper";
+
+          const node = document.createElement("div");
+          node.className = "node merged";
+
+          const dataDiv = document.createElement("div");
+          dataDiv.className = "node-data";
+          dataDiv.textContent = value;
+          node.appendChild(dataDiv);
+
+          const nextDiv = document.createElement("div");
+          nextDiv.className = "node-next";
+          nextDiv.textContent = "→";
+          node.appendChild(nextDiv);
+
+          nodeWrapper.appendChild(node);
+          wrapper3.appendChild(nodeWrapper);
+
+          if (idx < state.flattenedList.length - 1) {
+            const arrow = document.createElement("div");
+            arrow.className = "arrow";
+            arrow.textContent = "→";
+            wrapper3.appendChild(arrow);
+          }
+        });
+
+        const null3 = document.createElement("div");
+        null3.className = "null-indicator";
+        null3.textContent = "NULL";
+        null3.style.background = "#28a745";
+        wrapper3.appendChild(null3);
+        listContainer.appendChild(wrapper3);
+      }
+    }
+
+    function renderMergeLists(state) {
+      // Render List 1
+      if (state.list1 && state.list1.length > 0) {
+        const label1 = document.createElement("div");
+        label1.className = "list-label";
+        label1.textContent = "List 1:";
+        listContainer.appendChild(label1);
+
+        const wrapper1 = document.createElement("div");
+        wrapper1.className = "list-wrapper";
+
+        state.list1.forEach((value, idx) => {
+          const nodeWrapper = document.createElement("div");
+          nodeWrapper.className = "node-wrapper";
+
+          if (state.pointers && state.pointers.p1 === idx) {
+            const label = document.createElement("div");
+            label.className = "pointer-label p1-label";
+            label.textContent = "p1";
+            nodeWrapper.appendChild(label);
+            const arrow = document.createElement("div");
+            arrow.className = "arrow-down";
+            arrow.textContent = "↓";
+            nodeWrapper.appendChild(arrow);
+          }
+
+          const node = document.createElement("div");
+          node.className = "node";
+          if (state.pointers && state.pointers.p1 === idx) node.classList.add("current");
+
+          const dataDiv = document.createElement("div");
+          dataDiv.className = "node-data";
+          dataDiv.textContent = value;
+          node.appendChild(dataDiv);
+
+          const nextDiv = document.createElement("div");
+          nextDiv.className = "node-next";
+          nextDiv.textContent = "→";
+          node.appendChild(nextDiv);
+
+          nodeWrapper.appendChild(node);
+          wrapper1.appendChild(nodeWrapper);
+
+          if (idx < state.list1.length - 1) {
+            const arrow = document.createElement("div");
+            arrow.className = "arrow";
+            arrow.textContent = "→";
+            wrapper1.appendChild(arrow);
+          }
+        });
+
+        const null1 = document.createElement("div");
+        null1.className = "null-indicator";
+        null1.textContent = "NULL";
+        wrapper1.appendChild(null1);
+
+        listContainer.appendChild(wrapper1);
+      }
+
+      // Render List 2
+      if (state.list2 && state.list2.length > 0) {
+        const label2 = document.createElement("div");
+        label2.className = "list-label";
+        label2.textContent = "List 2:";
+        listContainer.appendChild(label2);
+
+        const wrapper2 = document.createElement("div");
+        wrapper2.className = "list-wrapper";
+
+        state.list2.forEach((value, idx) => {
+          const nodeWrapper = document.createElement("div");
+          nodeWrapper.className = "node-wrapper";
+
+          if (state.pointers && state.pointers.p2 === idx) {
+            const label = document.createElement("div");
+            label.className = "pointer-label p2-label";
+            label.textContent = "p2";
+            nodeWrapper.appendChild(label);
+            const arrow = document.createElement("div");
+            arrow.className = "arrow-down";
+            arrow.textContent = "↓";
+            nodeWrapper.appendChild(arrow);
+          }
+
+          const node = document.createElement("div");
+          node.className = "node";
+          if (state.pointers && state.pointers.p2 === idx) node.classList.add("current");
+
+          const dataDiv = document.createElement("div");
+          dataDiv.className = "node-data";
+          dataDiv.textContent = value;
+          node.appendChild(dataDiv);
+
+          const nextDiv = document.createElement("div");
+          nextDiv.className = "node-next";
+          nextDiv.textContent = "→";
+          node.appendChild(nextDiv);
+
+          nodeWrapper.appendChild(node);
+          wrapper2.appendChild(nodeWrapper);
+
+          if (idx < state.list2.length - 1) {
+            const arrow = document.createElement("div");
+            arrow.className = "arrow";
+            arrow.textContent = "→";
+            wrapper2.appendChild(arrow);
+          }
+        });
+
+        const null2 = document.createElement("div");
+        null2.className = "null-indicator";
+        null2.textContent = "NULL";
+        wrapper2.appendChild(null2);
+
+        listContainer.appendChild(wrapper2);
+      }
+
+      // Render Merged List
+      if (state.merged && state.merged.length > 0) {
+        const label3 = document.createElement("div");
+        label3.className = "list-label";
+        label3.textContent = "Merged List:";
+        label3.style.marginTop = "30px";
+        label3.style.color = "#28a745";
+        label3.style.fontWeight = "700";
+        listContainer.appendChild(label3);
+
+        const wrapper3 = document.createElement("div");
+        wrapper3.className = "list-wrapper";
+
+        state.merged.forEach((value, idx) => {
+          const nodeWrapper = document.createElement("div");
+          nodeWrapper.className = "node-wrapper";
+
+          const node = document.createElement("div");
+          node.className = "node merged";
+
+          const dataDiv = document.createElement("div");
+          dataDiv.className = "node-data";
+          dataDiv.textContent = value;
+          node.appendChild(dataDiv);
+
+          const nextDiv = document.createElement("div");
+          nextDiv.className = "node-next";
+          nextDiv.textContent = "→";
+          node.appendChild(nextDiv);
+
+          nodeWrapper.appendChild(node);
+          wrapper3.appendChild(nodeWrapper);
+
+          if (idx < state.merged.length - 1) {
+            const arrow = document.createElement("div");
+            arrow.className = "arrow";
+            arrow.textContent = "→";
+            wrapper3.appendChild(arrow);
+          }
+        });
+
+        const null3 = document.createElement("div");
+        null3.className = "null-indicator";
+        null3.textContent = "NULL";
+        null3.style.background = "#28a745";
+        wrapper3.appendChild(null3);
+
+        listContainer.appendChild(wrapper3);
+      }
+    }
+
+    // ==================== PLAYER LOGIC ====================
+    let states = [];
+    let currentIndex = 0;
+    let timer = null;
+
+    function stopTimer() {
+      if (timer !== null) {
+        clearInterval(timer);
+        timer = null;
+      }
+    }
+
+    function showCurrent() {
+      if (states.length === 0) return;
+      currentIndex = Math.max(0, Math.min(currentIndex, states.length - 1));
+      renderState(states[currentIndex], currentIndex, states.length);
+    }
+
+    function play() {
+      if (states.length === 0) return;
+      if (timer !== null) return;
+
+      const speed = parseInt(document.getElementById("speed-input").value, 10) || 1000;
+
+      timer = setInterval(() => {
+        currentIndex++;
+        if (currentIndex >= states.length) {
+          currentIndex = states.length - 1;
+          stopTimer();
+        }
+        showCurrent();
+      }, speed);
+    }
+
+    function pause() {
+      stopTimer();
+    }
+
+    function next() {
+      if (states.length === 0) return;
+      currentIndex = Math.min(currentIndex + 1, states.length - 1);
+      showCurrent();
+    }
+
+    function prev() {
+      if (states.length === 0) return;
+      currentIndex = Math.max(currentIndex - 1, 0);
+      showCurrent();
+    }
+
+    function reset() {
+      currentIndex = 0;
+      showCurrent();
+    }
+
+    // ==================== UI EVENT HANDLERS ====================
+    document.getElementById("play-btn").addEventListener("click", play);
+    document.getElementById("pause-btn").addEventListener("click", pause);
+    document.getElementById("next-btn").addEventListener("click", next);
+    document.getElementById("prev-btn").addEventListener("click", prev);
+    document.getElementById("reset-btn").addEventListener("click", reset);
+    document.getElementById("generate-btn").addEventListener("click", generateSteps);
+    
+    document.getElementById("problem-select").addEventListener("change", function() {
+      const problem = this.value;
+      displayCode(problem);
+      updateProblemInfo(problem);
+      
+      // Show/hide inputs based on problem
+      const list2Label = document.getElementById("list2-label");
+      const paramLabel = document.getElementById("param-label");
+      const cycleLabel = document.getElementById("cycle-label");
+      const paramInput = document.getElementById("param-input");
+      
+      list2Label.style.display = 'none';
+      paramLabel.style.display = 'none';
+      cycleLabel.style.display = 'none';
+      
+      if (problem === 'mergeSorted' || problem === 'intersection') {
+        list2Label.style.display = 'inline-block';
+      }
+      
+      if (problem === 'nthFromEnd') {
+        paramLabel.style.display = 'inline-block';
+        paramLabel.firstChild.textContent = 'N: ';
+      } else if (problem === 'rotateList') {
+        paramLabel.style.display = 'inline-block';
+        paramLabel.firstChild.textContent = 'K: ';
+      } else if (problem === 'reverseKGroup') {
+        paramLabel.style.display = 'inline-block';
+        paramLabel.firstChild.textContent = 'K: ';
+      } else if (problem === 'deleteNode') {
+        paramLabel.style.display = 'inline-block';
+        paramLabel.firstChild.textContent = 'Node Index: ';
+      }
+      
+      if (problem === 'detectCycle') {
+        cycleLabel.style.display = 'inline-block';
+      }
+      
+      if (problem === 'intersection') {
+        paramLabel.style.display = 'inline-block';
+        paramLabel.firstChild.textContent = 'Intersect at: ';
+        paramInput.placeholder = '-1 for no intersection';
+      }
+    });
+
+    function generateSteps() {
+      stopTimer();
+      const problem = document.getElementById("problem-select").value;
+      const input1 = document.getElementById("input-list1").value;
+      const input2 = document.getElementById("input-list2").value;
+      const param = parseInt(document.getElementById("param-input").value, 10);
+      const cyclePos = parseInt(document.getElementById("cycle-input").value, 10);
+
+      const arr1 = input1.split(",").map(x => x.trim()).filter(x => x).map(Number);
+      const arr2 = input2.split(",").map(x => x.trim()).filter(x => x).map(Number);
+
+      if (arr1.some(isNaN)) {
+        alert("Please enter valid numbers.");
+        return;
+      }
+
+      let head1 = createList(arr1);
+      let head2 = createList(arr2);
+      let result;
+
+      switch(problem) {
+        case "detectCycle":
+          if (!isNaN(cyclePos) && cyclePos >= 0) {
+            createCycle(head1, cyclePos);
+          }
+          result = detectCycleWithStates(head1, cyclePos);
+          break;
+        case "nthFromEnd":
+          result = nthFromEndWithStates(head1, param || 1);
+          break;
+        case "mergeSorted":
+          result = mergeSortedWithStates(head1, head2);
+          break;
+        case "deleteNode":
+          result = deleteNodeWithStates(head1, param || 2);
+          break;
+        case "intersection":
+          result = intersectionWithStates(head1, head2, param >= 0 ? param : -1);
+          break;
+        case "removeDuplicates":
+          result = removeDuplicatesWithStates(head1);
+          break;
+        case "rotateList":
+          result = rotateListWithStates(head1, param || 1);
+          break;
+        case "reverseKGroup":
+          result = reverseKGroupWithStates(head1, param || 2);
+          break;
+        case "cloneRandom":
+          result = cloneRandomWithStates(head1);
+          break;
+        case "flattenMulti":
+          result = flattenMultiWithStates(head1);
+          break;
+      }
+
+      states = result.states;
+      currentIndex = 0;
+      showCurrent();
+    }
+
+    // ==================== INITIALIZATION ====================
+    (function init() {
+      const problem = document.getElementById("problem-select").value;
+      displayCode(problem);
+      updateProblemInfo(problem);
+      generateSteps();
+    })();
+  </script>
+</body>
+</html>

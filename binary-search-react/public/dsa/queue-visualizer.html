@@ -1,0 +1,1904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Queue Visualizer</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 20px;
+      margin: 0;
+      background: #f8f9fa;
+    }
+    h1 { color: #333; text-align: center; margin-bottom: 20px; }
+    .container { max-width: 1800px; margin: 0 auto; }
+    
+    .input-section {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .input-section label {
+      display: inline-block;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    .input-section input, .input-section select {
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .input-section button {
+      padding: 8px 16px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .input-section button:hover { background: #45a049; }
+    
+    .main-content {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .visualization-panel { flex: 1; min-width: 0; }
+    
+    .code-panel {
+      width: 600px;
+      background: #1e1e1e;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      position: sticky;
+      top: 20px;
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+    }
+    .code-panel h3 {
+      color: #fff;
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 16px;
+      border-bottom: 2px solid #4CAF50;
+      padding-bottom: 8px;
+    }
+    .code-container {
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #d4d4d4;
+    }
+    .code-line {
+      padding: 2px 8px;
+      border-radius: 3px;
+      transition: all 0.3s ease;
+      white-space: pre;
+    }
+    .code-line.active {
+      background: #4CAF50;
+      color: white;
+      font-weight: 600;
+      border-left: 3px solid #fff;
+      padding-left: 5px;
+      animation: pulse 0.5s ease;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(4px); }
+    }
+    
+    .visualizer-section {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    
+    #queue-container {
+      min-height: 300px;
+      padding: 40px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    
+    .queue-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      position: relative;
+      padding: 20px 0;
+    }
+    
+    .queue-item {
+      width: 80px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: 3px solid #5a67d8;
+      border-radius: 8px;
+      color: white;
+      font-weight: 700;
+      font-size: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: all 0.4s ease;
+      position: relative;
+    }
+    
+    .queue-item.front {
+      border-color: #10b981;
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+      transform: scale(1.1);
+    }
+    
+    .queue-item.rear {
+      border-color: #f59e0b;
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
+      transform: scale(1.1);
+    }
+    
+    .queue-item.enqueuing {
+      animation: enqueueAnimation 0.5s ease;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    
+    .queue-item.dequeuing {
+      animation: dequeueAnimation 0.5s ease;
+      opacity: 0.3;
+    }
+    
+    @keyframes enqueueAnimation {
+      0% {
+        transform: translateX(100px);
+        opacity: 0;
+      }
+      100% {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes dequeueAnimation {
+      0% {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translateX(-100px) scale(0.8);
+        opacity: 0;
+      }
+    }
+    
+    .pointer-label {
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .front-label {
+      background: #10b981;
+      color: white;
+    }
+    
+    .rear-label {
+      background: #f59e0b;
+      color: white;
+    }
+    
+    .arrow-down {
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 18px;
+      color: #666;
+    }
+    
+    .queue-arrow {
+      font-size: 28px;
+      color: #666;
+      font-weight: bold;
+      margin: 0 5px;
+    }
+    
+    .empty-queue {
+      color: #9ca3af;
+      font-size: 18px;
+      font-weight: 600;
+      padding: 60px;
+      text-align: center;
+      border: 3px dashed #d1d5db;
+      border-radius: 8px;
+    }
+    
+    .queue-labels {
+      position: absolute;
+      width: 100%;
+      top: 10px;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+    
+    .label-box {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+    
+    .front-box {
+      background: #d1fae5;
+      color: #065f46;
+      border: 2px solid #10b981;
+    }
+    
+    .rear-box {
+      background: #fef3c7;
+      color: #92400e;
+      border: 2px solid #f59e0b;
+    }
+    
+    #controls {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    #controls button {
+      margin-right: 8px;
+      margin-bottom: 8px;
+      padding: 8px 16px;
+      background: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    #controls button:hover { background: #0b7dda; }
+    
+    #description {
+      margin-top: 15px;
+      padding: 12px;
+      background: #e3f2fd;
+      border-left: 4px solid #2196F3;
+      border-radius: 4px;
+      font-style: italic;
+      min-height: 20px;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+    #step-indicator {
+      margin-top: 8px;
+      font-size: 0.95rem;
+      color: #666;
+      font-weight: 600;
+    }
+    
+    .result-box {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+    }
+    .result-box.success {
+      background: #d4edda;
+      border: 2px solid #28a745;
+      color: #155724;
+    }
+    .result-box.error {
+      background: #f8d7da;
+      border: 2px solid #dc3545;
+      color: #721c24;
+    }
+    .result-box.info {
+      background: #d1ecf1;
+      border: 2px solid #17a2b8;
+      color: #0c5460;
+    }
+    
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 15px;
+      padding: 12px;
+      background: #f9f9f9;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-box {
+      width: 35px;
+      height: 30px;
+      border: 2px solid #333;
+      border-radius: 3px;
+    }
+    
+    .info-box {
+      margin-top: 15px;
+      padding: 15px;
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .info-box h3 {
+      margin-top: 0;
+      color: #856404;
+    }
+    
+    .auxiliary-display {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f3f4f6;
+      border-radius: 8px;
+      border-left: 4px solid #6366f1;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    
+    @media (max-width: 1400px) {
+      .main-content { flex-direction: column; }
+      .code-panel {
+        width: 100%;
+        position: relative;
+        top: 0;
+        max-height: 500px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎯 Queue Visualizer</h1>
+
+    <div class="input-section">
+      <label>
+        Operation/Problem:
+        <select id="operation-select">
+          <optgroup label="Basic Operations">
+            <option value="enqueue">Enqueue (Add to Rear)</option>
+            <option value="dequeue">Dequeue (Remove from Front)</option>
+            <option value="peek">Peek/Front</option>
+          </optgroup>
+          <optgroup label="Queue Problems">
+            <option value="circularQueue">Circular Queue</option>
+            <option value="stackUsingQueues">Implement Stack Using Queues</option>
+            <option value="slidingWindow">Sliding Window Maximum</option>
+            <option value="firstNonRepeating">First Non-Repeating Character (Stream)</option>
+            <option value="reverseQueue">Reverse Queue</option>
+            <option value="interleaveQueue">Interleave Queue</option>
+            <option value="generateBinary">Generate Binary Numbers 1 to N</option>
+          </optgroup>
+        </select>
+      </label>
+
+      <label id="initial-label">
+        Initial Queue:
+        <input id="input-queue" type="text" value="5,3,8,1" size="20" placeholder="front to rear" />
+      </label>
+
+      <label id="value-label">
+        Value:
+        <input id="value-input" type="text" value="9" style="width: 100px;" />
+      </label>
+
+      <label id="param-label" style="display: none;">
+        Parameter:
+        <input id="param-input" type="number" value="3" style="width: 80px;" />
+      </label>
+
+      <label id="stream-label" style="display: none;">
+        Stream:
+        <input id="stream-input" type="text" value="a,a,b,c" style="width: 150px;" />
+      </label>
+
+      <button id="generate-btn">Execute</button>
+    </div>
+
+    <div class="main-content">
+      <div class="visualization-panel">
+        <div class="visualizer-section">
+          <div id="queue-container"></div>
+          <div id="auxiliary-display" class="auxiliary-display" style="display: none;"></div>
+
+          <div id="controls">
+            <button id="prev-btn">◀ Previous</button>
+            <button id="play-btn">▶ Play</button>
+            <button id="pause-btn">⏸ Pause</button>
+            <button id="next-btn">Next ▶</button>
+            <button id="reset-btn">⟲ Reset</button>
+            <label style="margin-left: 8px;">
+              Speed (ms):
+              <input id="speed-input" type="number" value="1000" min="400" max="3000" step="100" style="width: 70px;" />
+            </label>
+          </div>
+
+          <div id="description"></div>
+          <div id="step-indicator"></div>
+          <div id="result-box" class="result-box" style="display: none;"></div>
+
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+              <span>Queue Element</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box" style="border-color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);"></div>
+              <span>Front</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box" style="border-color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);"></div>
+              <span>Rear</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);"></div>
+              <span>Enqueuing</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-box" id="algorithm-info"></div>
+      </div>
+
+      <div class="code-panel">
+        <h3 id="code-title">Algorithm Code</h3>
+        <div class="code-container" id="code-display"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Problem information
+    const problemInfo = {
+      enqueue: {
+        name: "Enqueue Operation",
+        description: "Add an element to the rear of the queue. Queue follows FIFO (First In, First Out) principle.",
+        complexity: "Time: O(1) | Space: O(1)",
+        technique: "Basic Queue Operation"
+      },
+      dequeue: {
+        name: "Dequeue Operation",
+        description: "Remove and return the front element from the queue. Returns error if queue is empty.",
+        complexity: "Time: O(1) | Space: O(1)",
+        technique: "Basic Queue Operation"
+      },
+      peek: {
+        name: "Peek/Front Operation",
+        description: "Return the front element without removing it. Returns error if queue is empty.",
+        complexity: "Time: O(1) | Space: O(1)",
+        technique: "Basic Queue Operation"
+      },
+      circularQueue: {
+        name: "Circular Queue",
+        description: "Circular queue where rear wraps around to beginning. Uses modulo to calculate positions.",
+        complexity: "Time: O(1) for all operations | Space: O(k)",
+        technique: "Array with Modulo Arithmetic"
+      },
+      stackUsingQueues: {
+        name: "Stack Using Two Queues",
+        description: "Implement stack using two queues. Make push or pop costly by moving elements between queues.",
+        complexity: "Time: O(n) for pop, O(1) for push | Space: O(n)",
+        technique: "Two Queues"
+      },
+      slidingWindow: {
+        name: "Sliding Window Maximum",
+        description: "Find maximum in each window of size k. Use deque to maintain elements in decreasing order.",
+        complexity: "Time: O(n) | Space: O(k)",
+        technique: "Monotonic Deque"
+      },
+      firstNonRepeating: {
+        name: "First Non-Repeating Character",
+        description: "Find first non-repeating character in a stream. Use queue and frequency map.",
+        complexity: "Time: O(n) | Space: O(n)",
+        technique: "Queue + Hash Map"
+      },
+      reverseQueue: {
+        name: "Reverse Queue",
+        description: "Reverse a queue using recursion or stack. Elements reversed in place.",
+        complexity: "Time: O(n) | Space: O(n)",
+        technique: "Stack or Recursion"
+      },
+      interleaveQueue: {
+        name: "Interleave Queue",
+        description: "Interleave first half with second half. Use stack or auxiliary queue.",
+        complexity: "Time: O(n) | Space: O(n)",
+        technique: "Stack + Queue"
+      },
+      generateBinary: {
+        name: "Generate Binary Numbers",
+        description: "Generate binary numbers from 1 to n using queue. Append 0 and 1 to generate next numbers.",
+        complexity: "Time: O(n) | Space: O(n)",
+        technique: "Queue for Level Generation"
+      }
+    };
+
+    // Code templates
+    const problemCode = {
+      enqueue: [
+        { code: 'function enqueue(queue, value) {', line: 0 },
+        { code: '  queue.push(value);  // Add to rear', line: 1 },
+        { code: '  return queue;', line: 2 },
+        { code: '}', line: 3 }
+      ],
+      dequeue: [
+        { code: 'function dequeue(queue) {', line: 0 },
+        { code: '  if (queue.isEmpty()) {', line: 1 },
+        { code: '    return "Error: Queue Underflow";', line: 2 },
+        { code: '  }', line: 3 },
+        { code: '  return queue.shift();  // Remove from front', line: 4 },
+        { code: '}', line: 5 }
+      ],
+      peek: [
+        { code: 'function peek(queue) {', line: 0 },
+        { code: '  if (queue.isEmpty()) {', line: 1 },
+        { code: '    return "Error: Queue is Empty";', line: 2 },
+        { code: '  }', line: 3 },
+        { code: '  return queue[0];  // Return front', line: 4 },
+        { code: '}', line: 5 }
+      ],
+      circularQueue: [
+        { code: 'class CircularQueue {', line: 0 },
+        { code: '  constructor(k) {', line: 1 },
+        { code: '    this.arr = new Array(k);', line: 2 },
+        { code: '    this.front = -1;', line: 3 },
+        { code: '    this.rear = -1;', line: 4 },
+        { code: '    this.size = k;', line: 5 },
+        { code: '  }', line: 6 },
+        { code: '  enqueue(val) {', line: 7 },
+        { code: '    if (isFull()) return false;', line: 8 },
+        { code: '    if (isEmpty()) front = 0;', line: 9 },
+        { code: '    rear = (rear + 1) % size;', line: 10 },
+        { code: '    arr[rear] = val;', line: 11 },
+        { code: '  }', line: 12 },
+        { code: '  dequeue() {', line: 13 },
+        { code: '    if (isEmpty()) return false;', line: 14 },
+        { code: '    if (front === rear) { reset(); }', line: 15 },
+        { code: '    front = (front + 1) % size;', line: 16 },
+        { code: '  }', line: 17 },
+        { code: '}', line: 18 }
+      ],
+      stackUsingQueues: [
+        { code: 'class StackUsingQueues {', line: 0 },
+        { code: '  constructor() {', line: 1 },
+        { code: '    this.q1 = [];', line: 2 },
+        { code: '    this.q2 = [];', line: 3 },
+        { code: '  }', line: 4 },
+        { code: '  push(val) {', line: 5 },
+        { code: '    q2.enqueue(val);', line: 6 },
+        { code: '    while (!q1.isEmpty()) {', line: 7 },
+        { code: '      q2.enqueue(q1.dequeue());', line: 8 },
+        { code: '    }', line: 9 },
+        { code: '    [q1, q2] = [q2, q1];  // Swap', line: 10 },
+        { code: '  }', line: 11 },
+        { code: '  pop() {', line: 12 },
+        { code: '    return q1.dequeue();', line: 13 },
+        { code: '  }', line: 14 },
+        { code: '}', line: 15 }
+      ],
+      slidingWindow: [
+        { code: 'function maxSlidingWindow(arr, k) {', line: 0 },
+        { code: '  deque = [];  // stores indices', line: 1 },
+        { code: '  result = [];', line: 2 },
+        { code: '  for (i = 0; i < arr.length; i++) {', line: 3 },
+        { code: '    // Remove out of window', line: 4 },
+        { code: '    while (!deque.isEmpty() &&', line: 5 },
+        { code: '           deque.front() <= i - k)', line: 6 },
+        { code: '      deque.removeFront();', line: 7 },
+        { code: '    // Remove smaller elements', line: 8 },
+        { code: '    while (!deque.isEmpty() &&', line: 9 },
+        { code: '           arr[deque.rear()] < arr[i])', line: 10 },
+        { code: '      deque.removeRear();', line: 11 },
+        { code: '    deque.addRear(i);', line: 12 },
+        { code: '    if (i >= k - 1)', line: 13 },
+        { code: '      result.push(arr[deque.front()]);', line: 14 },
+        { code: '  }', line: 15 },
+        { code: '  return result;', line: 16 },
+        { code: '}', line: 17 }
+      ],
+      firstNonRepeating: [
+        { code: 'function firstNonRepeating(stream) {', line: 0 },
+        { code: '  queue = [];', line: 1 },
+        { code: '  freq = {};', line: 2 },
+        { code: '  result = [];', line: 3 },
+        { code: '  for (char of stream) {', line: 4 },
+        { code: '    queue.push(char);', line: 5 },
+        { code: '    freq[char] = (freq[char] || 0) + 1;', line: 6 },
+        { code: '    while (!queue.isEmpty() &&', line: 7 },
+        { code: '           freq[queue.front()] > 1)', line: 8 },
+        { code: '      queue.shift();', line: 9 },
+        { code: '    result.push(queue.isEmpty() ? "#" :', line: 10 },
+        { code: '                queue.front());', line: 11 },
+        { code: '  }', line: 12 },
+        { code: '  return result;', line: 13 },
+        { code: '}', line: 14 }
+      ],
+      reverseQueue: [
+        { code: 'function reverseQueue(queue) {', line: 0 },
+        { code: '  stack = [];', line: 1 },
+        { code: '  // Transfer to stack', line: 2 },
+        { code: '  while (!queue.isEmpty()) {', line: 3 },
+        { code: '    stack.push(queue.dequeue());', line: 4 },
+        { code: '  }', line: 5 },
+        { code: '  // Transfer back to queue', line: 6 },
+        { code: '  while (!stack.isEmpty()) {', line: 7 },
+        { code: '    queue.enqueue(stack.pop());', line: 8 },
+        { code: '  }', line: 9 },
+        { code: '  return queue;', line: 10 },
+        { code: '}', line: 11 }
+      ],
+      interleaveQueue: [
+        { code: 'function interleave(queue) {', line: 0 },
+        { code: '  stack = [];', line: 1 },
+        { code: '  n = queue.size();', line: 2 },
+        { code: '  // Push first half to stack', line: 3 },
+        { code: '  for (i = 0; i < n/2; i++) {', line: 4 },
+        { code: '    stack.push(queue.dequeue());', line: 5 },
+        { code: '  }', line: 6 },
+        { code: '  // Enqueue back', line: 7 },
+        { code: '  while (!stack.isEmpty()) {', line: 8 },
+        { code: '    queue.enqueue(stack.pop());', line: 9 },
+        { code: '  }', line: 10 },
+        { code: '  // Dequeue first half again', line: 11 },
+        { code: '  for (i = 0; i < n/2; i++) {', line: 12 },
+        { code: '    queue.enqueue(queue.dequeue());', line: 13 },
+        { code: '  }', line: 14 },
+        { code: '  // Interleave', line: 15 },
+        { code: '  for (i = 0; i < n/2; i++) {', line: 16 },
+        { code: '    queue.enqueue(queue.dequeue());', line: 17 },
+        { code: '    queue.enqueue(queue.dequeue());', line: 18 },
+        { code: '  }', line: 19 },
+        { code: '  return queue;', line: 20 },
+        { code: '}', line: 21 }
+      ],
+      generateBinary: [
+        { code: 'function generateBinary(n) {', line: 0 },
+        { code: '  queue = [];', line: 1 },
+        { code: '  result = [];', line: 2 },
+        { code: '  queue.enqueue("1");', line: 3 },
+        { code: '  for (i = 0; i < n; i++) {', line: 4 },
+        { code: '    current = queue.dequeue();', line: 5 },
+        { code: '    result.push(current);', line: 6 },
+        { code: '    queue.enqueue(current + "0");', line: 7 },
+        { code: '    queue.enqueue(current + "1");', line: 8 },
+        { code: '  }', line: 9 },
+        { code: '  return result;', line: 10 },
+        { code: '}', line: 11 }
+      ]
+    };
+
+    // ==================== ENQUEUE ====================
+    function enqueueWithStates(queue, value) {
+      const states = [];
+      
+      function record(q, pointers, operation, message, codeLine) {
+        states.push({
+          queue: [...q],
+          pointers: pointers || {},
+          operation: operation,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(queue, { front: 0, rear: queue.length - 1 }, null, `Enqueue ${value} to rear of queue`, 0);
+      record(queue, { front: 0, rear: queue.length - 1 }, 'enqueue', `Add ${value} to rear (end of queue)`, 1);
+      
+      queue.push(value);
+      record(queue, { front: 0, rear: queue.length - 1 }, null, `✓ ${value} enqueued! New rear is ${value}`, 2);
+
+      return { states, result: queue };
+    }
+
+    // ==================== DEQUEUE ====================
+    function dequeueWithStates(queue) {
+      const states = [];
+      
+      function record(q, pointers, operation, message, codeLine) {
+        states.push({
+          queue: [...q],
+          pointers: pointers || {},
+          operation: operation,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(queue, { front: 0, rear: queue.length - 1 }, null, `Dequeue element from front`, 0);
+
+      if (queue.length === 0) {
+        record(queue, {}, null, `✗ Error: Queue is empty (underflow)`, 2);
+        return { states, result: null, error: true };
+      }
+
+      const front = queue[0];
+      record(queue, { front: 0, rear: queue.length - 1 }, 'dequeue', `Remove front element: ${front}`, 4);
+      
+      queue.shift();
+      record(queue, queue.length > 0 ? { front: 0, rear: queue.length - 1 } : {}, null, 
+             `✓ Dequeued ${front}. ${queue.length > 0 ? `New front: ${queue[0]}` : 'Queue is now empty'}`, 4);
+
+      return { states, result: front };
+    }
+
+    // ==================== PEEK ====================
+    function peekWithStates(queue) {
+      const states = [];
+      
+      function record(q, pointers, operation, message, codeLine) {
+        states.push({
+          queue: [...q],
+          pointers: pointers || {},
+          operation: operation,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(queue, { front: 0, rear: queue.length - 1 }, null, `Peek at front element`, 0);
+
+      if (queue.length === 0) {
+        record(queue, {}, null, `✗ Error: Queue is empty`, 2);
+        return { states, result: null, error: true };
+      }
+
+      record(queue, { front: 0 }, 'peek', `Front element is: ${queue[0]}`, 4);
+
+      return { states, result: queue[0] };
+    }
+
+    // ==================== CIRCULAR QUEUE ====================
+    function circularQueueWithStates(operations, values) {
+      const states = [];
+      const size = 5;
+      const arr = new Array(size).fill(null);
+      let front = -1, rear = -1;
+      
+      function record(a, f, r, operation, message, codeLine) {
+        states.push({
+          circularArray: [...a],
+          front: f,
+          rear: r,
+          size: size,
+          operation: operation,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(arr, front, rear, null, `Initialize circular queue of size ${size}`, 0);
+
+      for (let i = 0; i < operations.length; i++) {
+        const op = operations[i];
+        const val = values[i];
+
+        if (op === 'enqueue') {
+          const isFull = (rear + 1) % size === front;
+          if (isFull && front !== -1) {
+            record(arr, front, rear, null, `Queue is full, cannot enqueue ${val}`, 8);
+            continue;
+          }
+
+          if (front === -1) front = 0;
+          rear = (rear + 1) % size;
+          arr[rear] = val;
+          record(arr, front, rear, 'enqueue', `Enqueue ${val} at position ${rear}`, 11);
+        } else if (op === 'dequeue') {
+          if (front === -1) {
+            record(arr, front, rear, null, `Queue is empty, cannot dequeue`, 14);
+            continue;
+          }
+
+          const removed = arr[front];
+          arr[front] = null;
+          
+          if (front === rear) {
+            record(arr, front, rear, 'dequeue', `Dequeue ${removed}, queue now empty`, 15);
+            front = -1;
+            rear = -1;
+          } else {
+            front = (front + 1) % size;
+            record(arr, front, rear, 'dequeue', `Dequeue ${removed}, new front at ${front}`, 16);
+          }
+        }
+      }
+
+      record(arr, front, rear, null, `✓ Circular queue operations complete!`, 17);
+      return { states };
+    }
+
+    // ==================== STACK USING QUEUES ====================
+    function stackUsingQueuesWithStates(operations, values) {
+      const states = [];
+      let q1 = [], q2 = [];
+      
+      function record(queue1, queue2, operation, message, codeLine) {
+        states.push({
+          q1: [...queue1],
+          q2: [...queue2],
+          operation: operation,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(q1, q2, null, `Implement stack using two queues`, 0);
+
+      for (let i = 0; i < operations.length; i++) {
+        const op = operations[i];
+        const val = values[i];
+
+        if (op === 'push') {
+          record(q1, q2, null, `Push ${val} to stack`, 5);
+          
+          q2.push(val);
+          record(q1, q2, 'enqueue', `Add ${val} to Q2`, 6);
+
+          while (q1.length > 0) {
+            const elem = q1.shift();
+            q2.push(elem);
+            record(q1, q2, 'move', `Move ${elem} from Q1 to Q2`, 8);
+          }
+
+          [q1, q2] = [q2, q1];
+          record(q1, q2, 'swap', `Swap Q1 and Q2`, 10);
+        } else if (op === 'pop') {
+          if (q1.length === 0) {
+            record(q1, q2, null, `✗ Stack is empty`, 13);
+          } else {
+            const popped = q1.shift();
+            record(q1, q2, 'dequeue', `Pop ${popped} from stack (dequeue from Q1)`, 13);
+          }
+        }
+      }
+
+      record(q1, q2, null, `✓ Stack operations complete using queues!`, 14);
+      return { states };
+    }
+
+    // ==================== SLIDING WINDOW MAXIMUM ====================
+    function slidingWindowWithStates(arr, k) {
+      const states = [];
+      const deque = [];
+      const result = [];
+      
+      function record(q, res, currIdx, operation, message, codeLine) {
+        states.push({
+          queue: q.map(idx => arr[idx]),
+          dequeIndices: [...q],
+          inputArray: [...arr],
+          resultArray: [...res],
+          currentIndex: currIdx,
+          windowSize: k,
+          operation: operation,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(deque, result, 0, null, `Find maximum in each window of size ${k}`, 0);
+      record(deque, result, 0, null, `Use deque to maintain elements in decreasing order`, 1);
+
+      for (let i = 0; i < arr.length; i++) {
+        record(deque, result, i, 'processing', `Process arr[${i}] = ${arr[i]}`, 3);
+
+        // Remove elements outside window
+        while (deque.length > 0 && deque[0] <= i - k) {
+          const removed = deque.shift();
+          record(deque, result, i, 'remove', `Remove index ${removed} (outside window)`, 7);
+        }
+
+        // Remove smaller elements from rear
+        while (deque.length > 0 && arr[deque[deque.length - 1]] < arr[i]) {
+          const removed = deque.pop();
+          record(deque, result, i, 'pop', `Remove ${arr[removed]} (smaller than ${arr[i]})`, 11);
+        }
+
+        deque.push(i);
+        record(deque, result, i, 'add', `Add index ${i} (value: ${arr[i]})`, 12);
+
+        if (i >= k - 1) {
+          result.push(arr[deque[0]]);
+          record(deque, result, i, 'result', `Window max: ${arr[deque[0]]}`, 14);
+        }
+      }
+
+      record([], result, null, null, `✓ Sliding window maximums: [${result.join(', ')}]`, 16);
+      return { states, result };
+    }
+
+    // ==================== FIRST NON-REPEATING ====================
+    function firstNonRepeatingWithStates(stream) {
+      const states = [];
+      const queue = [];
+      const freq = {};
+      const result = [];
+      
+      function record(q, res, f, operation, message, codeLine) {
+        states.push({
+          queue: [...q],
+          resultArray: [...res],
+          frequency: {...f},
+          operation: operation,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(queue, result, freq, null, `Find first non-repeating character in stream`, 0);
+
+      for (let i = 0; i < stream.length; i++) {
+        const char = stream[i];
+        
+        queue.push(char);
+        freq[char] = (freq[char] || 0) + 1;
+        record(queue, result, freq, 'enqueue', `Read '${char}', frequency[${char}] = ${freq[char]}`, 5);
+
+        while (queue.length > 0 && freq[queue[0]] > 1) {
+          const removed = queue.shift();
+          record(queue, result, freq, 'dequeue', `Remove '${removed}' (repeating, freq = ${freq[removed]})`, 9);
+        }
+
+        const firstNonRep = queue.length > 0 ? queue[0] : '#';
+        result.push(firstNonRep);
+        record(queue, result, freq, 'result', `First non-repeating: ${firstNonRep}`, 10);
+      }
+
+      record(queue, result, freq, null, `✓ Result: [${result.join(', ')}]`, 13);
+      return { states, result };
+    }
+
+    // ==================== REVERSE QUEUE ====================
+    function reverseQueueWithStates(queue) {
+      const states = [];
+      const stack = [];
+      const original = [...queue];
+      
+      function record(q, stk, operation, message, codeLine) {
+        states.push({
+          queue: [...q],
+          stack: [...stk],
+          operation: operation,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(queue, stack, null, `Reverse queue using stack`, 0);
+      record(queue, stack, null, `Transfer all elements to stack`, 2);
+
+      while (queue.length > 0) {
+        const elem = queue.shift();
+        stack.push(elem);
+        record(queue, stack, 'dequeue-push', `Dequeue ${elem} and push to stack`, 4);
+      }
+
+      record(queue, stack, null, `All elements in stack (reversed order)`, 5);
+
+      while (stack.length > 0) {
+        const elem = stack.pop();
+        queue.push(elem);
+        record(queue, stack, 'pop-enqueue', `Pop ${elem} and enqueue back`, 8);
+      }
+
+      record(queue, stack, null, `✓ Queue reversed: [${queue.join(', ')}]`, 10);
+      return { states, result: queue };
+    }
+
+    // ==================== INTERLEAVE QUEUE ====================
+    function interleaveQueueWithStates(queue) {
+      const states = [];
+      const stack = [];
+      const n = queue.length;
+      const half = Math.floor(n / 2);
+      
+      function record(q, stk, operation, message, codeLine) {
+        states.push({
+          queue: [...q],
+          stack: [...stk],
+          operation: operation,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(queue, stack, null, `Interleave first half with second half`, 0);
+      record(queue, stack, null, `Queue: [${queue.join(', ')}], Half = ${half}`, 2);
+
+      // Step 1: Push first half to stack
+      for (let i = 0; i < half; i++) {
+        const elem = queue.shift();
+        stack.push(elem);
+        record(queue, stack, 'move-to-stack', `Move ${elem} to stack (first half)`, 5);
+      }
+
+      // Step 2: Enqueue back
+      while (stack.length > 0) {
+        const elem = stack.pop();
+        queue.push(elem);
+        record(queue, stack, 'stack-to-rear', `Move ${elem} from stack to rear`, 9);
+      }
+
+      // Step 3: Move first half to rear
+      for (let i = 0; i < half; i++) {
+        const elem = queue.shift();
+        queue.push(elem);
+        record(queue, stack, 'rotate', `Rotate ${elem} to rear`, 13);
+      }
+
+      // Step 4: Interleave
+      const result = [];
+      for (let i = 0; i < half; i++) {
+        result.push(queue.shift());
+        result.push(queue.shift());
+        record([...result, ...queue], stack, 'interleave', `Interleaving...`, 17);
+      }
+
+      record(result, stack, null, `✓ Interleaved: [${result.join(', ')}]`, 20);
+      return { states, result };
+    }
+
+    // ==================== GENERATE BINARY ====================
+    function generateBinaryWithStates(n) {
+      const states = [];
+      const queue = ['1'];
+      const result = [];
+      
+      function record(q, res, operation, message, codeLine) {
+        states.push({
+          queue: [...q],
+          resultArray: [...res],
+          operation: operation,
+          description: message,
+          codeLine: codeLine
+        });
+      }
+
+      record(queue, result, null, `Generate binary numbers from 1 to ${n}`, 0);
+      record(queue, result, 'enqueue', `Start with "1" in queue`, 3);
+
+      for (let i = 0; i < n; i++) {
+        const current = queue.shift();
+        result.push(current);
+        record(queue, result, 'dequeue', `Dequeue "${current}" → Result[${i}]`, 5);
+
+        queue.push(current + '0');
+        record(queue, result, 'enqueue', `Enqueue "${current}0"`, 7);
+
+        queue.push(current + '1');
+        record(queue, result, 'enqueue', `Enqueue "${current}1"`, 8);
+      }
+
+      record([], result, null, `✓ Binary numbers: [${result.join(', ')}]`, 10);
+      return { states, result };
+    }
+
+    // ==================== CODE DISPLAY ====================
+    function displayCode(operation) {
+      const codeDisplay = document.getElementById('code-display');
+      const codeTitle = document.getElementById('code-title');
+      const code = problemCode[operation];
+      
+      codeTitle.textContent = `${problemInfo[operation].name} - Code`;
+      codeDisplay.innerHTML = code.map(lineObj => 
+        `<div class="code-line" data-line="${lineObj.line}">${lineObj.code || '&nbsp;'}</div>`
+      ).join('');
+    }
+
+    function highlightCodeLine(lineNumber) {
+      const lines = document.querySelectorAll('.code-line');
+      lines.forEach(line => {
+        line.classList.remove('active');
+        if (lineNumber !== undefined && parseInt(line.dataset.line) === lineNumber) {
+          line.classList.add('active');
+          line.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    }
+
+    function updateProblemInfo(operation) {
+      const info = problemInfo[operation];
+      const infoBox = document.getElementById('algorithm-info');
+      infoBox.innerHTML = `
+        <h3>${info.name}</h3>
+        <p><strong>Description:</strong> ${info.description}</p>
+        <p><strong>Complexity:</strong> ${info.complexity}</p>
+        <p><strong>Technique:</strong> ${info.technique}</p>
+      `;
+    }
+
+    // ==================== RENDERING ====================
+    const queueContainer = document.getElementById("queue-container");
+    const descriptionEl = document.getElementById("description");
+    const stepIndicatorEl = document.getElementById("step-indicator");
+    const resultBoxEl = document.getElementById("result-box");
+    const auxiliaryDisplayEl = document.getElementById("auxiliary-display");
+
+    function renderState(state, index, total) {
+      queueContainer.innerHTML = "";
+
+      if (state.circularArray !== undefined) {
+        renderCircularQueue(state);
+      } else if (state.q1 !== undefined) {
+        renderTwoQueues(state);
+      } else if (state.windowSize !== undefined) {
+        renderSlidingWindow(state);
+      } else if (state.stack !== undefined) {
+        renderQueueWithStack(state);
+      } else if (state.frequency !== undefined) {
+        renderFirstNonRepeating(state);
+      } else {
+        renderSingleQueue(state);
+      }
+
+      descriptionEl.textContent = state.description || "";
+      stepIndicatorEl.textContent = `Step ${index + 1} / ${total}`;
+      
+      if (state.codeLine !== undefined) {
+        highlightCodeLine(state.codeLine);
+      }
+
+      // Show result on last step
+      if (index === total - 1 && state.description.includes('✓')) {
+        resultBoxEl.className = 'result-box success';
+        resultBoxEl.textContent = state.description;
+        resultBoxEl.style.display = 'block';
+      } else if (index === total - 1 && state.description.includes('✗')) {
+        resultBoxEl.className = 'result-box error';
+        resultBoxEl.textContent = state.description;
+        resultBoxEl.style.display = 'block';
+      } else {
+        resultBoxEl.style.display = 'none';
+      }
+    }
+
+    function renderSingleQueue(state) {
+      const wrapper = document.createElement("div");
+      wrapper.style.cssText = "position: relative; width: 100%;";
+
+      // Queue labels
+      if (state.queue && state.queue.length > 0) {
+        const labels = document.createElement("div");
+        labels.className = "queue-labels";
+        labels.innerHTML = `
+          <div class="label-box front-box">← FRONT (Remove here)</div>
+          <div class="label-box rear-box">REAR (Add here) →</div>
+        `;
+        wrapper.appendChild(labels);
+      }
+
+      const queueWrapper = document.createElement("div");
+      queueWrapper.className = "queue-wrapper";
+      queueWrapper.style.cssText = "justify-content: center; margin-top: 50px;";
+
+      if (!state.queue || state.queue.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "empty-queue";
+        empty.textContent = "Empty Queue";
+        queueWrapper.appendChild(empty);
+      } else {
+        state.queue.forEach((value, idx) => {
+          const item = document.createElement("div");
+          item.className = "queue-item";
+          item.textContent = value;
+
+          const pointers = state.pointers || {};
+          
+          if (pointers.front === idx) {
+            item.classList.add("front");
+            const label = document.createElement("div");
+            label.className = "pointer-label front-label";
+            label.textContent = "front";
+            item.appendChild(label);
+            const arrow = document.createElement("div");
+            arrow.className = "arrow-down";
+            arrow.textContent = "↓";
+            item.appendChild(arrow);
+          }
+
+          if (pointers.rear === idx) {
+            item.classList.add("rear");
+            const label = document.createElement("div");
+            label.className = "pointer-label rear-label";
+            label.textContent = "rear";
+            label.style.top = pointers.front === idx ? "-65px" : "-40px";
+            item.appendChild(label);
+            if (pointers.front !== idx) {
+              const arrow = document.createElement("div");
+              arrow.className = "arrow-down";
+              arrow.textContent = "↓";
+              arrow.style.top = "-55px";
+              item.appendChild(arrow);
+            }
+          }
+
+          if (state.operation === 'enqueue' && idx === state.queue.length - 1) {
+            item.classList.add("enqueuing");
+          }
+
+          if (state.operation === 'dequeue' && idx === 0) {
+            item.classList.add("dequeuing");
+          }
+
+          queueWrapper.appendChild(item);
+
+          if (idx < state.queue.length - 1) {
+            const arrow = document.createElement("div");
+            arrow.className = "queue-arrow";
+            arrow.textContent = "→";
+            queueWrapper.appendChild(arrow);
+          }
+        });
+      }
+
+      wrapper.appendChild(queueWrapper);
+      queueContainer.appendChild(wrapper);
+    }
+
+    function renderCircularQueue(state) {
+      const wrapper = document.createElement("div");
+      wrapper.style.cssText = "display: flex; flex-direction: column; align-items: center; gap: 20px;";
+
+      const title = document.createElement("div");
+      title.style.cssText = "font-weight: 700; font-size: 18px; color: #6366f1;";
+      title.textContent = `Circular Queue (Size: ${state.size})`;
+      wrapper.appendChild(title);
+
+      const circleContainer = document.createElement("div");
+      circleContainer.style.cssText = "position: relative; width: 400px; height: 400px;";
+
+      const radius = 150;
+      const centerX = 200;
+      const centerY = 200;
+
+      state.circularArray.forEach((value, idx) => {
+        const angle = (idx / state.size) * 2 * Math.PI - Math.PI / 2;
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+
+        const item = document.createElement("div");
+        item.style.cssText = `
+          position: absolute;
+          left: ${x - 40}px;
+          top: ${y - 40}px;
+          width: 80px;
+          height: 80px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: ${value === null ? '#f3f4f6' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'};
+          border: 3px solid ${state.front === idx ? '#10b981' : state.rear === idx ? '#f59e0b' : '#5a67d8'};
+          border-radius: 50%;
+          color: white;
+          font-weight: 700;
+          font-size: 18px;
+          box-shadow: ${state.front === idx || state.rear === idx ? '0 0 20px rgba(99, 102, 241, 0.6)' : '0 4px 6px rgba(0,0,0,0.1)'};
+          transition: all 0.3s ease;
+        `;
+        
+        item.textContent = value === null ? idx : value;
+        if (value === null) {
+          item.style.color = '#9ca3af';
+          item.style.fontWeight = '600';
+        }
+
+        if (state.front === idx) {
+          const label = document.createElement("div");
+          label.style.cssText = "position: absolute; top: -30px; background: #10b981; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;";
+          label.textContent = "FRONT";
+          item.appendChild(label);
+        }
+
+        if (state.rear === idx) {
+          const label = document.createElement("div");
+          label.style.cssText = `position: absolute; bottom: -30px; background: #f59e0b; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;`;
+          label.textContent = "REAR";
+          item.appendChild(label);
+        }
+
+        circleContainer.appendChild(item);
+      });
+
+      // Center info
+      const centerInfo = document.createElement("div");
+      centerInfo.style.cssText = `
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        border: 3px solid #6366f1;
+        text-align: center;
+        font-weight: 700;
+        color: #4338ca;
+      `;
+      centerInfo.innerHTML = `
+        <div style="font-size: 12px; color: #666;">Circular Queue</div>
+        <div style="font-size: 16px; margin-top: 5px;">
+          Front: ${state.front}<br>
+          Rear: ${state.rear}
+        </div>
+      `;
+      circleContainer.appendChild(centerInfo);
+
+      wrapper.appendChild(circleContainer);
+      queueContainer.appendChild(wrapper);
+    }
+
+    function renderTwoQueues(state) {
+      const container = document.createElement("div");
+      container.style.cssText = "display: flex; flex-direction: column; gap: 40px; align-items: center;";
+
+      // Operation badge
+      if (state.operation) {
+        const badge = document.createElement("div");
+        badge.style.cssText = "padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 16px;";
+        
+        if (state.operation === 'enqueue') {
+          badge.style.background = "#d1fae5"; badge.style.border = "3px solid #10b981"; badge.style.color = "#065f46";
+          badge.textContent = "🔺 ENQUEUE";
+        } else if (state.operation === 'dequeue') {
+          badge.style.background = "#fee2e2"; badge.style.border = "3px solid #dc2626"; badge.style.color = "#7f1d1d";
+          badge.textContent = "🔻 DEQUEUE";
+        } else if (state.operation === 'move') {
+          badge.style.background = "#fef3c7"; badge.style.border = "3px solid #f59e0b"; badge.style.color = "#92400e";
+          badge.textContent = "↔️ MOVE";
+        } else if (state.operation === 'swap') {
+          badge.style.background = "#e0e7ff"; badge.style.border = "3px solid #6366f1"; badge.style.color = "#312e81";
+          badge.textContent = "🔄 SWAP Q1 ↔ Q2";
+        }
+        
+        container.appendChild(badge);
+      }
+
+      // Queue 1
+      renderQueueInContainer(container, state.q1, "Queue 1 (Main)", "#3b82f6");
+
+      // Queue 2
+      renderQueueInContainer(container, state.q2, "Queue 2 (Auxiliary)", "#10b981");
+
+      queueContainer.appendChild(container);
+    }
+
+    function renderQueueInContainer(container, queue, label, color) {
+      const section = document.createElement("div");
+      section.style.cssText = "width: 100%;";
+
+      const queueLabel = document.createElement("div");
+      queueLabel.style.cssText = `font-weight: 700; font-size: 16px; color: ${color}; margin-bottom: 10px; text-align: center;`;
+      queueLabel.textContent = label;
+      section.appendChild(queueLabel);
+
+      const queueWrapper = document.createElement("div");
+      queueWrapper.className = "queue-wrapper";
+      queueWrapper.style.justifyContent = "center";
+
+      if (!queue || queue.length === 0) {
+        const empty = document.createElement("div");
+        empty.style.cssText = "color: #9ca3af; font-size: 16px; padding: 30px; border: 2px dashed #d1d5db; border-radius: 8px;";
+        empty.textContent = "Empty";
+        queueWrapper.appendChild(empty);
+      } else {
+        queue.forEach((value, idx) => {
+          const item = document.createElement("div");
+          item.className = "queue-item";
+          item.style.width = "70px";
+          item.style.height = "70px";
+          item.style.fontSize = "18px";
+          item.textContent = value;
+
+          if (idx === 0) item.style.borderColor = "#10b981";
+          if (idx === queue.length - 1) item.style.borderColor = "#f59e0b";
+
+          queueWrapper.appendChild(item);
+
+          if (idx < queue.length - 1) {
+            const arrow = document.createElement("div");
+            arrow.className = "queue-arrow";
+            arrow.textContent = "→";
+            queueWrapper.appendChild(arrow);
+          }
+        });
+      }
+
+      section.appendChild(queueWrapper);
+      container.appendChild(section);
+    }
+
+    function renderSlidingWindow(state) {
+      const container = document.createElement("div");
+      container.style.cssText = "display: flex; flex-direction: column; gap: 30px;";
+
+      // Show input array with window
+      const arraySection = document.createElement("div");
+      arraySection.style.cssText = "display: flex; flex-direction: column; align-items: center;";
+
+      const arrayLabel = document.createElement("div");
+      arrayLabel.style.cssText = "font-weight: 700; font-size: 16px; color: #6366f1; margin-bottom: 15px;";
+      arrayLabel.textContent = `Input Array (Window Size: ${state.windowSize})`;
+      arraySection.appendChild(arrayLabel);
+
+      const arrayWrapper = document.createElement("div");
+      arrayWrapper.style.cssText = "display: flex; gap: 5px; align-items: center;";
+
+      state.inputArray.forEach((val, idx) => {
+        const inWindow = state.currentIndex !== null && 
+                         idx >= Math.max(0, state.currentIndex - state.windowSize + 1) && 
+                         idx <= state.currentIndex;
+
+        const box = document.createElement("div");
+        box.style.cssText = `
+          width: 60px;
+          height: 60px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: ${idx === state.currentIndex ? '#fef3c7' : inWindow ? '#dbeafe' : '#f3f4f6'};
+          border: 3px solid ${idx === state.currentIndex ? '#f59e0b' : inWindow ? '#3b82f6' : '#d1d5db'};
+          border-radius: 6px;
+          font-weight: 700;
+          font-size: 18px;
+          transition: all 0.3s ease;
+          ${idx === state.currentIndex ? 'transform: scale(1.1); box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);' : ''}
+        `;
+        box.textContent = val;
+        arrayWrapper.appendChild(box);
+      });
+
+      arraySection.appendChild(arrayWrapper);
+      container.appendChild(arraySection);
+
+      // Show deque
+      const dequeSection = document.createElement("div");
+      dequeSection.style.cssText = "display: flex; flex-direction: column; align-items: center;";
+
+      const dequeLabel = document.createElement("div");
+      dequeLabel.style.cssText = "font-weight: 700; font-size: 16px; color: #7c3aed; margin-bottom: 10px;";
+      dequeLabel.textContent = "Deque (Stores Indices in Decreasing Order)";
+      dequeSection.appendChild(dequeLabel);
+
+      const dequeWrapper = document.createElement("div");
+      dequeWrapper.className = "queue-wrapper";
+      dequeWrapper.style.justifyContent = "center";
+
+      if (!state.queue || state.queue.length === 0) {
+        const empty = document.createElement("div");
+        empty.style.cssText = "color: #9ca3af; padding: 20px;";
+        empty.textContent = "Empty";
+        dequeWrapper.appendChild(empty);
+      } else {
+        state.queue.forEach((value, idx) => {
+          const item = document.createElement("div");
+          item.className = "queue-item";
+          item.style.width = "70px";
+          item.style.height = "70px";
+          item.textContent = value;
+
+          const actualIdx = state.dequeIndices ? state.dequeIndices[idx] : idx;
+          const indexLabel = document.createElement("div");
+          indexLabel.style.cssText = "position: absolute; bottom: -25px; font-size: 11px; color: #666; font-weight: 600;";
+          indexLabel.textContent = `idx:${actualIdx}`;
+          item.appendChild(indexLabel);
+
+          if (idx === 0) item.style.borderColor = "#10b981";
+          if (idx === state.queue.length - 1) item.style.borderColor = "#f59e0b";
+
+          dequeWrapper.appendChild(item);
+
+          if (idx < state.queue.length - 1) {
+            const arrow = document.createElement("div");
+            arrow.className = "queue-arrow";
+            arrow.textContent = "→";
+            dequeWrapper.appendChild(arrow);
+          }
+        });
+      }
+
+      dequeSection.appendChild(dequeWrapper);
+      container.appendChild(dequeSection);
+
+      // Show result array
+      if (state.resultArray && state.resultArray.length > 0) {
+        const resultSection = document.createElement("div");
+        resultSection.style.cssText = "margin-top: 20px;";
+
+        const resultLabel = document.createElement("div");
+        resultLabel.style.cssText = "font-weight: 700; font-size: 16px; color: #10b981; margin-bottom: 10px; text-align: center;";
+        resultLabel.textContent = "Window Maximums";
+        resultSection.appendChild(resultLabel);
+
+        const resultWrapper = document.createElement("div");
+        resultWrapper.style.cssText = "display: flex; gap: 10px; justify-content: center;";
+
+        state.resultArray.forEach((val, idx) => {
+          const box = document.createElement("div");
+          box.style.cssText = `
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #d1fae5;
+            border: 3px solid #10b981;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 18px;
+          `;
+          box.textContent = val;
+          resultWrapper.appendChild(box);
+        });
+
+        resultSection.appendChild(resultWrapper);
+        container.appendChild(resultSection);
+      }
+
+      queueContainer.appendChild(container);
+    }
+
+    function renderQueueWithStack(state) {
+      const container = document.createElement("div");
+      container.style.cssText = "display: flex; gap: 60px; justify-content: center; align-items: flex-start;";
+
+      // Queue section
+      const queueSection = document.createElement("div");
+      queueSection.style.cssText = "display: flex; flex-direction: column; align-items: center; min-width: 300px;";
+
+      const queueLabel = document.createElement("div");
+      queueLabel.style.cssText = "font-weight: 700; font-size: 16px; color: #3b82f6; margin-bottom: 15px;";
+      queueLabel.textContent = "Queue";
+      queueSection.appendChild(queueLabel);
+
+      const queueWrapper = document.createElement("div");
+      queueWrapper.className = "queue-wrapper";
+      queueWrapper.style.flexDirection = "column";
+      queueWrapper.style.gap = "5px";
+
+      if (!state.queue || state.queue.length === 0) {
+        const empty = document.createElement("div");
+        empty.textContent = "Empty";
+        empty.style.cssText = "color: #9ca3af; padding: 20px;";
+        queueWrapper.appendChild(empty);
+      } else {
+        state.queue.forEach((value, idx) => {
+          const item = document.createElement("div");
+          item.className = "queue-item";
+          item.style.width = "120px";
+          item.textContent = value;
+          if (idx === 0) item.style.borderColor = "#10b981";
+          if (idx === state.queue.length - 1) item.style.borderColor = "#f59e0b";
+          queueWrapper.appendChild(item);
+        });
+      }
+
+      queueSection.appendChild(queueWrapper);
+      container.appendChild(queueSection);
+
+      // Stack section
+      const stackSection = document.createElement("div");
+      stackSection.style.cssText = "display: flex; flex-direction: column; align-items: center; min-width: 300px;";
+
+      const stackLabel = document.createElement("div");
+      stackLabel.style.cssText = "font-weight: 700; font-size: 16px; color: #dc2626; margin-bottom: 15px;";
+      stackLabel.textContent = "Stack (for reversal)";
+      stackSection.appendChild(stackLabel);
+
+      const stackWrapper = document.createElement("div");
+      stackWrapper.style.cssText = "display: flex; flex-direction: column-reverse; gap: 2px; min-height: 100px;";
+
+      if (!state.stack || state.stack.length === 0) {
+        const empty = document.createElement("div");
+        empty.textContent = "Empty";
+        empty.style.cssText = "color: #9ca3af; padding: 20px;";
+        stackWrapper.appendChild(empty);
+      } else {
+        state.stack.forEach((value, idx) => {
+          const item = document.createElement("div");
+          item.className = "queue-item";
+          item.style.width = "120px";
+          item.style.background = "linear-gradient(135deg, #dc2626 0%, #991b1b 100%)";
+          item.style.borderColor = "#991b1b";
+          item.textContent = value;
+          if (idx === state.stack.length - 1) {
+            item.style.borderColor = "#f59e0b";
+          }
+          stackWrapper.appendChild(item);
+        });
+      }
+
+      stackSection.appendChild(stackWrapper);
+      container.appendChild(stackSection);
+
+      queueContainer.appendChild(container);
+    }
+
+    function renderFirstNonRepeating(state) {
+      const container = document.createElement("div");
+      container.style.cssText = "display: flex; flex-direction: column; gap: 30px; align-items: center;";
+
+      // Queue
+      const queueSection = document.createElement("div");
+      queueSection.style.cssText = "width: 100%;";
+
+      const queueLabel = document.createElement("div");
+      queueLabel.style.cssText = "font-weight: 700; font-size: 16px; color: #7c3aed; margin-bottom: 10px; text-align: center;";
+      queueLabel.textContent = "Queue (Non-Repeating Characters)";
+      queueSection.appendChild(queueLabel);
+
+      const queueWrapper = document.createElement("div");
+      queueWrapper.className = "queue-wrapper";
+      queueWrapper.style.justifyContent = "center";
+
+      if (!state.queue || state.queue.length === 0) {
+        const empty = document.createElement("div");
+        empty.textContent = "Empty";
+        empty.style.cssText = "color: #9ca3af; padding: 20px;";
+        queueWrapper.appendChild(empty);
+      } else {
+        state.queue.forEach((char, idx) => {
+          const item = document.createElement("div");
+          item.className = "queue-item";
+          item.style.width = "70px";
+          item.style.height = "70px";
+          item.textContent = char;
+          if (idx === 0) item.style.borderColor = "#10b981";
+          queueWrapper.appendChild(item);
+
+          if (idx < state.queue.length - 1) {
+            const arrow = document.createElement("div");
+            arrow.className = "queue-arrow";
+            arrow.textContent = "→";
+            queueWrapper.appendChild(arrow);
+          }
+        });
+      }
+
+      queueSection.appendChild(queueWrapper);
+      container.appendChild(queueSection);
+
+      // Frequency map
+      if (state.frequency) {
+        auxiliaryDisplayEl.style.display = 'block';
+        const freqText = Object.entries(state.frequency)
+          .map(([char, count]) => `'${char}':${count}`)
+          .join(', ');
+        auxiliaryDisplayEl.innerHTML = `<strong>Frequency Map:</strong> {${freqText}}`;
+      }
+
+      // Result
+      if (state.resultArray && state.resultArray.length > 0) {
+        const resultSection = document.createElement("div");
+        resultSection.style.cssText = "width: 100%;";
+
+        const resultLabel = document.createElement("div");
+        resultLabel.style.cssText = "font-weight: 700; font-size: 16px; color: #10b981; margin-bottom: 10px; text-align: center;";
+        resultLabel.textContent = "First Non-Repeating Character Stream";
+        resultSection.appendChild(resultLabel);
+
+        const resultWrapper = document.createElement("div");
+        resultWrapper.style.cssText = "display: flex; gap: 8px; justify-content: center;";
+
+        state.resultArray.forEach((char, idx) => {
+          const box = document.createElement("div");
+          box.style.cssText = `
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: ${char === '#' ? '#fef3c7' : '#d1fae5'};
+            border: 2px solid ${char === '#' ? '#f59e0b' : '#10b981'};
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 16px;
+          `;
+          box.textContent = char;
+          resultWrapper.appendChild(box);
+        });
+
+        resultSection.appendChild(resultWrapper);
+        container.appendChild(resultSection);
+      }
+
+      queueContainer.appendChild(container);
+    }
+
+    // ==================== PLAYER LOGIC ====================
+    let states = [];
+    let currentIndex = 0;
+    let timer = null;
+
+    function stopTimer() {
+      if (timer !== null) {
+        clearInterval(timer);
+        timer = null;
+      }
+    }
+
+    function showCurrent() {
+      if (states.length === 0) return;
+      currentIndex = Math.max(0, Math.min(currentIndex, states.length - 1));
+      renderState(states[currentIndex], currentIndex, states.length);
+    }
+
+    function play() {
+      if (states.length === 0) return;
+      if (timer !== null) return;
+      const speed = parseInt(document.getElementById("speed-input").value, 10) || 1000;
+      timer = setInterval(() => {
+        currentIndex++;
+        if (currentIndex >= states.length) {
+          currentIndex = states.length - 1;
+          stopTimer();
+        }
+        showCurrent();
+      }, speed);
+    }
+
+    function pause() { stopTimer(); }
+    function next() {
+      if (states.length === 0) return;
+      currentIndex = Math.min(currentIndex + 1, states.length - 1);
+      showCurrent();
+    }
+    function prev() {
+      if (states.length === 0) return;
+      currentIndex = Math.max(currentIndex - 1, 0);
+      showCurrent();
+    }
+    function reset() {
+      currentIndex = 0;
+      showCurrent();
+    }
+
+    // ==================== UI EVENT HANDLERS ====================
+    document.getElementById("play-btn").addEventListener("click", play);
+    document.getElementById("pause-btn").addEventListener("click", pause);
+    document.getElementById("next-btn").addEventListener("click", next);
+    document.getElementById("prev-btn").addEventListener("click", prev);
+    document.getElementById("reset-btn").addEventListener("click", reset);
+    document.getElementById("generate-btn").addEventListener("click", generateSteps);
+    
+    document.getElementById("operation-select").addEventListener("change", function() {
+      const operation = this.value;
+      displayCode(operation);
+      updateProblemInfo(operation);
+      
+      const initialLabel = document.getElementById("initial-label");
+      const valueLabel = document.getElementById("value-label");
+      const paramLabel = document.getElementById("param-label");
+      const streamLabel = document.getElementById("stream-label");
+      
+      initialLabel.style.display = 'inline-block';
+      valueLabel.style.display = 'none';
+      paramLabel.style.display = 'none';
+      streamLabel.style.display = 'none';
+      
+      if (operation === 'enqueue') {
+        valueLabel.style.display = 'inline-block';
+      } else if (operation === 'slidingWindow') {
+        paramLabel.style.display = 'inline-block';
+        paramLabel.firstChild.textContent = 'Window Size K: ';
+        document.getElementById('param-input').value = 3;
+      } else if (operation === 'firstNonRepeating') {
+        initialLabel.style.display = 'none';
+        streamLabel.style.display = 'inline-block';
+      } else if (operation === 'generateBinary') {
+        initialLabel.style.display = 'none';
+        paramLabel.style.display = 'inline-block';
+        paramLabel.firstChild.textContent = 'N (count): ';
+        document.getElementById('param-input').value = 5;
+      } else if (operation === 'circularQueue') {
+        initialLabel.style.display = 'none';
+        valueLabel.style.display = 'inline-block';
+        valueLabel.firstChild.textContent = 'Operations: ';
+        document.getElementById('value-input').value = 'enqueue:1,enqueue:2,enqueue:3,dequeue,enqueue:4';
+        document.getElementById('value-input').style.width = '300px';
+      } else if (operation === 'stackUsingQueues') {
+        initialLabel.style.display = 'none';
+        valueLabel.style.display = 'inline-block';
+        valueLabel.firstChild.textContent = 'Operations: ';
+        document.getElementById('value-input').value = 'push:1,push:2,push:3,pop';
+        document.getElementById('value-input').style.width = '250px';
+      }
+    });
+
+    function generateSteps() {
+      stopTimer();
+      const operation = document.getElementById("operation-select").value;
+      const queueInput = document.getElementById("input-queue").value;
+      const valueInput = document.getElementById("value-input").value;
+      const paramInput = parseInt(document.getElementById("param-input").value, 10);
+      const streamInput = document.getElementById("stream-input").value;
+
+      let queue = queueInput.split(",").map(x => x.trim()).filter(x => x).map(Number);
+      let result;
+
+      switch(operation) {
+        case "enqueue":
+          const value = parseInt(valueInput) || 0;
+          result = enqueueWithStates(queue, value);
+          break;
+        case "dequeue":
+          result = dequeueWithStates(queue);
+          break;
+        case "peek":
+          result = peekWithStates(queue);
+          break;
+        case "circularQueue":
+          const circOps = valueInput.split(',').map(op => {
+            const parts = op.trim().split(':');
+            return { op: parts[0], val: parts[1] ? parseInt(parts[1]) : null };
+          });
+          result = circularQueueWithStates(circOps.map(o => o.op), circOps.map(o => o.val));
+          break;
+        case "stackUsingQueues":
+          const stackOps = valueInput.split(',').map(op => {
+            const parts = op.trim().split(':');
+            return { op: parts[0], val: parts[1] ? parseInt(parts[1]) : null };
+          });
+          result = stackUsingQueuesWithStates(stackOps.map(o => o.op), stackOps.map(o => o.val));
+          break;
+        case "slidingWindow":
+          const k = paramInput || 3;
+          result = slidingWindowWithStates(queue.length > 0 ? queue : [1, 3, -1, -3, 5, 3, 6, 7], k);
+          break;
+        case "firstNonRepeating":
+          const stream = streamInput.split(',').map(x => x.trim());
+          result = firstNonRepeatingWithStates(stream);
+          break;
+        case "reverseQueue":
+          result = reverseQueueWithStates(queue);
+          break;
+        case "interleaveQueue":
+          result = interleaveQueueWithStates(queue.length > 0 ? queue : [1, 2, 3, 4, 5, 6]);
+          break;
+        case "generateBinary":
+          const n = paramInput || 5;
+          result = generateBinaryWithStates(n);
+          break;
+      }
+
+      states = result.states;
+      currentIndex = 0;
+      showCurrent();
+    }
+
+    // ==================== INITIALIZATION ====================
+    (function init() {
+      const operation = document.getElementById("operation-select").value;
+      displayCode(operation);
+      updateProblemInfo(operation);
+      generateSteps();
+    })();
+  </script>
+</body>
+</html>
